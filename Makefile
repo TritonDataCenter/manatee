@@ -18,6 +18,12 @@
 # Tools
 #
 TAP		:= ./node_modules/.bin/tap
+TAR = tar
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), SunOS)
+	TAR = gtar
+endif
 
 #
 # Files
@@ -27,7 +33,7 @@ JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
-JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
+JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0
 #REPO_MODULES	 = src/node-dummy
 SMF_MANIFESTS_IN = smf/manifests/bapi.xml.in
 
@@ -57,3 +63,37 @@ include ./tools/mk/Makefile.node.targ
 include ./tools/mk/Makefile.node_deps.targ
 include ./tools/mk/Makefile.smf.targ
 include ./tools/mk/Makefile.targ
+
+ROOT                    := $(shell pwd)
+RELEASE_TARBALL         := manatee-pkg-$(STAMP).tar.bz2
+TMPDIR                  := /tmp/$(STAMP)
+
+.PHONY: setup
+setup: | $(NPM_EXEC)
+	$(NPM) install
+
+.PHONY: release
+release: setup deps docs $(SMF_MANIFESTS)
+	@echo "Building $(RELEASE_TARBALL)"
+	@mkdir -p $(TMPDIR)/root/opt/smartdc/manatee
+	@mkdir -p $(TMPDIR)/site
+	@touch $(TMPDIR)/site/.do-not-delete-me
+	@mkdir -p $(TMPDIR)/root
+	@mkdir -p $(TMPDIR)/root/opt/smartdc/manatee/ssl
+	cp -r   $(ROOT)/build \
+		$(ROOT)/lib \
+		$(ROOT)/node_modules \
+		$(ROOT)/package.json \
+		$(ROOT)/smf \
+		$(TMPDIR)/root/opt/smartdc/manatee/
+	(cd $(TMPDIR) && $(TAR) -jcf $(ROOT)/$(RELEASE_TARBALL) root site)
+	@rm -rf $(TMPDIR)
+
+.PHONY: publish
+publish: release
+	@if [[ -z "$(BITS_DIR)" ]]; then \
+		echo "error: 'BITS_DIR' must be set for 'publish' target"; \
+		exit 1; \
+	fi
+	mkdir -p $(BITS_DIR)/manatee
+	cp $(ROOT)/$(RELEASE_TARBALL) $(BITS_DIR)/manatee/$(RELEASE_TARBALL)
