@@ -1,0 +1,21 @@
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile.smf.targ: see Makefile.smf.defs.
+#
+# NOTE: This makefile comes from the "eng" repo. It's designed to be dropped
+# into other repos as-is without requiring any modifications. If you find
+# yourself changing this file, you should instead update the original copy in
+# eng.git and then update your repo to use the new version.
+#
+.PHONY: check-manifests
+check-manifests: $(SMF_MANIFESTS:%=%.smfchk)
+
+%.smfchk: %
+	$(XMLLINT) --path $(dir $(SMF_DTD)) --dtdvalid $(SMF_DTD) $^
+
+check: check-manifests
+
+smf/manifests/%: smf/manifests/%.in
+	$(SED) -e 's#@@NODE@@#@@PREFIX@@/$(NODE_EXEC)#' $< > $@

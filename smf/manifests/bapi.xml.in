@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<!--
+	Copyright (c) 2012, Joyent, Inc. All rights reserved.
+ 	This is a sample SMF manifest. If you want to actually use it, you'll
+ 	need to replace @@PREFIX@@ in the *generated* file with the path to
+	whereever this package gets installed.
+ -->
+
+<service_bundle type="manifest" name="smartdc-ca-castashsvc">
+<service name="smartdc/application/bapi" type="service" version="1">
+
+<dependency name="network" grouping="require_all" restart_on="error" type="service">
+	<service_fmri value="svc:/network/physical" />
+</dependency>
+<dependency name="filesystem" grouping="require_all" restart_on="error" type="service">
+	<service_fmri value="svc:/system/filesystem/local" />
+</dependency>
+
+<exec_method type="method" name="start" exec="@@NODE@@ @@PREFIX@@/server.js &amp;" timeout_seconds="30" />
+<exec_method type="method" name="stop" exec=":kill" timeout_seconds="30" />
+
+<instance name="default" enabled="true" />
+
+<stability value='Unstable' />
+
+<template>
+	<common_name><loctext xml:lang="C">Joyent Boilerplate Service</loctext></common_name>
+</template>
+
+</service>
+</service_bundle>
