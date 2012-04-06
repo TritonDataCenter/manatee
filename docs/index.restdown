@@ -1,0 +1,1115 @@
+---
+title: Joyent Engineering Guide
+markdown2extras: wiki-tables, code-friendly
+apisections:
+---
+
+# Joyent Engineering Guide
+
+This document describes standards and best practices for software development at
+Joyent. These standards are intended to maintain product quality and to provide
+consistency across codebases to make it easier for all engineers to learn new
+parts of the system. This latter goal is important to encourage everyone to feel
+comfortable diving into all parts of the system, as is often necessary when
+debugging.
+
+It's important to remember that all situations are unique, so rules should not
+be followed blindly. However, these guidelines represent the best practices
+agreed upon by the team. If you feel it necessary to diverge from them, that's
+okay, but be prepared to explain why.
+
+Note: In this document, services implementing an API are referred to as APIs.
+For example, "MAPI" denotes the service implementing the MAPI API.
+
+
+# Repository Guidelines
+
+These guidelines cover naming, structure, and processes around repositories.
+A template repository is included in this repo so you can quickly get something
+working that follows these guidelines.
+
+
+## Rule #1: FCS Quality All the Time
+
+In general, use the "master" branch for development and releases. **"master"
+must be FCS (First Customer Ship) quality at all times.** Although releases are
+technically cut from release-specific branches, these branches are not expected
+to diverge significantly from "master" at the time the branch was cut except
+for fixes backported after the cut. That is, development should not be ongoing
+in the release branches.
+
+When working on large features, it's tempting to use development branches that
+eventually get integrated into master. Indeed, this is sometimes necessary.
+However, it should be avoided when possible, as it means people are running dev
+branches rather than "master", which can lead to a [quality death spiral
+(QDS)](http://hub.opensolaris.org/bin/view/Community+Group+on/qual_death_spiral)
+as fewer people actually run the mainline tree. Where possible, consider
+whether larger projects can be split into reasonably-sized chunks that can
+individually be integrated into "master" without breaking existing
+functionality. This allows you to continue developing on "master" while still
+being able to commit frequently.
+
+
+## Repository Naming
+
+For repositories representing an API, the repo name that matches how the API is
+discussed (spoken, chatted and emailed) means you'll get the repo name right on
+first guess. If you can get away with it, a repo named after the abbreviate API
+name is best. For example:
+
+    Network API -> NAPI -> napi.git          # Good.
+                        -> network-api.git   # Less good.
+                        -> network_api.git   # Even less good.
+                        -> NAPI.git          # Whoa! Capital letters are crazy here.
+
+
+## Language
+
+New server-side projects should almost certainly use Node.js with C/C++
+components as needed. Consolidating onto one language makes it easier for
+everyone to dig into other teams' projects as needed (for development as well
+as debugging) and allows us to share code and tools.
+
+
+## Directory Layout
+
+Here is a suggested directory/file structure for your repository. All
+repos **must** have a `README.md` and `Makefile`. The others are suggested
+namings for particular usages, should your repo require them.
+
+    build/          Built bits.
+    deps/           Git submodules and/or commited 3rd-party deps should go
+                    here. See "node_modules/" for node.js deps.
+    docs/           Project docs. Uses restdown and man.
+    lib/            JavaScript source files.
+    node_modules/   Node.js deps, either populated at build time or commited.
+                    See Managing Node Dependencies.
+    pkg/            Package lifecycle scripts
+    smf/manifests   SMF manifests
+    smf/methods     SMF method scripts
+    src/            C/C++ source files.
+    test/           Test suite. node-tap prefered.
+    tools/          Miscellaneous dev/upgrade/deployment tools and data.
+    Makefile        See below.
+    package.json    npm module info, if applicable (holds the project version)
+    README.md       See below.
+
+
+"docs" or "doc"? "test" or "tst"? We're not being religious about the
+directory names, however the Makefile target names should use the names
+specified below to allow automated build tools to rely on those names. The
+reason to suggest "docs" and "test" as the directory names is to have the
+same name as the Makefile targets.
+
+
+### README.md
+
+Every repository **must** have in its root a README.md (Markdown) file that
+describes the repo and covers:
+
+* the name of the API or other component(s) contained in the repo and a brief
+  description of what they do
+* the JIRA project for this repo (and any additional instructions, like how JIRA
+  components are used for this project)
+* owners of the project
+* the style and lint configurations used, any additional pre-commit checks, and
+  any non-standard useful Makefile targets
+* some overview of the structure of the project, potentially including
+  descriptions of the subcomponents, directory structure, and basic design
+  principles
+* basic development workflow: how to run the code and start playing with it
+
+It's strongly recommended to start with the template in this repo.
+
+
+### Makefile
+
+All repos **must** have a Makefile that defines at least the following targets:
+
+* `all`: builds all intermediate objects (e.g., binaries, executables, docs,
+  etc.). This should be the default target.
+* `check`: checks all files for adherence to lint, style, and other
+  repo-specific rules not described here.
+* `clean`: removes all built files
+* `prepush`: runs all checks/tests required before pushing changes to the repo
+* `docs`: builds documentation (restdown, man pages)
+* `test`: runs the automated test suite
+* `release`: build releasable artifacts, e.g. a tarball (for projects that
+  generate release packages)
+
+The `check` and `test` targets **must** fail if they find any 'check'
+violations or failed tests. The `prepush` target is intended to cover all
+pre-commit checks.  It **must** run successfully before any push to the repo.
+It **must** also be part of the automated build. Any commit which introduces a
+prepush failure **must** be fixed immediately or backed out. A typical prepush
+target will look like the following, but some non-code repositories might
+differ (e.g. not have a test suite):
+
+    prepush: check test
+            @echo "Okay to push."
+
+There are several modular Makefiles you can use to implement most of this. See
+"Writing Makefiles" (below) for details.
+
+## Coding Style
+
+Every repository **must** have a consistent coding style that is enforced by
+some tool. It's not necessary that all projects use the same style, though it's
+strongly suggested to keep differences to a minimum (e.g., only hard vs. soft
+tabs and tabstops). All styles **must** limit line length to 80 columns.
+Existing style-checking tools include:
+
+* C: [cstyle](https://github.com/joyent/illumos-joyent/blob/master/usr/src/tools/scripts/cstyle.pl)
+* JavaScript: [jsstyle](https://github.com/davepacheco/jsstyle),
+  [gjslint](https://code.google.com/closure/utilities/docs/linter_howto.html)
+* Bash: bashstyle (contained in eng.git:tools/bashstyle)
+* Makefiles: use bashstyle for now
+
+Both cstyle and jsstyle (which are 90% the same code) support overriding style
+checks on a per-line and block basis. `jsstyle` also now supports
+configuration options for indent style and few other things. E.g., you
+might like this in your Makefile:
+
+    JSSTYLE_FLAGS = -o indent=4,doxygen,unparenthesized-return=0
+
+Options can also be put in a "tools/jsstyle.conf" and passed in with '-f
+tools/jsstyle.conf'. See the [jsstyle
+README](https://github.com/davepacheco/jsstyle)) for details on
+JSSTYLED-comments and configuration options.
+
+Note that gjslint can be used as a style checker, but it is **not** a
+substitute for javascriptlint. And as with all style checkers, it **must** be
+integrated into `make check`.
+
+Bash scripts and Makefiles must also be checked for style. The only style
+guideline for now is the 80-column limit.
+
+Make target: "check"
+
+
+## Lint
+
+Every C repository **must** run "lint" and every JavaScript repository **must**
+run [javascriptlint](http://github.com/davepacheco/javascriptlint) and both
+**must** be lint-clean. Note that lint is not the same as style: lint covers
+objectively dangerous patterns like undeclared variables, while style covers
+subjective conventions like spacing.
+
+Both lint and javascriptlint are very configurable. Projects may choose to
+enable and disable particular sets of checks as they deem appropriate.  Most
+checks can be disabled on a per-line basis. As with style, it's recommended
+that we minimize divergence between repositories.
+
+Make target: "check"
+
+
+## Copyright
+
+All source files (including Makefiles) should have a copyright statement that
+says:
+
+    Copyright (c) [year], Joyent, Inc. All rights reserved.
+
+Year should be exactly the latest year when the file was changed, not a list or
+range of years. For example:
+
+    Copyright (c) 2012, Joyent, Inc. All rights reserved.
+
+
+## Testing
+
+All repos **must** be tested by a comprehensive automated test suite,
+preferably using node-tap. These tests may be repo-specific, or may be part of
+a broader system test suite (ideally both). In either case, bug fixes and new
+features should not be integrated without adding new tests, and the tests
+**must** be run automatically (as via jenkins) either with every commit or
+daily.
+
+Understanding and fixing failures in the automated test run **must** be
+considered the top development priority for that repo's team. Persistent
+failures are not acceptable.
+
+Make target: "test"
+
+## cscope
+
+cscope is a terminal-based tool for browsing source. For performance, it's best
+to use it with an index. For repos using this repo's Makefile, you can build a
+basic index in a source tree using:
+
+    # make xref
+
+which translates to a make recipe something like this:
+
+    .PHONY: xref
+    xref: cscope.files
+    	$(CSCOPE) -bqR
+
+    .PHONY: cscope.files
+    cscope.files:
+    	find . -name '*.c' -o -name '*.h' -o -name '*.cc' -o -name '*.js' \
+    	    -o -name '*.s' -o -name '*.cpp' > $@
+
+
+You may also want the "-k" flag to cscope, which tells it to ignore standard
+header files.
+
+Once the index is built, you can browse the source with:
+
+    # cscope -dq
+
+cscope is available for SmartOS in pkgsrc. It's also buildable on MacOS. For
+instructions, see [the
+wiki](https://hub.joyent.com/wiki/display/dev/Snow+Leopard+tips%2C+fixes+and+bugs).
+
+Make target: "xref"
+
+
+## Documentation
+
+### API Documentation
+
+You **must** use [restdown](https://github.com/trentm/restdown). Please discuss
+with Trent if this isn't workable for your project.
+
+Restdown is a tool for creating docs (and especially REST API docs) using a
+single Markdown file with a few added conventions. You can set it up as
+follows. Get the restdown tool:
+
+    git submodule add git://github.com/trentm/restdown.git deps/restdown
+    cd deps/restdown/
+    git checkout 1.2.15    # let's use a restdown release tag
+
+Get a starter restdown file:
+
+    mkdir -p docs/media/img
+    cp ../eng/docs/boilerplateapi.restdown docs/index.restdown
+    cp ../eng/docs/media/img/favicon.ico docs/media/img/
+    cp ../eng/docs/media/img/logo.png docs/media/img/
+
+Tell the Makefile about it (`make docs`):
+
+    DOC_FILES = docs/index.restdown
+
+TODO: Finish off static serving of the docs in server.js.
+
+
+### Code Documentation
+
+Consider adding a block comment at the top of every file that describes at a
+high level the component that's implemented in the file. For example:
+
+    /*
+     * ca-profile.js: profile support
+     *
+     * Profiles are sets of metrics.  They can be used to limit visibility of
+     * metrics based on module, stat, or field names, or to suggest a group of
+     * metrics to a user for a particular use case.
+     */
+
+For non-trivial subsystems, consider adding a Big Theory statement that
+describes what the component does, the external interface, and internal details.
+For a great example, check out
+[panic.c](https://github.com/joyent/illumos-joyent/blob/master/usr/src/uts/common/os/panic.c#L29)
+in the kernel.
+
+Consider keeping design documents in restdown inside the repo. It's okay to have
+one-off documents for specific projects, even if they become out of date as the
+code evolves, but make clear in the document that the content may be out of
+date. Keep such docs separate from general design documents that are kept up to
+date.
+
+
+## Managing Node Dependencies
+
+There are three cases for Node dependencies:
+
+* external public dependencies (e.g., restify, express): specify these in
+  package.json as usual and shrinkwrap them.
+* internal (Joyent-private) dependencies (e.g., ca-vis): either specify these in
+  package.json using git URLs instead of version numbers, or use git submodules
+  and treat these as local (repo-private) dependencies (see below). All things
+  being equal, prefer git URLs in package.json to git submodules. In all cases,
+  use shrinkwrap.
+* local, repo-private dependencies (e.g., ca-native in cloud-analytics or amon
+  modules): During the build process, run "npm install path/to/dep". **This
+  approach should only be used for code that lives inside the repo but is
+  installed as a separate package for whatever reason. This does not apply to
+  most dependencies. Most dependencies should not be checked into git.**
+
+Shrinkwrapping: all dependendencies that come from outside the repo should be
+shrinkwrapped. See [npm shrinkwrap](http://npmjs.org/doc/shrinkwrap.html) for
+details.
+
+Shrinkwrap is available in npm 1.1.2, which is bundled with node 0.6.12.
+However, proper support for git SHAs in shrinkwrap didn't land until the next
+version. If you're stuck on 1.1.2, you can still use git SHAs in the shrinkwrap
+file, but you'll have to specify them by hand.
+
+
+## Node add-ons (binary modules)
+
+Because C++ does not define a useful compiler- or platform-dependent
+[binary](http://stackoverflow.com/questions/7492180/c-abi-issues-list)
+[interface](http://developers.sun.com/solaris/articles/CC_abi/CC_abi_content.html),
+and we have seen breakage resulting from changing compiler versions, any repo
+that uses add-ons (binary modules) **must** bundle its own copy of "node" and
+use that copy at runtime. And almost every repo will fall into this bucket,
+since we use the native node-dtrace-provider heavily for observability.
+
+The recommended way to do this is to add the official node repo as a git
+submodule and build it during the build process. There are existing modular
+Makefiles in this repo (eng.git) to do all the work. All you need to do is
+include them and then add the appropriate dependencies on `$(NODE)`.
+
+
+## Commit Comments and JIRA Tickets
+
+In collaborating on a body of software as large as SDC, it's critical that the
+issues and thought processes behind non-trivial code changes be documented,
+whether that's through code comments, git commit comments, or JIRA tickets.
+There are many cases where people other than the original author need to
+examine the git log:
+
+* An engineer in another area tries to understand a bug they've run into (in
+  your repo or not), possibly as a result of a recent change. The easier it is
+  for people to move between repos and understand recent changes, the more
+  quickly bugs in master can be root-caused. This is particularly important to
+  avoid an issue bouncing around between teams where the problem is *not*.
+* An engineer in another area tries to understand when a feature or bugfix
+  was integrated into your repo so that they can pull it down to use it.
+* An engineer working on the same code base, possibly years later, needs to
+  modify (or even rewrite) the same code to fix another bug. They need to
+  understand why a particular change was made the way it was to avoid
+  reintroducing the original bug (or introducing a new bug).
+* A release engineer tries to better understand the risk and test impact of a
+  change to decide whether it's appropriate to backport.
+* A support engineer tries to better understand the risk and test impact of a
+  change to decide whether it's appropriate for binary relief or hot patching.
+* Product management wants to determine when a feature or bugfix was integrated.
+* Automated tools want to connect commits to JIRA tickets.
+
+To this end, we require that with every commit there **must** be a comment that
+includes the list of JIRA tickets addressed with this commit and a synopsis of
+the changes (*either* for the whole commit *or* for each change, one by one).
+**Between the JIRA ticket and the commit comment itself, there must be
+sufficient information for an engineer that's moderately familiar with the code
+base, possibly years later but with source in hand, to understand how and why
+the change was made.**
+
+The worst case is when the thought process and issue list are nowhere: not in
+the comments and not in the JIRA tickets.
+
+### Commit Comments
+
+Across Joyent we require that **each commit be associated with one or more JIRA
+tickets and that those tickets be listed in the commit comments**. This way,
+given either the commit or the JIRA ticket, one can find the other.
+
+Historically, some repos (notably illumos-joyent and cloud-analytics) have
+additionally required that tickets must not be reused for multiple commits in
+the same repo except for very minor changes like fixing lint or style warnings.
+This makes it easier to correlate tickets and commits, since there's usually
+exactly one commit for each resolved ticket. It also makes it easier to
+back out the changes for a particular project. For these repos, the git
+comments for the commit consist of a single line per JIRA ticket being resolved
+in the commit. Each line consists of the ticket identifier and the synopsis
+exactly as it appears in JIRA (optionally truncated to 80 characters with
+"..."):
+
+    OS-147 vfsstat command to show VFS activity by zone
+    OS-148 Update ziostat to coexist peacefully with vfsstat
+    OS-149 New kstats to support vfsstat
+
+This approach encourages short, descriptive ticket synopses. For repos that keep
+track of code reviews (e.g., illumos-joyent), that information is appended like
+this:
+
+    OS-850 Add support for Intel copper quad I350 to igb.
+    Reviewed by: Jerry Jelinek <jerry.jelinek@joyent.com>
+
+In the rare cases where the same ticket is used for multiple commits, a
+parenthetical is used to explain why:
+
+    INTRO-581 move mdb_v8 into illumos-joyent (missing file)
+
+This structure works well for established repos like illumos, but it's not
+always appropriate. For new work on greenfield projects, it may not even make
+sense to use more than one ticket until the project reaches a first milestone.
+
+### JIRA Tickets
+
+For bugs, especially those that a customer could hit, consider including
+additional information in the JIRA ticket:
+
+* An explanation of what happened and the root cause, referencing the source
+  where appropriate. This can be useful to engineers debugging similar issues
+  or working on the same area of code who want to understand exactly why a
+  change was made.
+* An explanation of how to tell if you've hit this issue. This can be pretty
+  technical (log entries, tools to run, etc.). This can be useful for engineers
+  to tell if they've hit this bug in development as well as whether a customer
+  has hit the bug.
+* A workaround, if any.
+
+Of course, much of this information won't make sense for many bugs, so use your
+judgment, but don't assume that you're the only person who will ever look at the
+ticket.
+
+# Logging
+
+There are at least three different consumers for a service's logs:
+
+- engineers debugging issues related to the service (which may not actually be
+  problems with the service)
+- monitoring tools that alert operators based on error events or levels of
+  service activity
+- non real-time analysis tools examining API activity to understand performance
+  and workload characteristics and how people use the service
+
+For the debugging use case, **the goal should be to have enough information
+available after a crash or an individual error to debug the problem from the
+very first occurrence in the field**. It should also be possible for engineers
+to manually dump the same information as needed to debug non-fatal failures.
+
+SDC service logs **must** be formatted in JSON. Node.js services **must**
+use [Bunyan](https://github.com/trentm/node-bunyan). Exceptions: (a) you are
+using syslog (see use case for syslog below); (b) your service is legacy; or,
+(c) you just haven't migrated to Bunyan yet (which is fine, JSON log output
+is not a top-priority make work project). If you have an example of a log for
+which JSON format gets in the way, please bring it up for discussion).
+
+Multiple use cases do not require multiple log files.  Most services should log
+all activity (debugging, errors, and API activity) in JSON to either the SMF
+log or into a separate log file in
+"/var/smartdc/&lt;service&gt;/log/&lt;component&gt;.log". For services with
+extraordinarily high volume for which it makes sense to separate out API
+activity into a separate file, that should be directed to
+"/var/smartdc/&lt;service&gt;/log/requests.log". However, don't use separate
+log files unless you're sure you need it.  All log files in
+"/var/smartdc/&lt;service&gt;/log" should be configured for appropriate log
+rotation.
+
+For any log entries generated while handling a particular request, the log
+entry **must** include the request id. See "Request Identifiers" under "REST
+API Guidelines" below.
+
+Log record fields **must** conform to the following (most of which comes
+for free with Bunyan usage):
+
+|| **JSON key** || **Description** || **Examples** || **Required** ||
+|| **name** || Service name. || "ca" (for Cloud Analytics) || All entries ||
+|| **hostname** || Server hostname. || `uname -n`, `os.hostname()` || All entries ||
+|| **pid** || Process id. || 1234 || All entries ||
+|| **time** || `YYYY-MM-DDThh:mm:ss.sssZ` || "2012-01-26T19:20:30.450Z" || All entries ||
+|| **level** || Log level. || "fatal", "error", "warn", "info", or "debug" || All entries ||
+|| **msg** || The log message || "illegal argument: parameter 'foo' must be an integer" || All entries ||
+|| **component** || Service component. A sub-name on the Logger "name". || "aggregator-12" || Optional ||
+|| **req_id** || Request UUID || See "Request Identifiers" section below. Restify simplifies this. || All entries relating to a particular request ||
+|| **latency** || Time of request in milliseconds || 155 || Strongly suggested for entries describing the completion of a request or other backend operation ||
+|| **req** || HTTP request || -- || At least once as per Restify's or [Bunyan's serializer](https://github.com/trentm/node-bunyan/blob/master/lib/bunyan.js#L856-870) for each request. ||
+|| **res** || HTTP response || -- || At least once as per Restify's or [Bunyan's serializer](https://github.com/trentm/node-bunyan/blob/master/lib/bunyan.js#L872-878) for each response. ||
+
+We use these definitions for log levels:
+
+- "fatal": the service is going to stop or become unusable now
+- "error": fatal for a particular request, but the service continues servicing other requests
+- "warn": a note on something that should probably be looked at by an operator
+- "info": detail on regular operation
+- "debug": anything else, i.e. too verbose to be included in "info" level.
+- "trace": logging from external libraries used by your app
+
+"debug" should be used sparingly. Information that will be useful to debug
+errors *post mortem* should usually be included in "info" messages if it's
+generally relevant or else with the corresponding "error" event. Don't rely on
+spewing mostly irrelevant debug messages all the time and sifting through them
+when an error occurs.
+
+Most of the time, different services should log to different files. But in some
+cases it's desirable for multiple consumers to log to the same file, as for
+vmadm and vmadmd. For such cases, syslog is an appropriate choice for logging
+since it handles synchronization automatically. Care must be taken to support
+entries longer than 1024 characters.
+
+
+# SMF Integration
+
+All services **must** be delivered as SMF services. This means:
+
+- They deliver an SMF service manifest.
+- The install mechanism imports the manifest.
+- The uninstall mechanism deletes the service.
+- The service is started, stopped, restarted, etc. via SMF.
+
+While SMF itself is grimy and the documentation is far from perfect, the
+documentation *is* extensive and useful. Many common misunderstandings about
+how SMF works are addressed in the documentation. It's strongly recommended
+that you take a pass through the docs before starting the SMF integration for
+your service. In order of importance, check out:
+
+- SMF concepts: smf(5), smf_restarter(5), smf_method(5), svc.startd(1M)
+- Tools: svcs(1), svcadm(1M), svccfg(1M)
+
+Common mistakes include:
+
+- Setting the start method to run the program you care about (e.g., "node
+  foo.js") rather than backgrounding it (e.g., "node foo.js &"). SMF expects
+  the start method to start the service, not *be* the service. It times out
+  start methods that don't complete, so if you do this you'll find that your
+  service is killed after some default timeout interval. After this happens
+  three times, SMF moves the service into maintenance.
+- Using "child" or "wait model" services to avoid the above problem. Read the
+  documentation carefully; this probably doesn't do what you want. In
+  particular, if your "wait model" service fails repeatedly, SMF will never put
+  it into maintenance. It will just loop forever, forking and exiting.
+- Not using "-s" with svcadm enable/disable. Without "-s", these commands are
+  asynchronous, which means the service may not be running when "svcadm enable"
+  returns. If you really care about this, you should check the service itself
+  for liveness, not rely on SMF, since the start method may have completed
+  before the service has opened its TCP socket (for example).
+
+## Managing processes under SMF
+
+SMF manages processes using an OS mechanism called contracts. See contract(4)
+for details. The upshot is that it can reliably tell when a process is no
+longer running, and it can also track child processes.
+
+Quoting svc.startd(1M):
+
+     A contract model service fails if any of the following conditions
+     occur:
+
+         o    all processes in the service exit
+
+         o    any processes in the service produce a core dump
+
+         o    a process outside the service sends a service process a
+              fatal signal (for example, an administrator terminates a
+              service process with the pkill command)
+
+Notice that if your service forks a process and *that* process exits,
+successfully or otherwise, SMF will not consider that a service failure. One
+common mistake here is forking a process that will be part of your service, but
+not considering what happens when that process fails (exits). SMF will not
+restart your service, so you'll have to manage that somehow.
+
+## Service logs
+
+SMF maintains a log for each service in /var/svc/log. The system logs restarter
+events here and launches the start method with stderr redirected to the log,
+which often means the service itself will have stderr going to this log as
+well. It's recommended that services either use this log for free-form debug
+output or use the standard logging facility described under "Logging" above.
+
+# REST API Guidelines
+
+It's strongly recommended to use
+[restify](https://github.com/mcavage/node-restify) for all web services. Not
+only will you leverage common code and test coverage, but restify gives you
+features like DTrace observability, debuggability, throttling, and versioning
+out of the box. If it doesn't support something you need, consider adding it
+rather than rolling your own.
+
+## Request Identifiers
+
+A request identifier uniquely identifies an operation across multiple services
+(e.g., portal, cloudapi, ca, ufds). It's essential for debugging issues after
+they've happened. The goal is for issues to be debuggable from the information
+available after their first occurrence, without having to reproduce it to
+gather more information. To facilitate this:
+
+- When an external service receives a request from the outside, it **must**
+  generate a unique request identifier and include it in the "x-request-id"
+  header of any requests made as part of handling the initial request.
+- When any service receives a request with an "x-request-id" header, it
+  **must** include it in the "x-request-id" header of any request made as part
+  of handling that request.
+- When each service logs activity (API requests), alerts, or debug messages
+  related to a particular request, it **must** include the request id as
+  the "req_id" field (as described in the [Bunyan
+  docs](https://github.com/trentm/bunyan)).
+
+
+## Naming Endpoints
+
+Service API endpoints **should** be named.
+
+TODO: codify some of MarkC's and my (mostly mark) discussions on naming of
+API endpoints. See cloudapi and amon api for examples.
+
+
+# Bash programming guidelines
+
+## xtrace
+
+Bash has a very useful feature called "xtrace" that causes it to emit
+information about each expression that it evaluates. You can enable it for a
+script with:
+
+    set -o xtrace
+
+With newer versions, you can redirect this output somewhere other than stderr
+by setting
+[BASH_XTRACEFD](https://www.gnu.org/software/bash/manual/bashref.html#Bash-Variables).
+
+This is incredibly useful for several situations:
+
+- debugging non-interactive system scripts (e.g., SMF start methods) *post
+  mortem*. Such scripts should leave xtrace on all the time, since they're not
+  run frequently enough for the extra logging to become a problem and the
+  xtrace output makes it significantly easier to understand what happened when
+  these scripts go wrong.
+- debugging interactive scripts in development. You can run bash with "-x" to
+  enable xtrace for a single run. You usually don't want to leave xtrace on for
+  interactive scripts, unless you redirect the xtrace output:
+- debugging interactive scripts *post mortem* by enabling the xtrace output and
+  redirecting it to a temporary file. Be sure to remove the file when the
+  script exits successfully.
+
+## Error handling
+
+It's absolutely possible to write robust shell scripts, but the default shell
+behavior to ignore errors means you have to consider how to handle errors in
+order to avoid creating brittle scripts that are difficult to debug.
+
+The biggest hammer is the "errexit" option, which you can enable with:
+
+    set -o errexit
+
+This will cause the program to exit when simple commands, pipelines, and
+subshells return non-zero. Commands invoked in a conditional test, a loop test,
+or as part of an `&&` or `||` list do not get this special treatment. While this
+approach is nice because the default is that errors are fatal (so it's harder to
+forget to handle them), it's not a silver bullet and doesn't let you forget
+about error handling completely. For example, many commands *can* reasonably
+fail with no ill effects and so must be explicitly modified with the unfortunate
+` || true` to keep errexit happy.
+
+A more fine-grained approach is to explicitly check for failure of invocations
+that may reasonably fail. A concise pattern is to define a `fail` function
+which emits its arguments to stderr and exits with failure:
+
+    function fail()
+    {
+        echo "$*" >&2
+        exit 1
+    }
+
+and then use it like this:
+
+    echo "about to do something that might fail"
+    zfs create zones/myfilesystem || fail "failed to create zones"
+
+You can also use this with variable assignments
+
+    echo "about to list contents of a directory that may not exist"
+    foo=$(ls -1 $tmpdir) || fail "failed to list contents of '$tmpdir'"
+
+It's also important to remember how error handling works with pipelines. From
+the Bash manual:
+
+    The exit status of a pipeline is the exit status of the last command in the
+    pipeline, unless the pipefail option is enabled (see The Set Builtin). If
+    pipefail is enabled, the pipeline's return status is the value of the last
+    (rightmost) command to exit with a non-zero status, or zero if all commands
+    exit successfully.
+
+This means that if you run this to look for compressed datasets:
+
+    # zfs list -oname,compression | grep on
+
+If the "zfs" command bails out partway through, that pipeline will still
+succeed (unless pipefail is set) because "grep" will succeed. To set pipefail,
+use:
+
+    set -o pipefail
+
+## Running subcommands
+
+Prefer `$(subcommand)` to `` `subcommand` ``, since it can be nested:
+
+    type_of_grep=$(file $(which grep))
+
+## Automatic Checks
+
+See "Coding Style" above for style checks. Currently, the only enforced check
+is an 80-column limit on line length.
+
+It's also worth using "bash -n" to check the syntax of bash scripts as part of
+your Makefile's "check" target. The Makefiles in eng.git automatically check
+both syntax and style.
+
+## Temporary Files
+
+Put temporary files in /var/tmp/`$(dirname $0)`.`$$`. This will generally be
+unique but also allows people to figure out what script left this output
+around.
+
+On successful invocations, remove any such temporary directories or files,
+though consider supporting a `-k` flag (or similar) to keep the temporary files
+from a successful run.
+
+## Parsing command line options
+
+By convention, illumos scripts tend to use `opt_X` variables to store the value
+of the `-X` option (e.g., `opt_d` for `-d`). Options are best parsed with
+getopts(1) (not to be confused with getopt(1)) using a block like this:
+
+    function usage
+    {
+        [[ $# -gt 0 ]] && echo "$(dirname $0): $*" >&2
+
+        cat <<-USAGE >&2
+        Usage: $(dirname $0) [-fn] [-d argument] args ...
+
+        Frobs args (optionally with argument <argument>).
+
+        -f    force frobnification in the face of errors
+        -n    dry-run (don't actually do anything)
+        -d    specify temporary directory
+        USAGE
+
+        exit 2
+    }
+
+    opt_f=false
+    opt_n=false
+    opt_d=
+
+    while getopts ":fnd:" c; do
+            case "$c" in
+            f|n)    eval opt_$c=true                                ;;
+            d)      eval opt_$c=$OPTARG                             ;;
+            :)      usage "option requires an argument -- $OPTARG"  ;;
+            *)      usage "illegal option -- $OPTARG"               ;;
+            esac
+    done
+
+    # Set $1, $2, ... to the rest of the arguments.
+    shift $((OPTIND - 1))
+
+Below are common command line options. If you're implementing the functionality
+below, try to stick to the same option letters to maintain consistency. Of
+course, many of these options won't apply to most tools.
+
+    -?          Display usage message.
+    -d dir      Use directory "dir" for temporary files
+    -i          Interactive mode (force confirmation)
+    -f          Barrel on in the face of errors
+    -k          Keep temporary files (for debugging)
+    -n          Dry-run: print out what would be done, but don't do it
+    -o file     Specify output file
+    -p pid      Specify process identifiers
+    -r          Recursive mode
+    -y          Non-interactive mode (override confirmations with "yes")
+    -z          Generate (or extract) a compressed artifact
+
+## Command-line scripts that perform multiple complex tasks
+
+With xpg_echo, you can use "\c" with "echo" to avoid printing a newline.
+Combined with the above error handling pattern, you can write clean scripts
+that perform a bunch of tasks in series:
+
+    shopt -s xpg_echo
+
+    echo "Setting nodename to 'devel' ... \c"
+    hostname devel || fail "failed to set hostname"
+    echo "done."
+
+    echo "Testing DNS ... \c"
+    ping example.com || fail "failed"
+
+    echo "Restarting ssh ... \c"
+    svcadm disable -s ssh || fail "failed to disable service"
+    svcadm enable -s ssh || fail "failed to enable service"
+    echo "done."
+
+The output is clean both when it succeeds:
+
+    # ./setup.sh
+    Setting nodename to 'devel' ... done.
+    Testing DNS ... example.com is alive
+    Restarting ssh ... done.
+
+and when it fails:
+
+    # ./setup.sh
+    Setting nodename to 'devel' ... done.
+    Testing DNS ... ping: unknown host example.com
+    failed
+
+This is primarily useful for complex scripts that people run interactively
+rather than system scripts whose output goes to a log.
+
+
+
+# JIRA best practices for Customer Issues
+
+We have all noticed that there are a lot more JIRA tickets originating from
+customers than there were 6 months ago.
+
+We need to refine the process of opening, updating, and resolving bugs so that
+we maximize productivity, and reduce the time that bugs sit idle with not
+enough information to act on.
+
+
+
+## JIRA Updates
+
+Providing regular updates to JIRA tickets is the best way to keep stakeholders
+informed on the progress of the issue. A little more effort spent updating
+JIRA issues will create a valuable knowledge base full of information for the
+Ops and Support teams to use. The result will be:
+
+1.  Fewer issues coming through to the Dev team, as issues that have been worked
+    through before will be able to be triaged before they are passed to
+    engineering. We are are shooting for a 10:1 ratio of issues opened to
+    issues passed to engineering. Currently we’re well over 10:5.
+
+2.  Issues that are passed to engineering have had more diagnostic information
+    in them, as the Ops and Support teams learn from example on how to
+    troubleshoot issues. This will reduce the time it takes for you to resolve
+    issues, leaving you more time to work on more interesting projects.
+
+3.  Better customer relations, as the customer teams will be able to explain to
+    the customers what steps are being taken to find them a solution to their
+    problem.
+
+
+### Assigning Tickets
+
+![Assign To Me](media/img/assign_to_me.jpg)
+
+It’s important to make sure that active tickets (tickets that someone is
+working on) have an Assignee. The way that the triage teams decide if something
+needs to be escalated to engineering triage is using this field. If there is no
+one assigned to an issue, Ben and Deniz will continue to ask for a triage in
+scrum. So if you’re working on an issue, even if you don’t intend to be the
+final owner, click the “Assign to me” button in the top nav. This will indicate
+that we’ve had eyes on this issue and it’s not sitting idle. You can always
+reassign the issue if something changes.
+
+
+### Needs More Info
+
+![Needs More Info](media/img/needs_more_info.jpg)
+
+Needs More Info is a custom status that we added last year to indicate that
+there is not enough information to proceed on an issue. This could be used both
+for development, when there is not enough info to troubleshoot, or by the
+customer teams, if there is not enough info to resolve the issue with the
+customer. Whenever you put a ticket into this state, make sure to assign the
+ticket to whoever needs to provide the info. In your case, this will often be
+the reporter. It is important to force a ticket into this status if you are
+blocked on proceeding with diagnostics due to lack of information.
+
+
+### Comments
+
+![Comments](media/img/comments.jpg)
+
+Commenting is important to keep our cross-functional teams aware of progress
+made (or not made) on the resolution of a customer issue. Commenting best
+practices:
+
+- Comment often, even if you don’t have all of the details worked out yet. The
+  more information provided the more informed we can make the customers.
+- Comment instructionally, as if you were explaining to someone else how you
+  diagnosed the issue. This will help the Ops and Support teams to be able to
+  recognize, categorize and help diagnose issues on their own in the future,
+  saving everyone time and energy.
+- Comment consistently, at the end of the work day, for instance. Even if the
+  comment is that you made little progress, it keeps the customer facing teams
+  informed of what’s going on, so that they can make an informed decision on
+  what to communicate back to the customer.
+
+
+### Moving Tickets
+
+Often a ticket will come in through the JPC project, but logically belongs in
+another, as the problem needs to be resolved in SDC.
+
+For issues like this, please use the Move feature to move the ticket into the
+appropriate project. The JPC ticket will then automatically redirect users to
+the new location.
+
+![Move Ticket](media/img/move_ticket.jpg)
+
+
+### Linking Tickets
+
+When an issue is either related to, or a duplicate of , or depends on a ticket
+that is already in the system, it’s valuable to link the 2 tickets in JIRA. You
+can do this using the Link feature:
+
+![Linking Tickets](media/img/linking_tickets.jpg)
+
+The linked issue(s) will then show up in the ticket as a separate section:
+
+![Issue Links](media/img/issue_links.jpg)
+
+
+### Field: `Target Fix Version`
+
+If you are working on an issue, it is important to know what release you are
+targeting for the fix. Typically, you will either be targeting a Simpsons
+version (meaning that the release to the customer would be the next major), or
+a dot release. Bryan and Laurel can help clarify which release your fix should
+go into if you are unsure.
+
+Note: The JPC project only contains dot release versions. If something is more
+suited for a Simpsons release version, you should move the ticket to another
+project.
+
+The customer teams will use this information to decide whether they can wait
+for the fix in the next release, or if they’ll need to find a short term work
+around.
+
+![Target Fix Version](media/img/fix_version.jpg)
+
+
+## Resolving JIRA Tickets
+
+Issue resolutions should provide valuable information to the customer teams,
+allowing them to communicate solutions back to our customers, as well as make
+decisions on patches and workarounds.
+
+Please spend some extra time when resolving bugs that originated from a
+customer.
+
+
+### Field: `Issue Resolution (Public)`
+
+The Issue Resolution field is the field that the customer teams are going to
+use to communicate information back to their customers about the bug fix.
+
+This field must be filled out upon resolution if the ticket has originated from
+a customer (either coming from the JPC project or having a customer label
+attached to it).
+
+When you are filling in this field, try to word it as though you are talking to
+the customer. The customer doesn’t need to know every detail of how the issue
+was resolved, but they do want to know how it will impact them.
+
+![Resolution](media/img/resolution.jpg)
+
+### Field: `Resolution`
+
+Resolving a ticket once you’ve committed code indicates to the customer teams
+that they can deliver a solution (or estimated release date) to the customer.
+It is important to resolve your issues so that we continue to rotate bugs out
+of the queue, and keep our customers happy.
+
+|| **Fixed/Implemented** || Indicates that a development solution has been implemented and can be communicated to the customer. Release date can be deduced from the fix version. ||
+|| **Duplicate** || Indicates that this is already being worked on (or has been fixed) by another bug. Please Link the duplicate issue to the ticket. ||
+|| **Won't Fix** || There are certain circumstances under which we will decline to resolve a customer issue. A couple examples of this are if the issue being raised occurs by design, if we are refactoring a part of the code base that will eliminate the bug once released, or if there is a sufficient workaround. Bryan and Laurel should be consulted if you think a bug is a "won't fix", and always include an explanation for the customer teams if you use this resolution on a ticket that originated from a customer. ||
+
+
+### Field: `Fix Version/s`
+
+Fix version is the version in which you actually committed the code that fixed
+the bug. It differs from Target Fix Version in that it should only be added to
+the ticket after resolution. The fix version is what the customer teams will
+use to decide whether or not a patch is required on the current operating
+version.
+
+![Fix Version](media/img/fix_version.jpg)
+
+
+
+# Writing Makefiles
+
+This repo (eng.git) provides a number of modular Makefiles which you can use
+(perhaps even by direct reference using submodules) to provide the required
+targets described above, as well as several other useful pieces (like building
+Node in your repo).  These are designed to be dropped in without modification:
+they consume Make variables as input and either export other variables or define
+rules. You should use these existing Makefiles wherever possible.
+
+Importantly:
+
+* If you find yourself adding anything other than a repo-specific variable
+  definition or a repo-specific rule to your Makefile, consider creating a
+  new Makefile with a crisp interface and adding it to the existing ones in
+  eng.git. We want to avoid Makefile code duplication just as we would
+  JavaScript code duplication.
+* Do **not** modify a copy of any of the existing sub Makefiles from eng.git.
+  Feel free to generalize or improve the original, but don't fork it.
+* We do not use recursive Make. Avoid it within a project if at all possible.
+
+Top level Makefiles should generally have the following structure:
+
+1. Repo-specific definitions. These serve as inputs for included Makefiles. For
+   example, you might define the list of JavaScript files that should be
+   style-checked here.
+2. Includes for Makefiles that define variables based on the repo-specific
+   variables (e.g., repo specifies input files, and the included Makefile
+   defines a list of output files, or modifies the list of files that will be
+   removed with "make clean").
+3. Repo-specific rules. These must be the first rules that appear in the
+   Makefile so that the repo can control the default target and the order of
+   dependencies for common targets.
+4. Includes for Makefiles that define other rules.
+
+The goal is that most top-level Makefiles only specify their parameters, the
+repo-specific rules, and which other Makefiles get included to do the heavy
+lift.  Here's an example from eng.git:
+
+    DOC_FILES        = index.restdown boilerplateapi.restdown
+    JS_FILES        := $(shell ls *.js) $(shell find lib test -name '*.js')
+    JSL_CONF_NODE    = tools/jsl.node.conf
+    JSL_FILES_NODE   = $(JS_FILES)
+    JSSTYLE_FILES    = $(JS_FILES)
+    JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
+    SMF_MANIFESTS_IN = smf/manifests/bapi.xml.in
+
+    include ./Makefile.defs
+    include ./Makefile.node.defs
+    include ./Makefile.smf.defs
+
+    .PHONY: all
+    all: $(SMF_MANIFESTS) | $(NPM_EXEC)
+    	$(NPM) install
+
+    include ./Makefile.deps
+    include ./Makefile.node.targ
+    include ./Makefile.smf.targ
+    include ./Makefile.targ
+
+All of the included Makefiles are modular and know nothing about this repo, but
+this Makefile provides all of the required targets: "docs" to build HTML from
+restdown, "check" to check SMF manifests as well as JavaScript style and lint,
+"all" to build node and npm and then use that npm to rebuild local dependencies,
+"clean" to remove built files, and so on.
+
+See the top-level Makefile in eng.git for the complete details.
+
+
+# Miscellaneous Best Practices
+
+- Use JSON for config data. Not ini files: iniparser module has bugs, there
+  are always questions about encoding non-string values.
+- For services and distributed systems, consider building rich tools to
+  understand the state of the service, like lists of the service's objects and
+  information about each one. Think of the SmartOS proc(1) tools (see man pages
+  for pgrep, pstack, pfiles, pargs).
+- Consider doing development inside a SmartOS zone rather than on your Macbook
+  or a COAL global zone. That forces us to use our product the way customers
+  might, and it eliminates classes of problems where the dev environment doesn't
+  match production (e.g., because you've inadvertently picked up a
+  globally-installed library instead of checking it in, or resource limits
+  differ between MacOS and a SmartOS zone.
+- Whether you develop in COAL or on your Macbook, document what's necessary to
+  get from scratch to a working development environment so that other people can
+  try it out. Ideally, automate it. Having a script is especially useful if you
+  do develop on COAL, which also forces you to keep it up to date.
+- Similarly, build tools to automate deploying bits to a test system (usually a
+  SmartOS headnode zone). The easier it is to test the actual deployment, the
+  more likely people will actually test that, and you'll catch environment
+  issues in development instead of after pushing.
+
+
+# Examples
+
+- The [boilerplate API](boilerplateapi.html) example in this repo gives you a
+  starter file and some suggestions on how to document a web service.
