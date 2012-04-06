@@ -22,7 +22,7 @@
     "sprintf": "0.1.0",
     "url": "0.4.9",
     "vargs": "0.1.0",
-    "zookeeper": "3.4.1-2"
+    "zookeeper": "git://github.com/mcavage/node-zookeeper"
   },
   "devDependencies": {
     "byline": "2.0.1",
