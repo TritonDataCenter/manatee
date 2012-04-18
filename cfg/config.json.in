@@ -1,0 +1,21 @@
+{
+  "url": "URL"
+  "shardId": "SHARD_ID",
+  "postgresqlPath": ,
+  "recoveryPath":,
+  "pgHbaPath":,
+  "postgresqlTemplate": "/opt/smartdc/manatee/cfg/postgresql.conf",
+  "recoveryTemplate": "/opt/smartdc/manatee/cfg/recovery.conf",
+  "pgHbaPathTemplate": "/opt/smartdc/manatee/cfg/pg_hba.conf",
+  "postgresCfg": {
+    "dataDir": "DATA_DIR",
+    "logFile": "LOG_FILE",
+    "pgCtlPath":
+  },
+  "zkCfg": {
+    "connect": 
+    "timeout": 30000,
+    "host_order_deterministic": false,
+    "data_as_buffer": false
+  }
+}

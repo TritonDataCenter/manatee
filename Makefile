@@ -35,7 +35,7 @@ JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
 JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0
 #REPO_MODULES	 = src/node-dummy
-SMF_MANIFESTS_IN = smf/manifests/bapi.xml.in
+#SMF_MANIFESTS_IN = smf/manifests/manatee.xml
 
 include ./tools/mk/Makefile.defs
 include ./tools/mk/Makefile.node.defs
@@ -85,6 +85,7 @@ release: setup deps docs $(SMF_MANIFESTS)
 		$(ROOT)/node_modules \
 		$(ROOT)/package.json \
 		$(ROOT)/smf \
+		$(ROOT)/cfg \
 		$(TMPDIR)/root/opt/smartdc/manatee/
 	(cd $(TMPDIR) && $(TAR) -jcf $(ROOT)/$(RELEASE_TARBALL) root site)
 	@rm -rf $(TMPDIR)

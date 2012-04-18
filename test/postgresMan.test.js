@@ -34,9 +34,8 @@ test('stop postgres', function(t) {
 });
 
 test('check no pg running', function(t) {
-  POSTGRES_MAN.stat(function(err) {
-    log.error(err);
-    t.ok(err, 'stat postgres');
+  POSTGRES_MAN.stat(function(stat, err) {
+    t.equal(stat, 1);
     t.end();
   });
 });
@@ -48,28 +47,30 @@ test('start postgres', function(t) {
       t.end();
     }
 
-    POSTGRES_MAN.stat(function(err) {
+    POSTGRES_MAN.stat(function(stat, err) {
       if (err) {
         t.fail(err);
         t.end();
       }
+      t.equal(stat, 0);
       t.end();
     });
   });
 });
 
-test('start postgres', function(t) {
+test('restart postgres', function(t) {
   POSTGRES_MAN.restart(function(err) {
     if (err) {
       t.fail(err);
       t.end();
     }
 
-    POSTGRES_MAN.stat(function(err) {
+    POSTGRES_MAN.stat(function(stat, err) {
       if (err) {
         t.fail(err);
         t.end();
       }
+      t.equal(stat, 0);
       t.end();
     });
   });
@@ -81,7 +82,14 @@ test('stop postgres', function(t) {
       t.fail(err);
       t.end();
     }
-    t.end();
+    POSTGRES_MAN.stat(function(stat, err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+      t.equal(stat, 1);
+      t.end();
+    });
   });
 });
 
