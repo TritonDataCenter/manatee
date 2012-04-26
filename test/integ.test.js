@@ -10,10 +10,6 @@ var ZooKeeper = require('zookeeper');
 var uuid = require('node-uuid');
 var Daemon = require('../lib/daemon');
 var confparser = require('../lib/confParser');
-var fs = require('fs'),
-    mkdirOrig = fs.mkdir,
-    mkdirSyncOrig = fs.mkdirSync,
-    osSep = process.platform === 'win32' ? '\\' : '/';
 
 var SHARD_ID = uuid();
 
@@ -35,9 +31,11 @@ var log = new Logger({
   level: 'trace'
 });
 
-var URL = 'postgresql://yunong@localhost:5432';
-var URL_2 = 'postgresql://yunong@localhost:5433';
-var URL_3 = 'postgresql://yunong@localhost:5434';
+var dbName = 'test';
+
+var URL = 'tcp://yunong@localhost:5432/' + dbName;
+var URL_2 = 'tcp://yunong@localhost:5433/' + dbName;
+var URL_3 = 'tcp://yunong@localhost:5434/' + dbName;
 
 var BASE_PATH;
 
@@ -62,7 +60,8 @@ var postgresManCfg = {
   pgHbaPath: PG_HBA_TEMPATE,
   dataDir: '/tmp/pg/primary/',
   logFile: '/tmp/pg/primary.log',
-  dbName: 'test'
+  dbName: 'test',
+  url: URL
 };
 
 var postgresManCfg_2 = {
@@ -73,7 +72,8 @@ var postgresManCfg_2 = {
   dataDir: '/tmp/pg/sync/',
   //dataDir: '/tmp/' + uuid(),
   logFile: '/tmp/pg/sync.log',
-  dbName: 'test'
+  dbName: 'test',
+  url: URL_2
   //logFile: '/tmp/' + uuid()
 };
 
@@ -84,7 +84,8 @@ var postgresManCfg_3 = {
   pgHbaPath: PG_HBA_TEMPATE,
   dataDir: '/tmp/pg/async/',
   logFile: '/tmp/pg/async.log',
-  dbName: 'test'
+  dbName: 'test',
+  url: URL_3
 };
 var DAEMON;
 var DAEMON2;
@@ -167,10 +168,29 @@ test('daemon-init primary', function(t) {
       t.fail(err);
       t.end();
     }
-    // 0 == readonly
+    // 0 == primary
     t.equal(DAEMON.mode, 0, 'in primary mode');
 
-    t.end();
+    DAEMON.postgresMan.stat(function(stat, err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+      t.equal(stat, 0);
+      DAEMON.postgresMan.health(function(err) {
+        if (err) {
+          t.fail(err);
+          t.end();
+        }
+        DAEMON.postgresMan.xlogLocation(function(err) {
+          if (err) {
+            t.fail(err);
+            t.end();
+          }
+          t.end();
+        })
+      })
+    });
   });
 });
 
@@ -212,7 +232,26 @@ test('daemon-init standby', function(t) {
     // 1 == standby
     t.equal(DAEMON.mode, 1, 'in standby mode');
 
-    t.end();
+    DAEMON.postgresMan.stat(function(stat, err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+      t.equal(stat, 0);
+      DAEMON.postgresMan.health(function(err) {
+        if (err) {
+          t.fail(err);
+          t.end();
+        }
+        DAEMON.postgresMan.xlogReceiveLocation(function(err) {
+          if (err) {
+            t.fail(err);
+            t.end();
+          }
+          t.end();
+        })
+      })
+    });
   });
 });
 
@@ -254,112 +293,28 @@ test('daemon-init async', function(t) {
     // 1 == standby
     t.equal(DAEMON.mode, 1, 'in standby mode');
 
-    t.end();
+    DAEMON.postgresMan.stat(function(stat, err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+      t.equal(stat, 0);
+      DAEMON.postgresMan.health(function(err) {
+        if (err) {
+          t.fail(err);
+          t.end();
+        }
+        DAEMON.postgresMan.xlogReceiveLocation(function(err) {
+          if (err) {
+            t.fail(err);
+            t.end();
+          }
+          t.end();
+        })
+      })
+    });
   });
 });
-
-//test('daemon-init standby', function(t) {
-  //var cfgPath = '/tmp/' + uuid() + '/';
-  //var daemon = 0;
-
-  //mkdir_p(cfgPath, 0777, function(err) {
-    //if (err) {
-      //t.fail(err);
-      //t.end();
-    //}
-    //DAEMON2 = new Daemon({
-      //url: URL,
-      //zkCfg: ZK_CFG,
-      //shardId: SHARD_ID,
-      //registrarPath: REGISTRAR_PATH,
-      //log: log,
-      //configPath: cfgPath,
-      //recoveryPath: cfgPath + 'recovery.conf',
-      //postgresqlPath: cfgPath + 'postgresql.conf',
-      //recoveryTemplate: RECOVERY_TEMPLATE,
-      //postgresqlTemplate: POSTGRESQL_TEMPLATE
-    //});
-
-    //DAEMON2.init(function(err) {
-      //if (err) {
-        //t.fail(err);
-        //t.end();
-      //}
-      //// 1 == standby
-      //t.equal(DAEMON2.mode, 1);
-      //daemon++;
-      //if (daemon === 2) {
-        //t.end();
-      //}
-    //});
-  //});
-
-  //DAEMON.shard.once('init', function(shard) {
-    //console.log(shard);
-    //// 0 == primary
-    //t.equal(DAEMON.mode, 0);
-    //daemon++;
-    //if (daemon === 2) {
-      //t.end();
-    //}
-  //});
-//});
-
-//test('daemon-init async', function(t) {
-  //var cfgPath = '/tmp/' + uuid() + '/';
-  //var daemon = 0;
-  //mkdir_p(cfgPath, 0777, function(err) {
-    //if (err) {
-      //t.fail(err);
-      //t.end();
-    //}
-    //DAEMON3 = new Daemon({
-      //url: URL,
-      //zkCfg: ZK_CFG,
-      //shardId: SHARD_ID,
-      //registrarPath: REGISTRAR_PATH,
-      //log: log,
-      //configPath: cfgPath,
-      //recoveryPath: cfgPath + 'recovery.conf',
-      //postgresqlPath: cfgPath + 'postgresql.conf',
-      //recoveryTemplate: RECOVERY_TEMPLATE,
-      //postgresqlTemplate: POSTGRESQL_TEMPLATE
-    //});
-
-    //DAEMON3.init(function(err) {
-      //if (err) {
-        //t.fail(err);
-        //t.end();
-      //}
-      //// 1 == standby
-      //daemon++;
-      //t.equal(DAEMON3.mode, 1);
-      //// 2 == async
-      //t.equal(DAEMON3.shard.role, 2);
-      //if (daemon === 3) {
-        //t.end();
-      //}
-    //});
-  //});
-
-  //DAEMON2.shard.once('init', function() {
-    //// 1 == standby
-    //t.equal(DAEMON2.mode, 1);
-    //daemon++;
-    //if (daemon === 3) {
-      //t.end();
-    //}
-  //});
-
-  //DAEMON.shard.once('init', function() {
-    //// 0 == primary
-    //t.equal(DAEMON.mode, 0);
-    //daemon++;
-    //if (daemon === 3) {
-      //t.end();
-    //}
-  //});
-//});
 
 tap.tearDown(function() {
   process.exit(tap.output.results.fail);

@@ -1,4 +1,6 @@
 var Logger = require('bunyan');
+var shelljs = require('shelljs');
+var spawn = require('child_process').spawn;
 var tap = require('tap');
 var test = require('tap').test;
 var PostgresMan = require('../lib/postgresMan');
@@ -10,10 +12,16 @@ var log = new Logger({
   level: 'trace'
 });
 
-var LOG_FILE = '/tmp/' + uuid();
-var DATA_DIR = '/tmp/' + uuid();
-
+var LOG_FILE = '/tmp/pg/' + uuid();
+var DATA_DIR = '/tmp/pg/' + uuid();
 var POSTGRES_MAN;
+
+test('killall postgres instances', function(t) {
+  shelljs.mkdir('-p', '/tmp/pg');
+  shelljs.rm('-rf', '/tmp/pg/*');
+  spawn('killall', ['-KILL', 'postgres']);
+  t.end();
+});
 
 test('setup postgres', function(t) {
   POSTGRES_MAN = new PostgresMan({
@@ -23,7 +31,8 @@ test('setup postgres', function(t) {
     pgHbaPath: './test_conf/pg_hba.conf',
     dbName: 'test',
     dataDir: DATA_DIR,
-    logFile: LOG_FILE
+    logFile: LOG_FILE,
+    url: 'tcp://yunong@localhost:5432/test'
   });
 
   t.ok(POSTGRES_MAN, 'instantiate postgresman');
@@ -36,20 +45,25 @@ test('initialize postgres', function(t) {
        t.fail(err);
        t.end();
     }
-
-    t.end();
+    POSTGRES_MAN.stat(function(stat, err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+      t.equal(stat, 1);
+      t.end();
+    });
   });
 });
 
 test('init already initialized postgres', function(t) {
   POSTGRES_MAN.initDb(function(err) {
-    t.ok(err);
     t.end();
   });
 });
 
 test('stop postgres', function(t) {
-  POSTGRES_MAN.stop(function(err) {
+  POSTGRES_MAN.shutdown(function(err) {
     t.end();
   });
 });
@@ -74,7 +88,19 @@ test('start postgres', function(t) {
         t.end();
       }
       t.equal(stat, 0);
-      t.end();
+      POSTGRES_MAN.health(function(err) {
+        if (err) {
+          t.fail(err);
+          t.end();
+        }
+        POSTGRES_MAN.xlogLocation(function(err) {
+          if (err) {
+            t.fail(err);
+            t.end();
+          }
+          t.end();
+        })
+      })
     });
   });
 });
