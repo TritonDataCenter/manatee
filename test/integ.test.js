@@ -1,4 +1,6 @@
 var Logger = require('bunyan');
+var shelljs = require('shelljs');
+var spawn = require('child_process').spawn;
 var tap = require('tap');
 var common = require('../lib/common');
 var test = require('tap').test;
@@ -33,7 +35,9 @@ var log = new Logger({
   level: 'trace'
 });
 
-var URL = 'localhost:5432';
+var URL = 'postgresql://yunong@localhost:5432';
+var URL_2 = 'postgresql://yunong@localhost:5433';
+var URL_3 = 'postgresql://yunong@localhost:5434';
 
 var BASE_PATH;
 
@@ -45,46 +49,55 @@ var PG_CTL_PATH = '/usr/local/pgsql/bin/pg_ctl';
 
 var CONFIG_PATH = '/tmp/' + uuid() + '/';
 
-var RECOVERY_PATH = CONFIG_PATH + 'recovery.conf';
-
-var POSTGRESQL_PATH = CONFIG_PATH + 'postgresql.conf';
-
+var PG_HBA_TEMPATE = './test_conf/pg_hba.conf';
 var RECOVERY_TEMPLATE = './test_conf/recovery.conf';
-
 var POSTGRESQL_TEMPLATE = './test_conf/postgresql.conf';
+var POSTGRESQL_TEMPLATE_2 = './test_conf/postgresql2.conf';
+var POSTGRESQL_TEMPLATE_3 = './test_conf/postgresql3.conf';
 
+var postgresManCfg = {
+  log: log,
+  pgCtlPath: '/usr/local/pgsql/bin/pg_ctl',
+  pgInitDbPath: '/usr/local/pgsql/bin/initdb',
+  pgHbaPath: PG_HBA_TEMPATE,
+  dataDir: '/tmp/pg/primary/',
+  logFile: '/tmp/pg/primary.log',
+  dbName: 'test'
+};
+
+var postgresManCfg_2 = {
+  log: log,
+  pgCtlPath: '/usr/local/pgsql/bin/pg_ctl',
+  pgInitDbPath: '/usr/local/pgsql/bin/initdb',
+  pgHbaPath: PG_HBA_TEMPATE,
+  dataDir: '/tmp/pg/sync/',
+  //dataDir: '/tmp/' + uuid(),
+  logFile: '/tmp/pg/sync.log',
+  dbName: 'test'
+  //logFile: '/tmp/' + uuid()
+};
+
+var postgresManCfg_3 = {
+  log: log,
+  pgCtlPath: '/usr/local/pgsql/bin/pg_ctl',
+  pgInitDbPath: '/usr/local/pgsql/bin/initdb',
+  pgHbaPath: PG_HBA_TEMPATE,
+  dataDir: '/tmp/pg/async/',
+  logFile: '/tmp/pg/async.log',
+  dbName: 'test'
+};
 var DAEMON;
 var DAEMON2;
-
 var DAEMON3;
 
 var zk;
 
-function mkdir_p(path, mode, callback, position) {
-  var parts = require('path').normalize(path).split(osSep);
-
-  mode = mode || process.umask();
-  position = position || 0;
-
-  if (position >= parts.length) {
-    return callback();
-  }
-
-  var directory = parts.slice(0, position + 1).join(osSep) || osSep;
-  fs.stat(directory, function(err) {
-    if (err === null) {
-      mkdir_p(path, mode, callback, position + 1);
-    } else {
-      mkdirOrig(directory, mode, function(err) {
-        if (err && err.errno != 17) {
-          return callback(err);
-        } else {
-          mkdir_p(path, mode, callback, position + 1);
-        }
-      });
-    }
-  });
-}
+test('killall postgres instances', function(t) {
+  shelljs.mkdir('-p', '/tmp/pg');
+  shelljs.rm('-rf', '/tmp/pg/*');
+  spawn('killall', ['-KILL', 'postgres']);
+  t.end();
+});
 
 test('setup-persistent-znode', function(t) {
   zk = new ZooKeeper(ZK_CFG);
@@ -133,64 +146,113 @@ test('setup-registrar', function(t) {
   });
 });
 
-test('setup directories', function(t) {
-  mkdir_p(CONFIG_PATH, 0777, function(err) {
-    if (err) {
-      t.fail(err);
-      t.end();
-    }
-    mkdir_p(POSTGRES_PRIMARY_PATH, 0777, function(err) {
-      mkdir_p(POSTGRES_SYNC_PATH, 0777, function(err) {
-        mkdir_p(POSTGRES_ASYNC_PATH, 0777, function(err) {
-          t.end();
-        });
-      });
-    });
-  });
-});
-
-//test('initialize primary db dir', function(t) {
-  //var postgresManCfg = {
-    //log: log,
-    //dataDir: POSTGRES_PRIMARY_PATH,
-    //logFile: '/tmp/' + uuid(),
-    //pgCtlPath: PG_CTL_PATH
-  //};
-
-  //var postgresMan = new PostgresMan(postgresManCfg);
-
-  //postgresMan.initDb()
-//});
-
-test('daemon-init readonly', function(t) {
-  var postgresManCfg = {
-    log: log,
-    dataDir: POSTGRES_PRIMARY_PATH,
-    logFile: '/tmp/' + uuid(),
-    pgCtlPath: PG_CTL_PATH
-  };
-
+test('daemon-init primary', function(t) {
   DAEMON = new Daemon({
     url: URL,
     zkCfg: ZK_CFG,
     shardId: SHARD_ID,
     log: log,
-    postgresqlPath: POSTGRES_PRIMARY_PATH + '/postgresql.conf',
-    recoveryPath: POSTGRES_PRIMARY_PATH + '/recovery.conf',
+    postgresqlPath: postgresManCfg.dataDir + '/postgresql.conf',
+    recoveryPath: postgresManCfg.dataDir + '/recovery.conf',
     registrarPath: REGISTRAR_PATH,
     recoveryTemplate: RECOVERY_TEMPLATE,
     postgresqlTemplate: POSTGRESQL_TEMPLATE,
     postgresCfg: postgresManCfg
   });
 
+
   DAEMON.init(function(err) {
     console.log(err);
     if (err) {
       t.fail(err);
-      //t.end();
+      t.end();
     }
-    // 2 == readonly
-    t.equal(DAEMON.mode, 2, 'in readonly mode');
+    // 0 == readonly
+    t.equal(DAEMON.mode, 0, 'in primary mode');
+
+    t.end();
+  });
+});
+
+// for the sake of unit tests, we just copy the data dir over
+test('backup secondary', function(t) {
+  var primaryPath = postgresManCfg.dataDir + '/*';
+  var secondaryPath = postgresManCfg_2.dataDir;
+  shelljs.mkdir('-p', secondaryPath);
+  log.info('copying primary to secondary', primaryPath, secondaryPath);
+  shelljs.cp('-r', primaryPath, secondaryPath);
+  shelljs.rm(postgresManCfg_2.dataDir+'/postmaster.pid');
+  shelljs.cp('-f', POSTGRESQL_TEMPLATE_2,
+    postgresManCfg_2.dataDir + '/postgresql.conf');
+  spawn('chmod', ['700', secondaryPath]);
+  t.end();
+});
+
+test('daemon-init standby', function(t) {
+  DAEMON = new Daemon({
+    url: URL_2,
+    zkCfg: ZK_CFG,
+    shardId: SHARD_ID,
+    log: log,
+    postgresqlPath: postgresManCfg_2.dataDir + '/postgresql.conf',
+    recoveryPath: postgresManCfg_2.dataDir + '/recovery.conf',
+    registrarPath: REGISTRAR_PATH,
+    recoveryTemplate: RECOVERY_TEMPLATE,
+    postgresqlTemplate: POSTGRESQL_TEMPLATE_2,
+    postgresCfg: postgresManCfg_2
+  });
+
+
+  DAEMON.init(function(err) {
+    console.log(err);
+    if (err) {
+      t.fail(err);
+      t.end();
+    }
+    // 1 == standby
+    t.equal(DAEMON.mode, 1, 'in standby mode');
+
+    t.end();
+  });
+});
+
+// for the sake of unit tests, we just copy the data dir over
+test('backup async', function(t) {
+  var primaryPath = postgresManCfg.dataDir + '/*';
+  var secondaryPath = postgresManCfg_3.dataDir;
+  shelljs.mkdir('-p', secondaryPath);
+  log.info('copying primary to secondary', primaryPath, secondaryPath);
+  shelljs.cp('-r', primaryPath, secondaryPath);
+  shelljs.rm(postgresManCfg_3.dataDir+'/postmaster.pid');
+  shelljs.cp('-f', POSTGRESQL_TEMPLATE_3,
+    postgresManCfg_3.dataDir + '/postgresql.conf');
+  spawn('chmod', ['700', secondaryPath]);
+  t.end();
+});
+
+test('daemon-init async', function(t) {
+  DAEMON = new Daemon({
+    url: URL_3,
+    zkCfg: ZK_CFG,
+    shardId: SHARD_ID,
+    log: log,
+    postgresqlPath: postgresManCfg_3.dataDir + '/postgresql.conf',
+    recoveryPath: postgresManCfg_3.dataDir + '/recovery.conf',
+    registrarPath: REGISTRAR_PATH,
+    recoveryTemplate: RECOVERY_TEMPLATE,
+    postgresqlTemplate: POSTGRESQL_TEMPLATE_3,
+    postgresCfg: postgresManCfg_3
+  });
+
+
+  DAEMON.init(function(err) {
+    console.log(err);
+    if (err) {
+      t.fail(err);
+      t.end();
+    }
+    // 1 == standby
+    t.equal(DAEMON.mode, 1, 'in standby mode');
 
     t.end();
   });
