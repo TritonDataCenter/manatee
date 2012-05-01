@@ -192,8 +192,8 @@ The responsibilities of the Sitter is best described via examples.
 
 ## Bootstrapping 3 new Peers into a Shard
 
-Let's call the 3 sitters A, B, and C which belong to shard 3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc.
-Bootstrapping occurs this way:
+Let's call the 3 sitters A, B, and C which belong to shard
+3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc. Bootstrapping occurs this way:
 - The standard [zookeeper election algorithm](http://zookeeper.apache.org/doc/trunk/recipes.html#sc_leaderElection) is run on all 3 sitters.
 - The leader becomes primary.
 - The remaining two peers become the sync and async standbys, depending on who
