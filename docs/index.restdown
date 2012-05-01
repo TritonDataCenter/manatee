@@ -17,7 +17,9 @@ It's assumed readers are familiar with Zookeeper and Postgres. Read through
 before starting this document.
 
 Postgres offers synchronous and asynchronous streaming replication. For a
-detailed look, check out the Postgres [docs](http://www.Postgresql.org/docs/9.1/interactive/warm-standby.html#SYNCHRONOUS-REPLICATION) on this subject matter.
+detailed look, check out the Postgres
+[docs](http://www.Postgresql.org/docs/9.1/interactive/warm-standby.html#SYNCHRONOUS-REPLICATION)
+on this subject matter.
 
 ## Brief Overview of Postgres Synchronous Replication
 
@@ -33,12 +35,12 @@ primary. From the point of view of the client, the response is
 indistinguishable from a 500, and the client will not know for certain whether
 the write request has succeeded.
 
-Basically, the default Postgres implementation of synchronous replication results
-in inconsistency between the client and Postgres on standby failures. Postgres'
-solution to this is achieved by adding multiple potential synchronous standbys.
-The first one in the list will be used as the synchronous standby. Standbys
-listed after this will take over as the synchronous standby should the first one
-fail.
+Basically, the default Postgres implementation of synchronous replication
+results in inconsistency between the client and Postgres on standby failures.
+Postgres' solution to this is achieved by adding multiple potential synchronous
+standbys.  The first one in the list will be used as the synchronous standby.
+Standbys listed after this will take over as the synchronous standby should the
+first one fail.
 
 This default setup is insufficient when the primary fails.
 Postgres does not provide automatic primary failover, which results in the loss
@@ -76,14 +78,18 @@ Zookeeper is used for the following tasks:
 -Primary election of Peers within a shard.
 -Discovery of Shards by Manatee clients.
 
-Tasks 1 and 2 are described in the Postgres Sitter section, whilst task 3 is described in the Registrar Service section.
+Tasks 1 and 2 are described in the Postgres Sitter section, whilst task 3 is
+described in the Registrar Service section.
 
 # Shards and Peers
 
 A Postgres Shard in Manatee is uniquely identified by a GUID.
 The Shard consists of 3 mirrored Postgres instances, henceforth known as Peers.
-Shard membership is stored under a configurable persistent znode under zookeeper path:
+Shard membership is stored under a configurable persistent znode under
+the zookeeper path:
+
   /shards/
+
 While each shard entry is stored under the shard path as an emphemeral znode:
   /shards/8d7bda74-7495-4765-80ad-87a1f99ef173
   /shards/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc
@@ -100,10 +106,11 @@ memberships change, the entry will be updated accordingly.
 
 # Registrar Service
 
-This is the external REST service that allows clients to query for the current status of
-all Postgres Shards in Manatee. Note we could have consumers of Manatee directly
-query zookeeper, (which would have the benefit of push notifications). However,
-the REST service allows us to reduce the load to Zookeeper.
+This is the external REST service that allows clients to query for the current
+status of all Postgres Shards in Manatee. Note we could have consumers of
+Manatee directly query zookeeper, (which would have the benefit of push
+notifications). However, the REST service allows us to reduce the load to
+Zookeeper.
 
 Internally the Registrar service maintains a connection to Zookeeper and updates
 the shards when changes occur.
@@ -119,13 +126,18 @@ Returns a shard entry in the format described in the previous section.
 ## Clients
 
 Clients should maintain a cache of the list of shards. The cache can be configured
-with a TTL. If 500s are received from a particular Postgres shard, e.g. the primary is unavailable, or no longer the primary, then the client should refresh its cache by querying the Registrar Service.
+with a TTL. If 500s are received from a particular Postgres shard, e.g.
+the primary is unavailable, or no longer the primary, then the client should
+refresh its cache by querying the Registrar Service.
 
 # Restore Service
 
-This is an internal REST service that allows peers in each shard to recover or bootstrap themselves from another peer in the service.
-This service is only used when the recovery of a peer from just WAL is not possible. e.g. database corruption, WAL cache exhaustion, or whilst bootstrapping a new peer.
-The backup and restore mechanism relies on ZFS snapshots of the db data dir, and utilizes @JWilsdon's ZFS send/recv lib for transport.
+This is an internal REST service that allows peers in each shard to recover or
+bootstrap themselves from another peer in the service.  This service is only
+used when the recovery of a peer from just WAL is not possible. e.g. database
+corruption, WAL cache exhaustion, or whilst bootstrapping a new peer. The backup
+and restore mechanism relies on ZFS snapshots of the db data dir, and utilizes
+@JWilsdon's ZFS send/recv lib for transport.
 
 This service is made up of the following components on each Postgres Peer:
 - A snapshot agent that takes periodic ZFS snapshots of the db dir.
@@ -145,14 +157,18 @@ In practice, backup requests will only be sent to the primary peer of a shard.
 
 # Postgres Sitter
 
-## Postgres Replicaiton Recap
+## Postgres Replication Recap
 
-It's important to note that the change of a Postgres' instance's replication state i.e. from standby to primary, or primary to
-standby, requires a restart of the Postgres instance.
-In addition, the primary Postgres instance requires the URLs of all standby hosts, and each standby host requires the URL of the primary.
-The distinction of whether a standby is synchronous or asynchronous is soley made on the primary as the standbys have the same configuration regardess of their replication mode.
+It's important to note that the change of a Postgres' instance's replication
+state i.e. from standby to primary, or primary to standby, requires a restart
+of the Postgres instance.  In addition, the primary Postgres instance requires
+the URLs of all standby hosts, and each standby host requires the URL of the
+primary.  The distinction of whether a standby is synchronous or asynchronous
+is soley made on the primary as the standbys have the same configuration
+regardess of their replication mode.
 
 ## Overview
+
 The postgres sitter is an agent co-located with each Postgres Peer.
 
 The sitter is responsible for:
@@ -164,7 +180,10 @@ The sitter is responsible for:
 - Primary failover.
 - Primary leader election.
 
-The Postgres instance can only be started/stopped by the Sitter, at no time can Postgres start/stop on its own. The Sitter is only changing replication role state of the peers in the event of a primary failure, and not in the event of standby failures. This is described in further detail in the failure section.
+The Postgres instance can only be started/stopped by the Sitter, at no time can
+Postgres start/stop on its own. The Sitter is only changing replication role
+state of the peers in the event of a primary failure, and not in the event of
+standby failures. This is described in further detail in the failure section.
 
 The responsibilities of the Sitter is best described via examples.
 
@@ -183,31 +202,51 @@ Bootstrapping occurs this way:
 
 Elaborating on the election process:
 
-Each peer creates an ephemeral||sequence znode under the path /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard- with their postgres url as the data. This results in the following state in Zookeeper:
+Each peer creates an ephemeral||sequence znode under the path
+/shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard- with their postgres url as
+the data. This results in the following state in Zookeeper:
 
   /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard-00000 -> {A.url}
   /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard-00001 -> {B.url}
   /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard-00002 -> {C.url}
 
-Each peer then sets a watch on the path /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/ and is notified of any changes
-to that path. The roles of the Shard is determined by the sequence number of each Peer's znode, in ascending order.
-With this example, A becomes the primary, B becomes the synchronous standby, and C becomse the asynchrnous standby.
+Each peer then sets a watch on the path
+/shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/ and is notified of any changes to
+that path. The roles of the Shard is determined by the sequence number of each
+Peer's znode, in ascending order.  With this example, A becomes the primary, B
+becomes the synchronous standby, and C becomse the asynchrnous standby.
 
 ## Failure of a Single Peer in a Shard.
 
-Each Shard can tolerate failures of any single Peer in the Shard. With the exception of a primary failure, the Sitter does not
-actively participate in the failover process. Postgres will automatically promote the asynchronous standby to synchronous should the synchronous standby fail as part of its replication process. The Sitter periodically checks the health status of Postgres along with its session to Zookeeper. If either returns error, the Sitter shuts down postgres and disconnects its session with Zookeeper.
+Each Shard can tolerate failures of any single Peer in the Shard. With the
+exception of a primary failure, the Sitter does not actively participate in the
+failover process. Postgres will automatically promote the asynchronous standby
+to synchronous should the synchronous standby fail as part of its replication
+process. The Sitter periodically checks the health status of Postgres along
+with its session to Zookeeper. If either returns error, the Sitter shuts down
+postgres and disconnects its session with Zookeeper.
 
 ### Primary Fails
-The Sitters on both the synchronous and asynchronous standby, due to their watches on the primary's zookeeper znode, will be notified that the primary is offline. Both standbys are also aware of who the synchronous standby by checking with the registrar service. The synchronous standby assumes the role of primary, and the async becomse the synchronous standby. This is only case where there will be a small window of time where writes will return 500s.
+
+The Sitters on both the synchronous and asynchronous standby, due to their
+watches on the primary's zookeeper znode, will be notified that the primary is
+offline. Both standbys are also aware of who the synchronous standby by checking
+with the registrar service. The synchronous standby assumes the role of primary,
+and the async becomse the synchronous standby. This is only case where there
+will be a small window of time where writes will return 500s.
 
 ### Synchronous Standby Fails
 
-The primary will automatically fail over to the asynchronous standby. The asynchronous standby now assumes the role of the synchronous standby. The Sitter on the primary will update the shard info in zookeeper under /shards/shardid to reflect the new membership of the shard.
+The primary will automatically fail over to the asynchronous standby.
+The asynchronous standby now assumes the role of the synchronous standby. The
+Sitter on the primary will update the shard info in zookeeper under
+/shards/shardid to reflect the new membership of the shard.
 
 ### Asynchronous Standby Fails
 
-If the Asynchronous standby is unavailable, no Postgres actions are taken. The Sitter on the primary will update the shard info in Zookeeper to reflect the loss of the asynchronous peer.
+If the Asynchronous standby is unavailable, no Postgres actions are taken. The
+Sitter on the primary will update the shard info in Zookeeper to reflect the
+loss of the asynchronous peer.
 
 ## Inserting a new Peer into a Shard
 
