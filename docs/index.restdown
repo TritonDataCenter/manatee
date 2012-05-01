@@ -8,7 +8,7 @@ apisections:
 
 This document describes the high level design for Manatee - A system built on
 top of Postgres synchronous replication to deliver a Postgres cluster that is
-consistent and partition tolerant whilst maxmimizing availability.
+consistent and partition tolerant whilst maximizing availability.
 
 # Background
 
@@ -51,8 +51,11 @@ of write availability until an operator can be engaged.
 A Postgres shard consisting of 3 peers must be able to:
 
 1) Provide group membership discovery to clients.
-2) Remain available to writes/reads in the face of failure of any 1 peer - Specifically, re-assigning the role of primary to a standby peer in the face of primary failure.
-3) Automate peer recovery - If a peer is down for an amount of time that exceeds the WAL cache, backup/restore from another peer should be automatic.
+2) Remain available to writes/reads in the face of failure of any 1 peer -
+Specifically, re-assigning the role of primary to a standby peer in the face of
+primary failure.
+3) Automate peer recovery - If a peer is down for an amount of time that exceeds
+the WAL cache, backup/restore from another peer should be automatic.
 
 With these goals in mind, we can ensure Manatee will be available, consistent,
 and partition tolerant as long as each shard doesn't lose more than 1 out of its
@@ -86,7 +89,7 @@ described in the Registrar Service section.
 A Postgres Shard in Manatee is uniquely identified by a GUID.
 The Shard consists of 3 mirrored Postgres instances, henceforth known as Peers.
 Shard membership is stored under a configurable persistent znode under
-the zookeeper path:
+the Zookeeper path:
 
   /shards/
 
@@ -108,7 +111,7 @@ memberships change, the entry will be updated accordingly.
 
 This is the external REST service that allows clients to query for the current
 status of all Postgres Shards in Manatee. Note we could have consumers of
-Manatee directly query zookeeper, (which would have the benefit of push
+Manatee directly query Zookeeper, (which would have the benefit of push
 notifications). However, the REST service allows us to reduce the load to
 Zookeeper.
 
@@ -169,7 +172,7 @@ regardess of their replication mode.
 
 ## Overview
 
-The postgres sitter is an agent co-located with each Postgres Peer.
+The Postgres sitter is an agent co-located with each Postgres Peer.
 
 The sitter is responsible for:
 - Replication role (primary, standby) determination.
@@ -193,17 +196,20 @@ Let's call the 3 sitters A, B, and C which belong to shard 3e051a10-4ab9-4aee-a2
 Bootstrapping occurs this way:
 - The standard [zookeeper election algorithm](http://zookeeper.apache.org/doc/trunk/recipes.html#sc_leaderElection) is run on all 3 sitters.
 - The leader becomes primary.
-- The remaining two peers become the sync and async standbys, depending on who had the larger sequence.
-- The primary initializes its postgres instance.
+- The remaining two peers become the sync and async standbys, depending on who
+had the larger sequence.
+- The primary initializes its Postgres instance.
 - The standbys initiate db restoration by calling the Restore service.
 - After successful restores, the standbys start their postgers instance.
 - The primary checks the status of replication via the pg_stat_replication table.
-- If replication has been successfully setup, the primary publishes group membership to the Registrar service. This indicates to clients that this Shard is ready to take writes.
+- If replication has been successfully setup, the primary publishes group
+membership to the Registrar service. This indicates to clients that this Shard
+is ready to take writes.
 
 Elaborating on the election process:
 
 Each peer creates an ephemeral||sequence znode under the path
-/shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard- with their postgres url as
+/shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard- with their Postgres url as
 the data. This results in the following state in Zookeeper:
 
   /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard-00000 -> {A.url}
@@ -224,12 +230,12 @@ failover process. Postgres will automatically promote the asynchronous standby
 to synchronous should the synchronous standby fail as part of its replication
 process. The Sitter periodically checks the health status of Postgres along
 with its session to Zookeeper. If either returns error, the Sitter shuts down
-postgres and disconnects its session with Zookeeper.
+Postgres and disconnects its session with Zookeeper.
 
 ### Primary Fails
 
 The Sitters on both the synchronous and asynchronous standby, due to their
-watches on the primary's zookeeper znode, will be notified that the primary is
+watches on the primary's Zookeeper znode, will be notified that the primary is
 offline. Both standbys are also aware of who the synchronous standby by checking
 with the registrar service. The synchronous standby assumes the role of primary,
 and the async becomse the synchronous standby. This is only case where there
@@ -239,7 +245,7 @@ will be a small window of time where writes will return 500s.
 
 The primary will automatically fail over to the asynchronous standby.
 The asynchronous standby now assumes the role of the synchronous standby. The
-Sitter on the primary will update the shard info in zookeeper under
+Sitter on the primary will update the shard info in Zookeeper under
 /shards/shardid to reflect the new membership of the shard.
 
 ### Asynchronous Standby Fails
@@ -251,7 +257,13 @@ loss of the asynchronous peer.
 ## Inserting a new Peer into a Shard
 
 Inserting works with the following algorithm:
-- Perform leader election, i.e. set a watch and create an emphemeral-sequence znode under the shard path. If there were any other peers in the shard before you joined, you would not become leader because you would have a higher sequenced znode.
-- If you are the leader, then the process is the same as the bootstrap process described earlier.
-- If you are not the leader, then join the shard as a standby. Note you do not determine whether you are the async or sync standby, you merely replicate from the primary and the primary will determine your standby role.
+- Perform leader election, i.e. set a watch and create an emphemeral-sequence
+znode under the shard path. If there were any other peers in the shard before
+you joined, you would not become leader because you would have a higher
+sequenced znode.
+- If you are the leader, then the process is the same as the bootstrap process
+described earlier.
+- If you are not the leader, then join the shard as a standby. Note you do not
+determine whether you are the async or sync standby, you merely replicate from
+the primary and the primary will determine your standby role.
 
