@@ -134,23 +134,6 @@ test('restart postgres', function(t) {
   });
 });
 
-test('stop postgres', function(t) {
-  POSTGRES_MAN.stop(function(err) {
-    if (err) {
-      t.fail(err);
-      t.end();
-    }
-    POSTGRES_MAN.stat(function(stat, err) {
-      if (err) {
-        t.fail(err);
-        t.end();
-      }
-      t.equal(stat, 1);
-      t.end();
-    });
-  });
-});
-
 tap.tearDown(function() {
   process.exit(tap.output.results.fail);
 });
