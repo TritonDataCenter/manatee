@@ -24,7 +24,7 @@
     "shelljs": "0.0.5pre4",
     "url": "0.4.9",
     "vargs": "0.1.0",
-    "zookeeper": "git://github.com/mcavage/node-zookeeper"
+    "zookeeper": "git://github.com/mcavage/node-zookeeper#33dd26b4e7a1efeafe499aac0b8716859bee9189"
   },
   "devDependencies": {
     "byline": "2.0.1",
