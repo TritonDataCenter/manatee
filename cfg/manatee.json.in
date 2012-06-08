@@ -1,0 +1,51 @@
+{
+  "shardCfg": {
+    "shardPath": "SHARD_PATH",
+    "shardId": "SHARD_ID",
+    "registrarPath": "REGISTRAR_PATH",
+    "registrarPathPrefix": "REGISTRAR_PATH_PREFIX",
+    "zkCfg": {
+      "connect": "ZK_URL",
+      "timeout": ZK_TIMEOUT,
+      "debug_level": 0,
+      "host_order_deterministic": false,
+      "data_as_buffer": false
+    },
+    "url": "PG_URL",
+    "xlogPath": "XLOG_PATH",
+    "xlogPathPrefix": "XLOG_PATH_PREFIX"
+  },
+
+  "postgresManCfg": {
+    "pgCtlPath": "/opt/local/bin/pg_ctl",
+    "postgresPath": "/opt/local/bin/postgres",
+    "pgInitDbPath": "/opt/local/bin/initdb",
+    "hbaConf": "./cfg/pg_hba.conf",
+    "postgresConf": "./cfg/postgresql.conf",
+    "recoveryConf": "./cfg/recovery.conf",
+    "dbUser": "postgres",
+    "dataDir": "PG_DIR",
+    "url": "PG_URL",
+    "healthChkInterval": 1000,
+    "opsTimeout": 10000,
+    "backupClientCfg": {
+      "dataset": "DATASET",
+      "snapshotDir": "SNAPSHOT_DIR",
+      "zfsHost": "ZFS_RECV_IP",
+      "zfsPort": ZFS_RECV_PORT,
+      "pollInterval": 100,
+      "zfsRecvPath": "./zfs_recv"
+    }
+  },
+  "xlogInterval": 1000,
+  "xlogSlack": 1,
+  "xlogTimeout": 10000,
+  "snapShotterCfg": {
+    "dataset": "DATASET",
+    "snapshotDir": "SNAPSHOT_DIR",
+    "pollInterval": 5000,
+    "snapshotNumber": 5,
+    "pgUrl": "PG_URL"
+  }
+}
+

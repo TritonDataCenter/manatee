@@ -1,0 +1,11 @@
+{
+  "set_customer_metadata": {
+    "MANATEE_SHARD_PATH": "/shard/1",
+    "MANATEE_SHARD_ID": "1",
+    "MANATEE_REGISTRAR_PATH": "/registrar/1",
+    "MANATEE_REGISTRAR_PATH_PREFIX": "/registrar",
+    "MANATEE_ZK_URL": "10.88.88.52:2181",
+    "MANATEE_ZK_TIMEOUT": "200",
+    "MANATEE_ZFS_RECV_PORT": "1234"
+  }
+}

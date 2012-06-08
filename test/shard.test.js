@@ -1,15 +1,25 @@
 var Logger = require('bunyan');
 var tap = require('tap');
-var common = require('../lib/common');
 var test = require('tap').test;
 var Shard = require('../lib/shard');
 var ZooKeeper = require('zookeeper');
 var uuid = require('node-uuid');
 
+var LOG = new Logger({
+  name: 'shard-test',
+  src: true,
+  level: 'trace'
+});
+var REGISTRAR_PATH = '/' + uuid() + 'registrar';
 var SHARD_ID = uuid();
+var SHARD_PATH;
 
-var MEMBERS = 'toto, dorothy, lion';
+var PRIMARY;
+var PRIMARY_URL = 'tcp://wizard@localhost:5432/oz'
+var SYNC;
+var ASYNC;
 
+var ZK;
 var ZK_CFG = {
  connect: 'localhost:2181',
  timeout: 200000,
@@ -18,44 +28,25 @@ var ZK_CFG = {
  data_as_buffer: false
 };
 
-var URL = 'localhost';
-var BASE_PATH;
-var REGISTRAR_PATH = '/' + uuid() + 'registrar';
-var EPATH;
-var ZNODE_TYPE = ZooKeeper.ZOO_SEQUENCE | ZooKeeper.ZOO_EPHEMERAL;
-var log = new Logger({
-  name: 'scallop-test',
-  src: true,
-  level: 'trace'
-});
-
-var PRIMARY;
-var SYNC;
-var ASYNC;
-
-var zk;
-var zks = [];
-var shards = [];
-test('setup-local', function(t) {
-
-  zk = new ZooKeeper(ZK_CFG);
-  zk.connect(function(err) {
+test('create shard znode', function(t) {
+  ZK = new ZooKeeper(ZK_CFG);
+  ZK.connect(function(err) {
     if (err) {
       t.fail(err);
       t.end();
     }
 
-    zk.a_create('/' + SHARD_ID, null, ZooKeeper.ZOO_PERSISTENT,
-                function(rc, msg, path) {
-
+    ZK.a_create('/' + SHARD_ID, null, ZooKeeper.ZOO_PERSISTENT,
+                function(rc, msg, path)
+    {
       if (rc !== 0) {
         console.log(rc, msg, path);
         t.fail();
         t.end();
       }
 
-      log.info('successfully created a znode', path);
-      BASE_PATH = path;
+      LOG.info('successfully created a znode', path);
+      SHARD_PATH = path;
       t.end();
     });
   });
@@ -63,7 +54,7 @@ test('setup-local', function(t) {
 
 test('setup-registrar', function(t) {
   // create /REGISTRAR_PATH
-  zk.a_create(REGISTRAR_PATH, null, ZooKeeper.ZOO_PERSISTENT,
+  ZK.a_create(REGISTRAR_PATH, null, ZooKeeper.ZOO_PERSISTENT,
     function(rc, msg, path) {
 
     if (rc !== 0) {
@@ -71,552 +62,291 @@ test('setup-registrar', function(t) {
       t.fail();
       t.end();
     }
+    LOG.info('successfully created a znode', path);
+    t.end();
+  });
+});
 
-    log.info('successfully created a znode', path);
-    // create /REGISTRAR_PATH/SHARD_ID
-    zk.a_create(REGISTRAR_PATH + '/' + SHARD_ID, null,
-                ZooKeeper.ZOO_PERSISTENT, function(rc, msg, path) {
-      if (rc !== 0) {
-        console.log(rc, msg, path);
-        t.fail();
+test('new peer in empty shard', function(t) {
+  PRIMARY = new Shard({
+    log: LOG,
+    shardPath: SHARD_PATH,
+    shardId: SHARD_ID,
+    registrarPath: REGISTRAR_PATH + '/' + SHARD_ID,
+    registrarPathPrefix: REGISTRAR_PATH,
+    zkCfg: ZK_CFG,
+    url: 'tcp://wizard@localhost:12345/oz'
+  });
+
+  PRIMARY.once('primary', function() {
+    t.ok(PRIMARY.standbys);
+    t.equal(PRIMARY.standbys.length, 0);
+    var shardInfo = {
+      primary: PRIMARY.url
+    };
+    PRIMARY.writeRegistrar(shardInfo, function(err) {
+      if (err) {
+        t.fail(err);
         t.end();
       }
       t.end();
     });
   });
+  PRIMARY.once('err', function(err) {
+    t.fail(err);
+    t.end();
+  });
+  PRIMARY.init();
 });
 
-test('setup-shards', function(t) {
-  zk = new ZooKeeper(ZK_CFG);
+test('add another peer to shard', function(t) {
+  SYNC = new Shard({
+    log: LOG,
+    shardPath: SHARD_PATH,
+    shardId: SHARD_ID,
+    registrarPath: REGISTRAR_PATH + '/' + SHARD_ID,
+    registrarPathPrefix: REGISTRAR_PATH,
+    zkCfg: ZK_CFG,
+    url: 'tcp://dorothy@localhost:12345/oz'
+  });
+
   var count = 0;
 
-  EPATH = '/' + SHARD_ID + '/shard-';
-  for (i = 0; i < 3; i++) {
-    var shard = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, i, log);
-    shards.push(shard);
-    shard.once('error', function(err) {
-      t.fail();
+  SYNC.once('standby', function() {
+    t.ok(SYNC);
+    t.ok(SYNC.shardInfo);
+    if (++count === 2) {
       t.end();
-    });
-    shard.once('init', function() {
-      count++;
-      if (count === 3) {
-        //wait a couple seconds for shards to converge.
-        setTimeout(function() { t.end(); }, 200);
-      }
-    });
-    shard.init();
-  }
-});
-
-test('steady state', function(t) {
-  shards.forEach(function(shard) {
-    t.equals(shard.role,
-      parseInt(shard.myPath.substring(shard.myPath.length - 1), 10));
-    t.equal(shard.primary.path.substring(shard.primary.path.length - 1), '0');
-    t.equal(shard.sync.path.substring(shard.sync.path.length - 1), '1');
-    t.equal(shard.async.path.substring(shard.async.path.length - 1), '2');
-
-    switch (shard.role) {
-      case 0:
-        PRIMARY = shard;
-        break;
-      case 1:
-        SYNC = shard;
-        break;
-      case 2:
-        ASYNC = shard;
-        break;
-      default:
-        t.fail();
-        t.end();
-        break;
     }
   });
-  t.end();
+  SYNC.on('err', function(err) {
+    t.fail(err);
+    t.end();
+  });
+
+  PRIMARY.once('standby-change', function(standbys) {
+    t.ok(standbys);
+    t.equal(standbys.length, 1);
+    t.equal(standbys[0], 'tcp://dorothy@localhost:12345/oz');
+    // update the registrar
+    var shardInfo = {
+      primary: 'tcp://wizard@localhost:12345/oz',
+      sync: standbys[0]
+    }
+
+    PRIMARY.writeRegistrar(shardInfo, function(err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+
+      t.ok(PRIMARY.shardInfo);
+      t.equals(JSON.stringify(PRIMARY.shardInfo), JSON.stringify(shardInfo));
+      if (++count === 2) {
+        t.end();
+      }
+    });
+
+  });
+
+  SYNC.init();
+});
+
+test('add another peer to the shard', function(t) {
+  ASYNC = new Shard({
+    log: LOG,
+    shardPath: SHARD_PATH,
+    shardId: SHARD_ID,
+    registrarPath: REGISTRAR_PATH + '/' + SHARD_ID,
+    registrarPathPrefix: REGISTRAR_PATH,
+    zkCfg: ZK_CFG,
+    url: 'tcp://toto@localhost:12345/oz'
+  });
+  var count = 0;
+  ASYNC.once('standby', function() {
+    t.ok(ASYNC);
+    t.ok(ASYNC.shardInfo);
+    if (++count === 2) {
+      t.end();
+    }
+  });
+  ASYNC.once('err', function(err) {
+    t.fail(err);
+    t.end();
+  });
+
+  PRIMARY.once('standby-change', function(standbys) {
+    t.ok(standbys);
+    t.equal(standbys.length, 2);
+    t.equal(standbys[1], 'tcp://dorothy@localhost:12345/oz');
+    t.equal(standbys[0], 'tcp://toto@localhost:12345/oz');
+    // update the registrar
+    var shardInfo = {
+      primary: 'tcp://wizard@localhost:12345/oz',
+      sync: 'tcp://dorothy@localhost:12345/oz',
+      async: 'tcp://toto@localhost:12345/oz'
+    }
+
+    PRIMARY.writeRegistrar(shardInfo, function(err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+
+      t.ok(PRIMARY.shardInfo);
+      t.equals(JSON.stringify(PRIMARY.shardInfo), JSON.stringify(shardInfo));
+      if (++count === 2) {
+        t.end();
+      }
+    });
+  });
+
+  ASYNC.init();
 });
 
 test('primary dies', function(t) {
-  var initCount = 0;
-  SYNC.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    PRIMARY = shard;
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
+  SYNC.once('primary', function(standbys) {
+    t.ok(standbys);
+    t.equal(standbys[0], 'tcp://toto@localhost:12345/oz');
+    SYNC.writeRegistrar({
+      primary: 'tcp://dorothy@localhost:12345/oz',
+      sync: 'tcp://toto@localhost:12345/oz'
+    }, function(){});
   });
-
-  ASYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    SYNC = shard;
-    ASYNC = null;
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  PRIMARY.disconnect();
-});
-
-test('add a peer', function(t) {
-  ASYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.once('init', function(shard) {
-    t.equals(shard.role, 2);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.init();
-});
-
-test('sync dies', function(t) {
-  initCount = 0;
-
-  PRIMARY.once('init', function(shard) {
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  ASYNC.once('init', function(shard) {
-    t.equals(shard.role, 1);
-    SYNC = shard;
-    ASYNC = null;
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  SYNC.disconnect();
-});
-
-test('add a peer', function(t) {
-  ASYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.once('init', function(shard) {
-    t.equals(shard.role, 2);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.init();
-});
-
-test('async dies', function(t) {
-  initCount = 0;
-
-  PRIMARY.once('init', function(shard) {
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  SYNC.once('init', function(shard) {
-    t.equals(shard.role, 1);
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  ASYNC.disconnect();
-});
-
-test('add a peer', function(t) {
-  ASYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.once('init', function(shard) {
-    t.equals(shard.role, 2);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.init();
-});
-
-test('primary and sync dies', function(t) {
-  ASYNC.once('init', function(shard) {
-    t.equals(shard.role, 0);
-    t.equals(shard.sync, null);
-    t.equals(shard.async, null);
-    PRIMARY = shard;
-    SYNC = null;
-    ASYNC = null;
+  ASYNC.once('primary-change', function(shardInfo) {
+    t.ok(shardInfo);
+    t.equal(shardInfo.primary, 'tcp://dorothy@localhost:12345/oz');
+    t.equal(shardInfo.sync, 'tcp://toto@localhost:12345/oz');
     t.end();
   });
-
-  PRIMARY.disconnect();
-  SYNC.disconnect();
+  PRIMARY.session.close();
 });
 
-test('add a peer', function(t) {
-  SYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    initCount++;
-    if (initCount == 2) {
+test('primary dies', function(t) {
+  PRIMARY = ASYNC;
+  PRIMARY.once('primary', function(standbys) {
+    t.ok(standbys);
+    t.equal(standbys.length, 0);
+    PRIMARY.writeRegistrar({
+      primary: 'tcp://toto@localhost:12345/oz'
+    }, function(err){
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
       t.end();
-    }
+    });
   });
-
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  SYNC.init();
+  LOG.info('closing sync sessions');
+  SYNC.session.close();
 });
 
-test('add a peer', function(t) {
-  ASYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
+test('add sync peer back to shard', function(t) {
+  ASYNC = null;
+  SYNC = new Shard({
+    log: LOG,
+    shardPath: SHARD_PATH,
+    shardId: SHARD_ID,
+    registrarPath: REGISTRAR_PATH + '/' + SHARD_ID,
+    registrarPathPrefix: REGISTRAR_PATH,
+    zkCfg: ZK_CFG,
+    url: 'tcp://dorothy@localhost:12345/oz'
   });
 
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.once('init', function(shard) {
-    t.equals(shard.role, 2);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.init();
-});
-
-test('primary and async dies', function(t) {
-  SYNC.once('init', function(shard) {
-    t.equals(shard.role, 0);
-    t.equals(shard.sync, null);
-    t.equals(shard.async, null);
-    PRIMARY = shard;
-    SYNC = null;
-    ASYNC = null;
-    t.end();
-  });
-
-  PRIMARY.disconnect();
-  ASYNC.disconnect();
-});
-
-test('add a peer', function(t) {
-  SYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  SYNC.init();
-});
-
-test('add a peer', function(t) {
-  ASYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.once('init', function(shard) {
-    t.equals(shard.role, 2);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.init();
-});
-
-test('sync and async dies', function(t) {
-  PRIMARY.once('init', function(shard) {
-    t.equals(shard.role, 0);
-    t.equals(shard.sync, null);
-    t.equals(shard.async, null);
-    PRIMARY = shard;
-    SYNC = null;
-    ASYNC = null;
-    t.end();
-  });
-
-  SYNC.disconnect();
-  ASYNC.disconnect();
-});
-
-test('add a peer', function(t) {
-  SYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    initCount++;
-    if (initCount == 2) {
-      t.end();
-    }
-  });
-
-  SYNC.init();
-});
-
-test('add a peer', function(t) {
-  ASYNC = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 4, log);
-  var initCount = 0;
-  PRIMARY.once('init', function(shard) {
-    console.log(SYNC);
-    t.equals(shard.role, 0);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  SYNC.once('init', function(shard) {
-    console.log(ASYNC);
-    t.equals(shard.role, 1);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.once('init', function(shard) {
-    t.equals(shard.role, 2);
-    t.equals(shard.primary.path, PRIMARY.myPath);
-    t.equals(shard.sync.path, SYNC.myPath);
-    t.equals(shard.async.path, ASYNC.myPath);
-    initCount++;
-    if (initCount == 3) {
-      t.end();
-    }
-  });
-
-  ASYNC.init();
-});
-
-test('add a fourth peer', function(t) {
-  var fourth = new Shard(BASE_PATH, REGISTRAR_PATH, ZK_CFG, 'fooo', log);
   var count = 0;
-  PRIMARY.on('error', function() {
-    count++;
-    if (count == 4) {
+
+  SYNC.once('standby', function() {
+    t.ok(SYNC);
+    t.ok(SYNC.shardInfo);
+    if (++count === 2) {
       t.end();
     }
   });
+  SYNC.on('err', function(err) {
+    t.fail(err);
+    t.end();
+  });
 
-  SYNC.on('error', function() {
-    count++;
-    if (count == 4) {
+  PRIMARY.once('standby-change', function(standbys) {
+    t.ok(standbys);
+    LOG.info(standbys);
+    t.equal(standbys.length, 1);
+    t.equal(standbys[0], 'tcp://dorothy@localhost:12345/oz');
+    // update the registrar
+    var shardInfo = {
+      primary: 'tcp://toto@localhost:12345/oz',
+      sync: 'tcp://dorothy@localhost:12345/oz'
+    }
+
+    PRIMARY.writeRegistrar(shardInfo, function(err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+
+      t.ok(PRIMARY.shardInfo);
+      t.equals(JSON.stringify(PRIMARY.shardInfo), JSON.stringify(shardInfo));
+      if (++count === 2) {
+        t.end();
+      }
+    });
+
+  });
+
+  SYNC.init();
+});
+
+test('add async peer back to the shard', function(t) {
+  ASYNC = new Shard({
+    log: LOG,
+    shardPath: SHARD_PATH,
+    shardId: SHARD_ID,
+    registrarPath: REGISTRAR_PATH + '/' + SHARD_ID,
+    registrarPathPrefix: REGISTRAR_PATH,
+    zkCfg: ZK_CFG,
+    url: 'tcp://wizard@localhost:12345/oz'
+  });
+  var count = 0;
+  ASYNC.once('standby', function() {
+    t.ok(ASYNC);
+    t.ok(ASYNC.shardInfo);
+    if (++count === 2) {
       t.end();
     }
   });
-
-  ASYNC.on('error', function() {
-    count++;
-    if (count == 4) {
-      t.end();
-    }
+  ASYNC.once('err', function(err) {
+    t.fail(err);
+    t.end();
   });
 
-  fourth.on('error', function() {
-    count++;
-    if (count == 4) {
-      t.end();
+  PRIMARY.once('standby-change', function(standbys) {
+    t.ok(standbys);
+    t.equal(standbys.length, 2);
+    LOG.info(standbys);
+    t.equal(standbys[1], 'tcp://dorothy@localhost:12345/oz');
+    t.equal(standbys[0], 'tcp://wizard@localhost:12345/oz');
+    // update the registrar
+    var shardInfo = {
+      async: 'tcp://wizard@localhost:12345/oz',
+      sync: 'tcp://dorothy@localhost:12345/oz',
+      primary: 'tcp://toto@localhost:12345/oz'
     }
+
+    PRIMARY.writeRegistrar(shardInfo, function(err) {
+      if (err) {
+        t.fail(err);
+        t.end();
+      }
+
+      t.ok(PRIMARY.shardInfo);
+      t.equals(JSON.stringify(PRIMARY.shardInfo), JSON.stringify(shardInfo));
+      if (++count === 2) {
+        t.end();
+      }
+    });
   });
 
-  fourth.init();
+  ASYNC.init();
 });
 
 tap.tearDown(function() {

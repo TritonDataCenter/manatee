@@ -1,0 +1,10 @@
+{
+  "backupServerCfg": {
+    "port": 8080
+  },
+  "backupSenderCfg": {
+    "zfsSendPath": "/root/manatee/test/zfs_send",
+    "dataset": "zones/a6354a44-6d08-40fb-b4fe-7f58100d6d14/data",
+    "snapshotDir": "/zones/a6354a44-6d08-40fb-b4fe-7f58100d6d14/data/.zfs/snapshot/"
+  }
+}
