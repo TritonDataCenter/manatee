@@ -1,7 +1,8 @@
 var bunyan = require('bunyan');
 var fs = require('fs');
 var optimist = require('optimist');
-var Sitter = require('./lib/sitter');
+var BackupServer = require('./lib/backupServer');
+var BackupSender = require('./lib/backupSender');
 
 ///--- Mainline
 
@@ -39,16 +40,12 @@ function readConfig() {
 }
 
 var cfg = readConfig();
-cfg.log = LOG;
-cfg.snapShotterCfg.log = LOG;
-cfg.postgresManCfg.log = LOG;
-cfg.postgresManCfg.backupClientCfg.log = LOG;
-cfg.shardCfg.log = LOG;
+cfg.backupServerCfg.log = LOG;
+cfg.backupSenderCfg.log = LOG;
+var server = new BackupServer(cfg.backupServerCfg);
 
-var sitter = new Sitter(cfg);
-sitter.init();
+cfg.backupSenderCfg.queue = server.queue;
 
-process.on('uncaughtException', function (err) {
-        LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
-        process.exit(1);
-});
+var BackupSender = new BackupSender(cfg.backupSenderCfg);
+
+server.init();

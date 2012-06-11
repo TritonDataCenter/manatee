@@ -34,7 +34,8 @@ JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
 JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0
-SMF_MANIFESTS_IN = smf/manifests/manatee.xml.in
+#REPO_MODULES	 = src/node-dummy
+SMF_MANIFESTS_IN = smf/manifests/manatee.xml
 
 include ./tools/mk/Makefile.defs
 include ./tools/mk/Makefile.node.defs
@@ -82,6 +83,7 @@ release: setup deps docs $(SMF_MANIFESTS)
 	cp -r   $(ROOT)/build \
 		$(ROOT)/lib \
 		$(ROOT)/manatee.js \
+		$(ROOT)/snapshotter.js \
 		$(ROOT)/node_modules \
 		$(ROOT)/package.json \
 		$(ROOT)/smf \

@@ -1,7 +1,8 @@
 var bunyan = require('bunyan');
-var fs = require('fs');
 var optimist = require('optimist');
-var Sitter = require('./lib/sitter');
+var fs = require('fs');
+var SnapShotter = require('./lib/snapShotter');
+
 
 ///--- Mainline
 
@@ -40,15 +41,13 @@ function readConfig() {
 
 var cfg = readConfig();
 cfg.log = LOG;
-cfg.snapShotterCfg.log = LOG;
-cfg.postgresManCfg.log = LOG;
-cfg.postgresManCfg.backupClientCfg.log = LOG;
-cfg.shardCfg.log = LOG;
 
-var sitter = new Sitter(cfg);
-sitter.init();
+var snapShotter = new SnapShotter(cfg);
 
-process.on('uncaughtException', function (err) {
-        LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
-        process.exit(1);
+snapShotter.on('err', function(err) {
+  LOG.error('got error from snapshotter', err);
+});
+
+snapShotter.start(function() {
+  LOG.info('started snapshotter');
 });

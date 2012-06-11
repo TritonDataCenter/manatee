@@ -7,8 +7,8 @@
 	whereever this package gets installed.
  -->
 
-<service_bundle type="manifest" name="manatee">
-<service name="sds/application/manatee" type="service" version="1">
+<service_bundle type="manifest" name="manatee-snapshotter">
+<service name="sds/application/manatee-snapshotter" type="service" version="1">
 
 <dependency name="network" grouping="require_all" restart_on="error" type="service">
 	<service_fmri value="svc:/network/physical" />
@@ -18,7 +18,7 @@
 	<service_fmri value="svc:/system/filesystem/local" />
 </dependency>
 
-<exec_method type="method" name="start" exec="/opt/local/bin/sudo -u postgres /opt/smartdc/manatee/build/node/bin/node /opt/smartdc/manatee/manatee.js -d -f /opt/smartdc/manatee/cfg/manatee.json | /opt/smartdc/manatee/node_modules/bunyan/bin/bunyan &amp;" timeout_seconds="30" />
+<exec_method type="method" name="start" exec="/opt/smartdc/manatee/build/node/bin/node /opt/smartdc/manatee/snapshotter.js -d -f /opt/smartdc/manatee/cfg/snapshotter.json | /opt/smartdc/manatee/node_modules/bunyan/bin/bunyan &amp;" timeout_seconds="30" />
 <exec_method type="method" name="stop" exec=":kill" timeout_seconds="30" />
 
 <instance name="default" enabled="true" />
@@ -26,7 +26,7 @@
 <stability value='Unstable' />
 
 <template>
-	<common_name><loctext xml:lang="C">Joyent HA Postgres Service</loctext></common_name>
+	<common_name><loctext xml:lang="C">Joyent HA Postgres Service Snapshotter</loctext></common_name>
 </template>
 
 </service>
