@@ -82,7 +82,9 @@ release: setup deps docs $(SMF_MANIFESTS)
 	@mkdir -p $(TMPDIR)/root/opt/smartdc/manatee/ssl
 	cp -r   $(ROOT)/build \
 		$(ROOT)/lib \
+		$(ROOT)/bin \
 		$(ROOT)/manatee.js \
+		$(ROOT)/backupserver.js \
 		$(ROOT)/snapshotter.js \
 		$(ROOT)/node_modules \
 		$(ROOT)/package.json \
