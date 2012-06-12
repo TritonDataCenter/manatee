@@ -38,6 +38,7 @@
     }
   },
   "backupUrl": "BACKUP_URL",
+  "ttl": TTL,
   "xlogInterval": 1000,
   "xlogSlack": 1,
   "xlogTimeout": 10000,
