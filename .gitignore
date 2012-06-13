@@ -7,3 +7,4 @@ cscope.in.out
 cscope.po.out
 cscope.out
 smf/manifests/*.xml
+*.tar.bz2
