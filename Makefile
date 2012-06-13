@@ -26,19 +26,34 @@ ifeq ($(UNAME), SunOS)
 endif
 
 #
+# Env variables
+#
+PATH            := $(NODE_INSTALL)/bin:${PATH}
+
+#
 # Files
 #
-DOC_FILES	 = index.restdown boilerplateapi.restdown
+DOC_FILES	 = index.restdown
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
 JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0
-#REPO_MODULES	 = src/node-dummy
-SMF_MANIFESTS_IN = smf/manifests/manatee.xml
+SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
+		smf/manifests/manatee.xml.in \
+		smf/manifests/snapshotter.xml.in
+
+#
+# Variables
+#
+
+NODE_PREBUILT_VERSION   := v0.6.19
+RELEASE_TARBALL         := manatee-pkg-$(STAMP).tar.bz2
+ROOT                    := $(shell pwd)
+TMPDIR                  := /tmp/$(STAMP)
 
 include ./tools/mk/Makefile.defs
-include ./tools/mk/Makefile.node.defs
+include ./tools/mk/Makefile.node_prebuilt.defs
 include ./tools/mk/Makefile.node_deps.defs
 include ./tools/mk/Makefile.smf.defs
 
@@ -59,14 +74,10 @@ test: $(TAP)
 	TAP=1 $(TAP) test/*.test.js
 
 include ./tools/mk/Makefile.deps
-include ./tools/mk/Makefile.node.targ
+include ./tools/mk/Makefile.node_prebuilt.targ
 include ./tools/mk/Makefile.node_deps.targ
 include ./tools/mk/Makefile.smf.targ
 include ./tools/mk/Makefile.targ
-
-ROOT                    := $(shell pwd)
-RELEASE_TARBALL         := manatee-pkg-$(STAMP).tar.bz2
-TMPDIR                  := /tmp/$(STAMP)
 
 .PHONY: setup
 setup: | $(NPM_EXEC)
@@ -79,7 +90,6 @@ release: setup deps docs $(SMF_MANIFESTS)
 	@mkdir -p $(TMPDIR)/site
 	@touch $(TMPDIR)/site/.do-not-delete-me
 	@mkdir -p $(TMPDIR)/root
-	@mkdir -p $(TMPDIR)/root/opt/smartdc/manatee/ssl
 	cp -r   $(ROOT)/build \
 		$(ROOT)/lib \
 		$(ROOT)/bin \
