@@ -23,7 +23,8 @@
     "sprintf": "0.1.0",
     "shelljs": "0.0.5pre4",
     "vargs": "0.1.0",
-    "zookeeper": "git://github.com/mcavage/node-zookeeper#1bc4d4fcfda81267717564ebf57e65f8aa5a203f"
+    "zookeeper": "git://github.com/mcavage/node-zookeeper#1bc4d4fcfda81267717564ebf57e65f8aa5a203f",
+    "zkplus": "0.2.0"
   },
   "devDependencies": {
     "byline": "2.0.1",
