@@ -47,15 +47,17 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 # Variables
 #
 
-NODE_PREBUILT_VERSION   := v0.6.19
-RELEASE_TARBALL         := manatee-pkg-$(STAMP).tar.bz2
-ROOT                    := $(shell pwd)
-TMPDIR                  := /tmp/$(STAMP)
+NODE_PREBUILT_VERSION   := v0.6.18
+
 
 include ./tools/mk/Makefile.defs
 include ./tools/mk/Makefile.node_prebuilt.defs
 include ./tools/mk/Makefile.node_deps.defs
 include ./tools/mk/Makefile.smf.defs
+
+RELEASE_TARBALL         := manatee-pkg-$(STAMP).tar.bz2
+ROOT                    := $(shell pwd)
+TMPDIR                  := /tmp/$(STAMP)
 
 #
 # Repo-specific targets
