@@ -22,11 +22,10 @@ var CFG;
 var LOG = bunyan.createLogger({
   level: ARGV.d ? (ARGV.d > 1 ? 'trace' : 'debug') : 'info',
   name: 'sitter',
- // serializers: {
- //   err: bunyan.stdSerializers.err
- // },
- src: ARGV.d ? true : false,
-  //stream: process.stderr
+  serializers: {
+    err: bunyan.stdSerializers.err
+  },
+  src: ARGV.d ? true : false,
 });
 
 function readConfig() {
