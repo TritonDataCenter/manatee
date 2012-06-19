@@ -48,6 +48,7 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 #
 
 NODE_PREBUILT_VERSION   := v0.6.18
+NODE_PREBUILT_TAG       := zone
 
 
 include ./tools/mk/Makefile.defs
