@@ -56,8 +56,8 @@
 #	NODE_PREBUILT_TAG	The 'sdcnode' project supports special
 #				configuration builds of node, e.g. say a
 #				build configured `--without-ssl`. These
-#				special configurations are given a tag
-#				name that is used in the filename. Optionally
+#				special configurations are given a tag, e.g.
+#				'gz', that is used in the filename. Optionally
 #				specify a tag name here.
 #				(default: empty)
 #
@@ -118,7 +118,7 @@ else
 	NODE_PREBUILT_NAME := $(NODE_PREBUILT_VERSION)-$(NODE_PREBUILT_CC)$(NODE_PREBUILT_CC_VERSION)-$(NODE_PREBUILT_TAG)
 endif
 NODE_PREBUILT_PATTERN := sdcnode-$(NODE_PREBUILT_NAME)-$(NODE_PREBUILT_BRANCH)-.*\.tgz
-NODE_PREBUILT_DIR ?= https://guest:GrojhykMid@stuff.joyent.us/stuff/builds/sdcnode/$(NODE_PREBUILT_BRANCH)-latest/sdcnode/
+NODE_PREBUILT_DIR ?= https://download.joyent.com/pub/build/sdcnode/$(NODE_PREBUILT_BRANCH)-latest/sdcnode/
 ifeq ($(shell echo $(NODE_PREBUILT_DIR) | cut -c 1-4),http)
 	NODE_PREBUILT_BASE := $(shell curl -ksS --fail --connect-timeout 5 $(NODE_PREBUILT_DIR) | grep 'href=' | cut -d'"' -f2 | grep "^$(NODE_PREBUILT_PATTERN)$$" | sort | tail -1)
 	ifneq ($(NODE_PREBUILT_BASE),)
