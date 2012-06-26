@@ -18,7 +18,25 @@
 	<service_fmri value="svc:/system/filesystem/local" />
 </dependency>
 
-<exec_method type="method" name="start" exec="/opt/smartdc/manatee/build/node/bin/node /opt/smartdc/manatee/backupserver.js -d -f /opt/smartdc/manatee/cfg/backupserver.json | /opt/smartdc/manatee/node_modules/bunyan/bin/bunyan &amp;" timeout_seconds="30" />
+<exec_method type="method"
+	     name="start"
+	     exec="node backupserver.js -d -f cfg/backupserver.json &amp;"
+	     timeout_seconds="30">
+    <method_context working_directory="/opt/smartdc/manatee">
+	<method_credential user="root"
+			   group="root"
+			   privileges="basic,net_privaddr"/>
+	<method_environment>
+	    <envvar name="PATH"
+		    value="/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>
+	    <envvar name="LD_PRELOAD_32"
+		    value="/usr/lib/extendedFILE.so.1" />
+	</method_environment>
+    </method_context>
+</exec_method>
+
+
+
 <exec_method type="method" name="stop" exec=":kill" timeout_seconds="30" />
 
 <instance name="default" enabled="true" />
