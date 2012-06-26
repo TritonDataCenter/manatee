@@ -20,11 +20,11 @@
 
 <exec_method type="method"
 	     name="start"
-	     exec="/opt/local/bin/sudo -u postgres /usr/bin/ctrun -l child -o noorphan node manatee.js -d -f cfg/manatee.json &amp;"
+	     exec="/usr/bin/ctrun -l child -o noorphan node manatee.js -d -f cfg/manatee.json &amp;"
 	     timeout_seconds="30">
     <method_context working_directory="/opt/smartdc/manatee">
-	<method_credential user="root"
-			   group="root"
+	<method_credential user="postgres"
+			   group="postgres"
 			   privileges="basic,net_privaddr"/>
 	<method_environment>
 	    <envvar name="PATH"
