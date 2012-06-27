@@ -20,7 +20,7 @@
 
 <exec_method type="method"
 	     name="start"
-	     exec="sleep 10; /usr/bin/ctrun -l child -o noorphan node manatee.js -d -f cfg/manatee.json &amp;"
+	     exec="/usr/bin/ctrun -l child -o noorphan node manatee.js -d -f cfg/manatee.json &amp;"
 	     timeout_seconds="30">
     <method_context working_directory="/opt/smartdc/manatee">
 	<method_credential user="postgres"
