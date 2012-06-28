@@ -3,5 +3,6 @@
   "snapshotDir": "SNAPSHOT_DIR",
   "pollInterval": SNAPSHOT_INTERVAL,
   "snapshotNumber": SNAPSHOT_NUMBER,
-  "pgUrl": "PG_URL"
+  "pgUrl": "PG_URL",
+  "startupDelay": 30000
 }

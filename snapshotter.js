@@ -41,18 +41,23 @@ function readConfig() {
 var cfg = readConfig();
 cfg.log = LOG;
 
-var snapShotter = new SnapShotter(cfg);
+setTimeout(function(){ startSnapshotter(); }, cfg.startupDelay);
 
-snapShotter.on('err', function(err) {
-  LOG.fatal('got error from snapshotter', err);
-  process.exit(1);
-});
+function startSnapshotter() {
+  var snapShotter = new SnapShotter(cfg);
+
+  snapShotter.on('err', function(err) {
+    LOG.fatal('got error from snapshotter', err);
+    process.exit(1);
+  });
+
+  snapShotter.start(function() {
+    LOG.info('started snapshotter');
+  });
+}
 
 process.on('uncaughtException', function (err) {
   LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
   process.exit(1);
 });
 
-snapShotter.start(function() {
-  LOG.info('started snapshotter');
-});
