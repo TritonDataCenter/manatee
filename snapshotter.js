@@ -44,7 +44,13 @@ cfg.log = LOG;
 var snapShotter = new SnapShotter(cfg);
 
 snapShotter.on('err', function(err) {
-  LOG.error('got error from snapshotter', err);
+  LOG.fatal('got error from snapshotter', err);
+  process.exit(1);
+});
+
+process.on('uncaughtException', function (err) {
+  LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
+  process.exit(1);
 });
 
 snapShotter.start(function() {

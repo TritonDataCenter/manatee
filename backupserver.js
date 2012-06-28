@@ -48,3 +48,8 @@ cfg.backupSenderCfg.queue = server.queue;
 var BackupSender = new BackupSender(cfg.backupSenderCfg);
 
 server.init();
+
+process.on('uncaughtException', function (err) {
+  LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
+  process.exit(1);
+});

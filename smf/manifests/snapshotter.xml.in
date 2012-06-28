@@ -20,12 +20,9 @@
 
 <exec_method type="method"
 	     name="start"
-	     exec="node snapshotter.js -d -f cfg/snapshotter.json &amp;"
+	     exec="sudo -u postgres node snapshotter.js -d -f cfg/snapshotter.json &amp;"
 	     timeout_seconds="30">
     <method_context working_directory="/opt/smartdc/manatee">
-	<method_credential user="root"
-			   group="root"
-			   privileges="basic,net_privaddr"/>
 	<method_environment>
 	    <envvar name="PATH"
 		    value="/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>

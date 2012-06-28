@@ -48,6 +48,6 @@ var sitter = new Sitter(cfg);
 sitter.init();
 
 process.on('uncaughtException', function (err) {
-        LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
-        process.exit(1);
+  LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
+  process.exit(1);
 });
