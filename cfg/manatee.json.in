@@ -37,6 +37,7 @@
       "zfsRecvPath": "ZFS_RECV_PATH"
     }
   },
+  "startupDelay": 20000,
   "backupUrl": "BACKUP_URL",
   "ttl": TTL,
   "xlogInterval": 1000,

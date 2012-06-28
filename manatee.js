@@ -44,8 +44,15 @@ cfg.postgresManCfg.log = LOG;
 cfg.postgresManCfg.backupClientCfg.log = LOG;
 cfg.shardCfg.log = LOG;
 
-var sitter = new Sitter(cfg);
-sitter.init();
+/**
+ * Delay the start of manatee to account of ZK session timeouts
+ */
+setTimeout(function() { startSitter(); }, cfg.startupDelay);
+
+function startSitter() {
+  var sitter = new Sitter(cfg);
+  sitter.init();
+}
 
 process.on('uncaughtException', function (err) {
   LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
