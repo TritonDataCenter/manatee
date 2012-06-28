@@ -47,8 +47,11 @@ function startSnapshotter() {
   var snapShotter = new SnapShotter(cfg);
 
   snapShotter.on('err', function(err) {
-    LOG.fatal('got error from snapshotter', err);
-    process.exit(1);
+    // only exit if zfs snapshotting fails.
+    if (err.snapshotErr) {
+      LOG.fatal('got error from snapshotter', err);
+      process.exit(1);
+    }
   });
 
   snapShotter.start(function() {
