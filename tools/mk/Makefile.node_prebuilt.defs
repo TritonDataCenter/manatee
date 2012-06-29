@@ -73,7 +73,9 @@
 #				(default: "$BUILD/node")
 #
 #	NPM_FLAGS		extra flags to pass to npm invocations
-#				(default: empty)
+#				The default "--cache" setting should be
+#				preserved, so use "NPM_FLAGS += ..." if adding.
+#				(default: "--cache=$(TOP)/$(BUILD)/npm-cache")
 #
 #
 # Dev Notes:
@@ -104,6 +106,7 @@ NODE_INSTALL	?= $(BUILD)/node
 DISTCLEAN_FILES	+= $(NODE_INSTALL) \
 	$(BUILD)/prebuilt-node-* $(BUILD)/prebuilt-npm-*
 
+NPM_FLAGS	?= --cache=$(TOP)/$(BUILD)/npm-cache
 
 NODE_PREBUILT_BRANCH ?= master
 NODE_PREBUILT_CC := $(CC)

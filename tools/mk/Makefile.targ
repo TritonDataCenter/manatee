@@ -157,27 +157,33 @@ check-bash: $(BASH_FILES:%=%.bashchk) $(BASH_FILES:%=%.bashstyle)
 %.bashstyle: %
 	$(BASHSTYLE) $^
 
-.PHONY: check-jsl check-jsl-node check-jsl-web
-check-jsl: check-jsl-node check-jsl-web
+#
+# The above approach can be slow when there are many files to check because it
+# requires that "make" invoke the check tool once for each file, rather than
+# passing in several files at once.  For the JavaScript check targets, we define
+# a variable for the target itself *only if* the list of input files is
+# non-empty.  This avoids invoking the tool if there are no files to check.
+#
+JSL_NODE_TARGET = $(if $(JSL_FILES_NODE), check-jsl-node)
+.PHONY: check-jsl-node
+check-jsl-node: $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_NODE) $(JSL_FILES_NODE)
 
-check-jsl-node: $(JSL_FILES_NODE:%=%.jslnodechk)
+JSL_WEB_TARGET = $(if $(JSL_FILES_WEB), check-jsl-web)
+.PHONY: check-jsl-web
+check-jsl-web: $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_WEB) $(JSL_FILES_WEB)
 
-check-jsl-web: $(JSL_FILES_WEB:%=%.jslwebchk)
+.PHONY: check-jsl
+check-jsl: $(JSL_NODE_TARGET) $(JSL_WEB_TARGET)
 
-%.jslnodechk: % $(JSL_EXEC)
-	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_NODE) $<
-
-%.jslwebchk: % $(JSL_EXEC)
-	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_WEB) $<
-
+JSSTYLE_TARGET = $(if $(JSSTYLE_FILES), check-jsstyle)
 .PHONY: check-jsstyle
-check-jsstyle: $(JSSTYLE_FILES:%=%.jsstylechk)
-
-%.jsstylechk: % $(JSSTYLE_EXEC)
-	$(JSSTYLE) $(JSSTYLE_FLAGS) $<
+check-jsstyle:  $(JSSTYLE_EXEC)
+	$(JSSTYLE) $(JSSTYLE_FLAGS) $(JSSTYLE_FILES)
 
 .PHONY: check
-check: check-jsl check-jsstyle check-bash
+check: check-jsl $(JSSTYLE_TARGET) check-bash
 	@echo check ok
 
 .PHONY: clean
