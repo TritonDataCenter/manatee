@@ -25,7 +25,7 @@ var LOG = bunyan.createLogger({
   serializers: {
     err: bunyan.stdSerializers.err
   },
-  src: ARGV.d ? true : false,
+  src: ARGV.d ? true : false
 });
 
 function readConfig() {
