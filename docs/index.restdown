@@ -48,7 +48,7 @@ of write availability until an operator can be engaged.
 
 ## The Number 3
 
-Thus, if a Postgres Shard is provisioned with 3 Peers, one primary,
+If a Postgres Shard is provisioned with 3 Peers, one primary,
 one synchronous standby and one asynchronous standby, the Shard can tolerate the
 loss of any 1 Peer without becoming unavailable. Unfortunately, adding more
 Peers past 3 to a Shard does not increase the availability of a Shard. If at
@@ -72,7 +72,7 @@ and partition tolerant as long as each shard doesn't lose more than 1 out of its
 3 peers.
 
 All bets are off if we lose more than 1. In this case, the shard will remain in
-readonly mode until operator intervention.
+read-only mode until operator intervention.
 
 # Overview
 
@@ -82,9 +82,6 @@ Manatee consists of the following logical components:
 - Postgres.
 - Backup/Restore agent.
 - Postgres Sitter.
-- Registrar Service.
-
-![Alt text](https://www.evernote.com/shard/s2/sh/ccfc9fd4-33cd-41ff-a4b4-d42e8d82928b/86a8b088197189b02e11c8c15f6d287d/res/3eaa0165-23a1-4069-92b1-b926146b353c/Manatee_Components-20120501-155449.jpg.jpg "Manatee Component Diagram")
 
 # Zookeeper
 
@@ -99,54 +96,43 @@ described in the Registrar Service section.
 
 # Shards and Peers
 
-A Postgres Shard in Manatee is uniquely identified by a GUID.
+A Postgres Shard in Manatee is uniquely identified by a configurable url, 
+generally something like: 
+
+    1.moray.us-sw-1.joyent.com
+
 The Shard consists of 3 mirrored Postgres instances, henceforth known as Peers.
-Shard membership is stored under a configurable persistent znode under
-the Zookeeper path:
+Each Peer registers itself with an **emphemeral** node under this path in zookeeper:
 
-    /shards/
+    /shard/1.moray.us-sw-1.joyent.com/
 
-While each shard entry is stored under the shard path as an emphemeral znode:
+This node is used for leader election to determine the primary peer of the shard.
 
-    /shards/8d7bda74-7495-4765-80ad-87a1f99ef173
-    /shards/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc
+Shard membership is stored under an emphemeral znode under a configured path:
+
+    /com/joyent/us-sw-1/moray/1/pg
+
+This path is configurable, but generally shared with the binder path of the moray
+shard that postgres is backing.
 
 Each shard entry contains the following JSON object:
 
     {
-      primary: 'postgres://user@ip:port/db',
-      sync: 'postgres://user@ip:port/db',
-      async: 'postgres://user@ip:port/db'
+      "type": "database",
+      "database": {
+        "primary": "tcp://postgres@10.99.99.222:5432/postgres",
+        "sync": "tcp://postgres@10.99.99.37:5432/postgres",
+        "async": "tcp://postgres@10.99.99.89:5432/postgres",
+        "backupUrl": "http://10.99.99.222:12345",
+        "primaryPath": "/shard/1.moray.us-sw-1.joyent.com/shard-0000000023"
+      },
+      "ttl": 10
     }
-
+    
+Only the database object is used by manatee, the other objects in the shard 
+entry are used by the binder for dns purposes.
 The shard entry is updated/created by the current primary in the shard. As group
 memberships change, the entry will be updated accordingly.
-
-# Registrar Service
-
-This is the external REST service that allows clients to query for the current
-status of all Postgres Shards in Manatee. Note we could have consumers of
-Manatee directly query Zookeeper, (which would have the benefit of push
-notifications). However, the REST service allows us to reduce the load to
-Zookeeper.
-
-Internally the Registrar service maintains a connection to Zookeeper and updates
-the shards when changes occur.
-
-## GET /shards
-
-Returns a list of shard URIs.
-
-## GET /shards/:uuid
-
-Returns a shard entry in the format described in the previous section.
-
-## Clients
-
-Clients should maintain a cache of the list of shards. The cache can be configured
-with a TTL. If 500s are received from a particular Postgres shard, e.g.
-the primary is unavailable, or no longer the primary, then the client should
-refresh its cache by querying the Registrar Service.
 
 # Restore Service
 
@@ -186,7 +172,7 @@ of the Postgres instance.  In addition, the primary Postgres instance requires
 the URLs of all standby hosts, and each standby host requires the URL of the
 primary.  The distinction of whether a standby is synchronous or asynchronous
 is soley made on the primary as the standbys have the same configuration
-regardess of their replication mode.
+regardless of their replication mode.
 
 ## Overview
 
@@ -212,9 +198,9 @@ The responsibilities of the Sitter is best described via examples.
 ## Bootstrapping 3 new Peers into a Shard
 
 Let's call the 3 sitters A, B, and C which belong to shard
-3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc. Bootstrapping occurs this way:
+1.moray.us-sw-1.joyent.com. Bootstrapping occurs this way:
 
-- The standard [zookeeper election algorithm](http://zookeeper.apache.org/doc/trunk/recipes.html#sc_leaderElection) is run on all 3 sitters.
+- The standard [zookeeper election algorithm](http://zookeeper.apache.org/doc/trunk/recipes.html#sc_leaderElection) is executed on all 3 sitters.
 - The leader becomes primary.
 - The remaining two peers become the sync and async standbys, depending on who
 had the smaller sequence.
@@ -230,23 +216,20 @@ Elaborating on the election process:
 
 Each peer creates an ephemeral and sequence znode under the path
 
-    /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard-
+    /shard/1.moray.us-sw-1.joyent.com/
 
 with their Postgres url as the data. This results in the following state in
 Zookeeper:
 
-    /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard-00000 -> {A.url}
-    /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard-00001 -> {B.url}
-    /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/shard-00002 -> {C.url}
+    /shard/1.moray.us-sw-1.joyent.com/shard-00000 -> {A.url}
+    /shard/1.moray.us-sw-1.joyent.com/shard-00001 -> {B.url}
+    /shard/1.moray.us-sw-1.joyent.com/shard-00002 -> {C.url}
 
-Each peer then sets a watch on the path
+Each peer then gets the set of child nodes under the path:
 
-    /shard/3e051a10-4ab9-4aee-a2bf-0a0efd9c85cc/
+    /shard/1.moray.us-sw-1.joyent.com/
 
-and is notified of any changes to that path. The roles of the Shard is
-determined by the sequence number of each Peer's znode, in ascending order.
-With this example, A becomes the primary, B becomes the synchronous standby, and
-C becomes the asynchronous standby.
+The roles of the Shard is determined by the sequence number of each Peer's znode, in ascending order. With this example, A becomes the primary, B becomes the synchronous standby, and C becomes the asynchronous standby.Only the primary sets a watch on this path such that it can be notified of standby liveliness.
 
 ## Failure of a Single Peer in a Shard.
 
@@ -276,7 +259,7 @@ Sitter on the primary will update the shard info in Zookeeper under
 
 ### Asynchronous Standby Fails
 
-If the Asynchronous standby is unavailable, no Postgres actions are taken. The
+If the asynchronous standby is unavailable, no Postgres actions are taken. The
 Sitter on the primary will update the shard info in Zookeeper to reflect the
 loss of the asynchronous peer.
 
@@ -293,4 +276,3 @@ described earlier.
 - If you are not the leader, then join the shard as a standby. Note you do not
 determine whether you are the async or sync standby, you merely replicate from
 the primary and the primary will determine your standby role.
-

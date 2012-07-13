@@ -22,11 +22,11 @@ var CFG;
 
 var LOG = bunyan.createLogger({
   level: ARGV.d ? (ARGV.d > 1 ? 'trace' : 'debug') : 'info',
-  name: 'sitter',
+  name: 'backupSender',
   serializers: {
     err: bunyan.stdSerializers.err
   },
-  src: ARGV.d ? true : false,
+  src: ARGV.d ? true : false
 });
 
 function readConfig() {
@@ -41,10 +41,11 @@ function readConfig() {
 var cfg = readConfig();
 cfg.backupServerCfg.log = LOG;
 cfg.backupSenderCfg.log = LOG;
+
 var server = new BackupServer(cfg.backupServerCfg);
 
+// server and sender share the same queue
 cfg.backupSenderCfg.queue = server.queue;
-
 var BackupSender = new BackupSender(cfg.backupSenderCfg);
 
 server.init();
