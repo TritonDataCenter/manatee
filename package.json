@@ -24,7 +24,7 @@
     "sprintf": "0.1.0",
     "shelljs": "0.0.5pre4",
     "vargs": "0.1.0",
-    "zookeeper": "git://github.com/yunong/node-zookeeper#0201abd3fc6e8caf84b0a4ff71eea6d404bd0e40",
+    "zookeeper": "3.4.1-4",
     "zkplus": "0.2.0"
   },
   "devDependencies": {
