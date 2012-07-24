@@ -70,11 +70,6 @@
 #				(default: "--with-dtrace" on SmartOS; empty
 #				otherwise.)
 #
-#	NPM_FLAGS		extra flags to pass to npm invocations
-#				The default "--cache" setting should be
-#				preserved, so use "NPM_FLAGS += ..." if adding.
-#				(default: "--cache=$(TOP)/$(BUILD)/npm-cache")
-#
 
 TOP ?= $(error You must include Makefile.defs before this makefile)
 
@@ -83,8 +78,6 @@ NODE_INSTALL 	?= $(BUILD)/node
 DISTCLEAN_FILES	+= $(NODE_INSTALL)
 
 NODE_CONFIG_FLAGS += --prefix=$(TOP)/$(NODE_INSTALL)
-
-NPM_FLAGS	?= --cache=$(TOP)/$(BUILD)/npm-cache
 
 ifeq ($(shell uname -s),SunOS)
 	NODE_CONFIG_FLAGS += 	--with-dtrace \
@@ -100,4 +93,4 @@ NPM_EXEC	= $(NODE_INSTALL)/bin/npm
 # from a dir other than the project top.
 NODE		:= $(TOP)/$(NODE_EXEC)
 NODE_WAF	:= $(TOP)/$(NODE_WAF_EXEC)
-NPM		:= PATH=$(TOP)/$(NODE_INSTALL)/bin:$(PATH) $(TOP)/$(NPM_EXEC) $(NPM_FLAGS)
+NPM		:= PATH=$(TOP)/$(NODE_INSTALL)/bin:$(PATH) node $(TOP)/$(NPM_EXEC)

@@ -32,9 +32,7 @@ TOP := $(shell pwd)
 _AWK := $(shell (which gawk >/dev/null && echo gawk) \
 	|| (which nawk >/dev/null && echo nawk) \
 	|| echo awk)
-ifeq ($(BRANCH),)
-	BRANCH := $(shell git symbolic-ref HEAD | $(_AWK) -F/ '{print $$3}')
-endif
+BRANCH := $(shell git symbolic-ref HEAD | $(_AWK) -F/ '{print $$3}')
 ifeq ($(TIMESTAMP),)
 	TIMESTAMP := $(shell date -u "+%Y%m%dT%H%M%SZ")
 endif
