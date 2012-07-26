@@ -48,7 +48,7 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 #
 
 NODE_PREBUILT_VERSION   := v0.8.2
-NODE_PREBUILT_TAG       := zone
+NODE_PREBUILT_TAG       := manatee
 
 
 include ./tools/mk/Makefile.defs
