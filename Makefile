@@ -99,6 +99,7 @@ release: setup deps docs $(SMF_MANIFESTS)
 	cp -r   $(ROOT)/build \
 		$(ROOT)/lib \
 		$(ROOT)/bin \
+		$(ROOT)/deps/zookeeper \
 		$(ROOT)/manatee.js \
 		$(ROOT)/backupserver.js \
 		$(ROOT)/snapshotter.js \
