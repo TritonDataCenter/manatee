@@ -29,8 +29,6 @@ endif
 # Env variables
 #
 PATH            := $(NODE_INSTALL)/bin:${PATH}
-DFLAGS = "-L./deps/zookeeper"
-CXXFLAGS = "-I./deps/zookeeper -R=./deps/zookeeper"
 
 #
 # Files
@@ -67,10 +65,10 @@ TMPDIR                  := /tmp/$(STAMP)
 #
 .PHONY: all
 all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS)
-	DFLAGS=$(DFLAGS) CXXFLAGS=$(CXXFLAGS) $(NPM) rebuild
+	$(NPM) rebuild
 
 $(TAP): | $(NPM_EXEC)
-	DFLAGS=$(DFLAGS) CXXFLAGS=$(CXXFLAGS) $(NPM) install
+	$(NPM) install
 
 CLEAN_FILES += $(TAP) ./node_modules/tap
 
@@ -86,7 +84,7 @@ include ./tools/mk/Makefile.targ
 
 .PHONY: setup
 setup: | $(NPM_EXEC)
-	DFLAGS=$(DFLAGS) CXXFLAGS=$(CXXFLAGS) $(NPM) install
+	$(NPM) install
 
 .PHONY: release
 release: setup deps docs $(SMF_MANIFESTS)
