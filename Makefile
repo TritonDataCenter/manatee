@@ -60,8 +60,8 @@ ROOT                    := $(shell pwd)
 TMPDIR                  := /tmp/$(STAMP)
 
 DFLAGS="-L$(TOP)/deps/zookeeper"
-CXXFLAGS="-I$(TOP)/deps/zookeeper -R=$(TOP)/deps/zookeeper"
-LDFLAGS="-L$(TOP)/deps/zookeeper"
+CXXFLAGS="-I$(TOP)/deps/zookeeper"
+LDFLAGS="-L$(TOP)/deps/zookeeper -R $(TOP)/deps/zookeeper -R /opt/smartdc/manatee/deps/zookeeper" 
 
 #
 # Repo-specific targets
