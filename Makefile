@@ -14,6 +14,10 @@
 # included Makefiles (in eng.git) so that other teams can use them too.
 #
 
+CXXFLAGS = -m64
+CFLAGS = -m64
+LDFLAGS = -m64
+
 #
 # Tools
 #
@@ -65,10 +69,10 @@ TMPDIR                  := /tmp/$(STAMP)
 #
 .PHONY: all
 all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS)
-	$(NPM) rebuild
+	CFLAGS=$(CFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS) $(NPM) rebuild
 
 $(TAP): | $(NPM_EXEC)
-	$(NPM) install
+	CFLAGS=$(CFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS) $(NPM) install
 
 CLEAN_FILES += $(TAP) ./node_modules/tap
 
@@ -84,7 +88,7 @@ include ./tools/mk/Makefile.targ
 
 .PHONY: setup
 setup: | $(NPM_EXEC)
-	$(NPM) install
+	CFLAGS=$(CFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS) $(NPM) install
 
 .PHONY: release
 release: setup deps docs $(SMF_MANIFESTS)
