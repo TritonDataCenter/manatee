@@ -17,9 +17,9 @@
   },
 
   "postgresManCfg": {
-    "pgCtlPath": "/opt/smartdc/manatee/bin/pgsql/pg_ctl",
-    "postgresPath": "/opt/smartdc/manatee/bin/pgsql/postgres",
-    "pgInitDbPath": "/opt/smartdc/manatee/bin/pgsql/initdb",
+    "pgCtlPath": "/opt/smartdc/manatee/bin/pgsql/bin/pg_ctl",
+    "postgresPath": "/opt/smartdc/manatee/bin/pgsql/bin/postgres",
+    "pgInitDbPath": "/opt/smartdc/manatee/bin/pgsql/bin/initdb",
     "hbaConf": "/opt/smartdc/manatee/cfg/pg_hba.conf",
     "postgresConf": "/opt/smartdc/manatee/cfg/postgresql.conf",
     "recoveryConf": "/opt/smartdc/manatee/cfg/recovery.conf",
