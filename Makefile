@@ -46,7 +46,7 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 # Variables
 #
 
-NODE_PREBUILT_VERSION   := v0.8.2
+NODE_PREBUILT_VERSION   := v0.8.5
 NODE_PREBUILT_TAG       := manatee
 
 
