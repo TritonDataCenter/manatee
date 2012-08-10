@@ -106,7 +106,7 @@ release: setup deps docs $(SMF_MANIFESTS)
 		$(ROOT)/node_modules \
 		$(ROOT)/package.json \
 		$(ROOT)/smf \
-		$(ROOT)/cfg \
+		$(ROOT)/etc \
 		$(TMPDIR)/root/opt/smartdc/manatee/
 	(cd $(TMPDIR) && $(TAR) -jcf $(ROOT)/$(RELEASE_TARBALL) root site)
 	@rm -rf $(TMPDIR)

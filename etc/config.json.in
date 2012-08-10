@@ -4,9 +4,9 @@
   "postgresqlPath": ,
   "recoveryPath":,
   "pgHbaPath":,
-  "postgresqlTemplate": "/opt/smartdc/manatee/cfg/postgresql.conf",
-  "recoveryTemplate": "/opt/smartdc/manatee/cfg/recovery.conf",
-  "pgHbaPathTemplate": "/opt/smartdc/manatee/cfg/pg_hba.conf",
+  "postgresqlTemplate": "/opt/smartdc/manatee/etc/postgresql.conf",
+  "recoveryTemplate": "/opt/smartdc/manatee/etc/recovery.conf",
+  "pgHbaPathTemplate": "/opt/smartdc/manatee/etc/pg_hba.conf",
   "postgresCfg": {
     "dataDir": "DATA_DIR",
     "logFile": "LOG_FILE",
