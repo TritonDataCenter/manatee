@@ -8,7 +8,7 @@
  -->
 
 <service_bundle type="manifest" name="manatee">
-  <service name="sds/application/manatee" type="service" version="1">
+  <service name="sds/application/manatee-sitter" type="service" version="1">
 
     <dependency name="network" grouping="require_all" restart_on="error" type="service">
       <service_fmri value="svc:/network/physical" />
@@ -20,7 +20,7 @@
 
     <exec_method type="method"
       name="start"
-      exec="sudo -u postgres /usr/bin/ctrun -l child -o noorphan node manatee.js -d -f etc/manatee.json &amp;"
+      exec="sudo -u postgres /usr/bin/ctrun -l child -o noorphan node sitter.js -d -f etc/sitter.json &amp;"
       timeout_seconds="30">
       <method_context working_directory="/opt/smartdc/manatee">
         <method_environment>
@@ -33,10 +33,6 @@
     </exec_method>
 
     <exec_method type="method" name="stop" exec=":kill" timeout_seconds="30" />
-    <property_group name='startd' type='framework'>
-      <propval name='critical_failure_count' type='integer' value='100000' />
-      <propval name='critical_failure_period' type='integer' value='100' />
-    </property_group>
     <instance name="default" enabled="true" />
 
     <stability value='Unstable' />
@@ -47,3 +43,4 @@
 
   </service>
 </service_bundle>
+

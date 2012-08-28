@@ -3,223 +3,72 @@ var shelljs = require('shelljs');
 var spawn = require('child_process').spawn;
 var tap = require('tap');
 var test = require('tap').test;
-var PostgresMan = require('../lib/postgresMan');
+var PostgresMan = require('../lib/postgresMan2');
 var uuid = require('node-uuid');
 
 var LOG = new Logger({
-  name: 'postgresMan-test',
-  src: true,
-  level: 'trace'
+        name: 'postgresMan-test',
+        src: true,
+        level: 'trace'
 });
 
-var log = new Logger({
-  name: 'postgresMan-test',
-  src: true,
-  level: 'trace'
+var POSTGRES_MAN_CFG = {
+        log: LOG,
+        pgCtlPath: '/opt/smartdc/manatee/bin/pgsql/bin/pg_ctl',
+        postgresPath: '/opt/smartdc/manatee/bin/pgsql/bin/postgres',
+        pgInitDbPath: '/opt/smartdc/manatee/bin/pgsql/bin/initdb',
+        hbaConf: '/root/manatee/cfg/pg_hba.conf',
+        postgresConf: '/root/manatee/cfg/postgresql.conf',
+        recoveryConf: '/root/manatee/cfg/recovery.conf',
+        dbUser: 'postgres',
+        dataDir: '/zones/4da04395-d51b-4b5d-966b-1a8e662245c4/data/pg',
+        url: 'tcp://postgres@10.99.99.12:5432/postgres',
+        healthChkInterval: 1000,
+        opsTimeout: 2000,
+        backupClientCfg: {
+                log: LOG,
+                dataset: 'zones/4da04395-d51b-4b5d-966b-1a8e662245c4/data',
+                snapshotDir: '/zones/4da04395-d51b-4b5d-966b-1a8e662245c4/data/.zfs/snapshot/',
+                zfsHost: '10.99.99.12',
+                zfsPort: 1234,
+                pollInterval: 100,
+                zfsRecvPath: '/opt/smartdc/manatee/bin/zfs_recv'
+        }
+};
+
+var PMAN = null;
+
+var PRIMARY_URL = 'tcp://postgres@10.99.99.118:5432/postgres';
+var BACKUP_URL = 'http://10.99.99.118:12345';
+
+test('init', function(t) {
+        PMAN = new PostgresMan(POSTGRES_MAN_CFG);
+        t.ok(PMAN);
+        t.end();
 });
 
-var LOG_FILE = '/tmp/pg/' + uuid();
-var DATA_DIR = '/tmp/pg/' + uuid();
-var POSTGRES_MAN;
-var PRIMARY_URL = 'tcp://yunong@localhost:5432/test';
-var STANDBY_URL = 'tcp://yunong@localhost:5433/test';
+//test('standby', function(t) {
+        //PMAN.standby(PRIMARY_URL, BACKUP_URL, function(err) {
+                //if(err) {
+                        //t.fail(err);
+                        //t.end();
+                //}
 
-test('killall postgres instances', function(t) {
-  shelljs.mkdir('-p', '/tmp/pg');
-  shelljs.rm('-rf', '/tmp/pg/*');
-  spawn('killall', ['-KILL', 'postgres']);
-  t.end();
+                //t.end();
+        //});
+//});
+
+test('primary', function(t) {
+        PMAN.primary(null, function(err) {
+                if(err) {
+                        t.fail(err);
+                        t.end();
+                }
+
+                t.end();
+        });
 });
-
-test('setup postgres', function(t) {
-  var postgresManCfg = {
-    log: LOG,
-    pgCtlPath: '/opt/local/bin/pg_ctl',
-    pgCreateDbPath: 'createdb',
-    pgInitDbPath: 'initdb',
-    postgresPath: 'postgres',
-    hbaConf: './test_conf/pg_hba.conf',
-    postgresConf: './test_conf/postgresql.conf',
-    recoveryConf: './test_conf/recovery.conf',
-    dbName: 'test',
-    dbUser: 'yunong',
-    dataDir: DATA_DIR,
-    logFile: '/tmp/pg.log',
-    url: 'tcp://yunong@localhost:5432/postgres',
-    healthChkInterval: 1000,
-    opsTimeout: 2000,
-    backupClientCfg:{
-      log: LOG,
-      dataset: 'YOUR DAD',
-      snapshotDir: '/tmp/foo',
-      zfsHost: '10.0.0.0',
-      zfsPort: 1234,
-      pollInterval: 100,
-      zfsRecvPath: './zfs_recv'
-    }
-  };
-  POSTGRES_MAN = new PostgresMan(postgresManCfg);
-
-  t.ok(POSTGRES_MAN, 'instantiate postgresman');
-  t.end();
-});
-
-test('healthcheck on start', function(t) {
-  // pg can't start since initdb wasn't called
-  POSTGRES_MAN.start(POSTGRES_MAN, function(err, process) {
-    t.ok(err);
-    t.end();
-  });
-});
-
-//test('initdb', function(t) {
-  //POSTGRES_MAN.initDb(POSTGRES_MAN, function(err) {
-    //if (err) {
-      //t.fail(err);
-      //t.end();
-    //}
-    //t.end();
-  //});
-//});
-
-//test('primary', function(t) {
-  //POSTGRES_MAN.primary([], function(err) {
-    //if (err) {
-      //t.fail(err);
-      //t.end();
-    //}
-    //t.end();
-  //});
-//});
-
-test('standby', function(t) {
-  var pMan = new PostgresMan({
-    log: LOG,
-    pgCtlPath: '/opt/local/bin/pg_ctl',
-    pgCreateDbPath: 'createdb',
-    pgInitDbPath: 'initdb',
-    postgresPath: 'postgres',
-    hbaConf: './test_conf/pg_hba.conf',
-    postgresConf: './test_conf/postgresql.conf',
-    recoveryConf: './test_conf/recovery.conf',
-    dbName: 'test',
-    dbUser: 'yunong',
-    dataDir: DATA_DIR,
-    logFile: '/tmp/pg.log',
-    url: 'tcp://yunong@localhost:5432/postgres',
-    healthChkInterval: 1000,
-    opsTimeout: 2000,
-    backupClientCfg:{
-      log: LOG,
-      dataset: 'YOUR DAD',
-      snapshotDir: '/tmp/foo',
-      zfsHost: '10.0.0.0',
-      zfsPort: 1234,
-      pollInterval: 100,
-      zfsRecvPath: './zfs_recv'
-    }
-  });
-
-  pMan.standby(PRIMARY_URL, 'foobar', function() {
-    t.end();
-  });
-});
-
-//test('initialize postgres', function(t) {
-  //POSTGRES_MAN.initDb(POSTGRES_MAN, function(err) {
-    //if (err) {
-       //t.fail(err);
-       //t.end();
-    //}
-    //POSTGRES_MAN.stat(function(stat, err) {
-      //if (err) {
-        //t.fail(err);
-        //t.end();
-      //}
-      //t.equal(stat, 1);
-      //t.end();
-    //});
-  //});
-//});
-
-//test('init already initialized postgres', function(t) {
-  //POSTGRES_MAN.initDb(POSTGRES_MAN, function(err) {
-    //t.end();
-  //});
-//});
-
-//test('stop postgres', function(t) {
-  //POSTGRES_MAN.shutdown(function(err) {
-    //t.end();
-  //});
-//});
-
-//test('check no pg running', function(t) {
-  //POSTGRES_MAN.stat(function(stat, err) {
-    //t.equal(stat, 1);
-    //t.end();
-  //});
-//});
-
-//test('start postgres', function(t) {
-  //POSTGRES_MAN.start(function(err) {
-    //if (err) {
-      //t.fail(err);
-      //t.end();
-    //}
-
-    //POSTGRES_MAN.stat(function(stat, err) {
-      //if (err) {
-        //t.fail(err);
-        //t.end();
-      //}
-      //t.equal(stat, 0);
-      //POSTGRES_MAN.health(function(err) {
-        //if (err) {
-          //t.fail(err);
-          //t.end();
-        //}
-        //POSTGRES_MAN.xlogLocation(function(err) {
-          //if (err) {
-            //t.fail(err);
-            //t.end();
-          //}
-          //t.end();
-        //})
-      //})
-    //});
-  //});
-//});
-
-//test('createdb', function(t) {
-  //POSTGRES_MAN.createDb(uuid(), function(err) {
-    //if (err) {
-      //t.fail(err);
-      //t.end();
-    //}
-
-    //t.end();
-  //});
-//});
-
-//test('restart postgres', function(t) {
-  //POSTGRES_MAN.restart(function(err) {
-    //if (err) {
-      //t.fail(err);
-      //t.end();
-    //}
-
-    //POSTGRES_MAN.stat(function(stat, err) {
-      //if (err) {
-        //t.fail(err);
-        //t.end();
-      //}
-      //t.equal(stat, 0);
-      //t.end();
-    //});
-  //});
-//});
 
 tap.tearDown(function() {
-  process.exit(tap.output.results.fail);
+        process.exit(tap.output.results.fail);
 });

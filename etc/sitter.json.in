@@ -1,0 +1,45 @@
+{
+        "shardPath": "SHARD_PATH",
+        "zkCfg": {
+                "pollInterval": 200,
+                "servers": [],
+                "timeout": ZK_TIMEOUT
+        },
+        "postgresManCfg": {
+                "pgCtlPath": "/opt/smartdc/manatee/bin/pgsql/bin/pg_ctl",
+                "postgresPath": "/opt/smartdc/manatee/bin/pgsql/bin/postgres",
+                "pgInitDbPath": "/opt/smartdc/manatee/bin/pgsql/bin/initdb",
+                "hbaConf": "/opt/smartdc/manatee/etc/pg_hba.conf",
+                "postgresConf": "/opt/smartdc/manatee/etc/postgresql.conf",
+                "recoveryConf": "/opt/smartdc/manatee/etc/recovery.conf",
+                "dbUser": "postgres",
+                "dataDir": "PG_DIR",
+                "url": "PG_URL",
+                "healthChkInterval": 1000,
+                "opsTimeout": 10000,
+                "backupClientCfg": {
+                        "dataset": "DATASET",
+                        "snapshotDir": "SNAPSHOT_DIR",
+                        "zfsHost": "ZONE_IP",
+                        "zfsPort": 1234,
+                        "pollInterval": 1000,
+                        "zfsRecvPath": "/opt/smartdc/manatee/bin/zfs_recv"
+                },
+                "snapShotterCfg": {
+                        "dataset": "DATASET",
+                        "snapshotDir": "SNAPSHOT_DIR",
+                        "pollInterval": 5000,
+                        "snapshotNumber": 5,
+                        "pgUrl": "PG_URL"
+                }
+        },
+        "heartbeaterCfg": {
+                "port": 12344
+        },
+        "backupPort": 12345,
+        "postgresPort": 5432,
+        "url": "ZONE_IP",
+        "heartbeatPort": 12344,
+        "heartbeatInterval": 200,
+        "ttl": 30
+}

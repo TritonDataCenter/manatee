@@ -39,7 +39,7 @@ JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
 JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0
 SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
-		smf/manifests/manatee.xml.in \
+		smf/manifests/sitter.xml.in \
 		smf/manifests/snapshotter.xml.in
 
 #
@@ -100,7 +100,7 @@ release: setup deps docs $(SMF_MANIFESTS)
 		$(ROOT)/lib \
 		$(ROOT)/bin \
 		$(ROOT)/deps \
-		$(ROOT)/manatee.js \
+		$(ROOT)/sitter.js \
 		$(ROOT)/backupserver.js \
 		$(ROOT)/snapshotter.js \
 		$(ROOT)/node_modules \

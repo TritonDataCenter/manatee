@@ -9,22 +9,22 @@ var ZooKeeper = require('zookeeper');
 var uuid = require('node-uuid');
 
 var log = new Logger({
-  name: 'backupServer-test',
-  src: true,
-  level: 'trace'
+        name: 'backupServer-test',
+        src: true,
+        level: 'trace'
 });
 
 var server = new BackupServer({
-  log: log,
-  port: 8080
+        log: log,
+        port: 8080
 });
 
-var BackupSender = new BackupSender({
-  log: log,
-  zfsSendPath: '/root/manatee/test/zfs_send',
-  dataset: 'zones/a6354a44-6d08-40fb-b4fe-7f58100d6d14/data',
-  snapshotDir: '/zones/a6354a44-6d08-40fb-b4fe-7f58100d6d14/data/.zfs/snapshot/',
-  queue: server.queue
+var sender = new BackupSender({
+        log: log,
+        zfsSendPath: '/root/manatee/test/zfs_send',
+        dataset: 'zones/a6354a44-6d08-40fb-b4fe-7f58100d6d14/data',
+        snapshotDir: '/zones/a6354a44-6d08-40fb-b4fe-7f58100d6d14/data/.zfs/snapshot/',
+        queue: server.queue
 });
 
 

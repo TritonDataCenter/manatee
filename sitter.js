@@ -1,8 +1,7 @@
 var bunyan = require('bunyan');
 var fs = require('fs');
 var optimist = require('optimist');
-var BackupServer = require('./lib/backupServer');
-var BackupSender = require('./lib/backupSender');
+var Shard = require('./lib/shard');
 
 ///--- Mainline
 
@@ -22,7 +21,7 @@ var CFG;
 
 var LOG = bunyan.createLogger({
         level: ARGV.d ? (ARGV.d > 1 ? 'trace' : 'debug') : 'info',
-        name: 'backupSender',
+        name: 'pg-sitter',
         serializers: {
                 err: bunyan.stdSerializers.err
         },
@@ -39,16 +38,18 @@ function readConfig() {
 }
 
 var cfg = readConfig();
-cfg.backupServerCfg.log = LOG;
-cfg.backupSenderCfg.log = LOG;
+cfg.log = LOG;
+cfg.zkCfg.log = LOG;
+cfg.postgresManCfg.log = LOG;
+cfg.postgresManCfg.backupClientCfg.log = LOG;
+cfg.postgresManCfg.snapShotterCfg.log = LOG;
+cfg.heartbeaterCfg.log = LOG;
 
-var server = new BackupServer(cfg.backupServerCfg);
+var shard = new Shard(cfg);
 
-// server and sender share the same queue
-cfg.backupSenderCfg.queue = server.queue;
-var backupSender = new BackupSender(cfg.backupSenderCfg);
-
-server.init();
+shard.on('connect', function() {
+        shard.init();
+});
 
 process.on('uncaughtException', function (err) {
         LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
