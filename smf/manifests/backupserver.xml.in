@@ -1,34 +1,37 @@
 <?xml version="1.0"?>
 <!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
 <!--
-	Copyright (c) 2012, Joyent, Inc. All rights reserved.
- 	This is a sample SMF manifest. If you want to actually use it, you'll
- 	need to replace /opt/smartdc/manatee in the *generated* file with the path to
-	whereever this package gets installed.
+        Copyright (c) 2012, Joyent, Inc. All rights reserved.
+        This is a sample SMF manifest. If you want to actually use it, you'll
+        need to replace /opt/smartdc/manatee in the *generated* file with the path to
+        whereever this package gets installed.
  -->
 
 <service_bundle type="manifest" name="manatee-backupserver">
 <service name="sds/application/manatee-backupserver" type="service" version="1">
 
 <dependency name="network" grouping="require_all" restart_on="error" type="service">
-	<service_fmri value="svc:/network/physical" />
+        <service_fmri value="svc:/network/physical" />
 </dependency>
 
 <dependency name="filesystem" grouping="require_all" restart_on="error" type="service">
-	<service_fmri value="svc:/system/filesystem/local" />
+        <service_fmri value="svc:/system/filesystem/local" />
+</dependency>
+<dependency name="mdata" grouping="require_all" restart_on="none" type="service">
+        <service_fmri value="svc:/smartdc/mdata:execute" />
 </dependency>
 
 <exec_method type="method"
-	     name="start"
-	     exec="sudo -u postgres node backupserver.js -d -f etc/backupserver.json &amp;"
-	     timeout_seconds="30">
+             name="start"
+             exec="sudo -u postgres node backupserver.js -d -f etc/backupserver.json &amp;"
+             timeout_seconds="30">
     <method_context working_directory="/opt/smartdc/manatee">
-	<method_environment>
-	    <envvar name="PATH"
-		    value="/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>
-	    <envvar name="LD_PRELOAD_32"
-		    value="/usr/lib/extendedFILE.so.1" />
-	</method_environment>
+        <method_environment>
+            <envvar name="PATH"
+                    value="/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>
+            <envvar name="LD_PRELOAD_32"
+                    value="/usr/lib/extendedFILE.so.1" />
+        </method_environment>
     </method_context>
 </exec_method>
 
@@ -41,7 +44,7 @@
 <stability value='Unstable' />
 
 <template>
-	<common_name><loctext xml:lang="C">Joyent HA Postgres Service BackupServer</loctext></common_name>
+        <common_name><loctext xml:lang="C">Joyent HA Postgres Service BackupServer</loctext></common_name>
 </template>
 
 </service>

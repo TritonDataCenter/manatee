@@ -17,6 +17,9 @@
     <dependency name="filesystem" grouping="require_all" restart_on="error" type="service">
       <service_fmri value="svc:/system/filesystem/local" />
     </dependency>
+    <dependency name="mdata" grouping="require_all" restart_on="none" type="service">
+        <service_fmri value="svc:/smartdc/mdata:execute" />
+    </dependency>
 
     <exec_method type="method"
       name="start"
