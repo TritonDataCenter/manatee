@@ -10,4 +10,3 @@ smf/manifests/*.xml
 *.swp
 *.*~
 *.un~
-*.tar.bz2
