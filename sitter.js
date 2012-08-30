@@ -45,17 +45,11 @@ cfg.postgresManCfg.backupClientCfg.log = LOG;
 cfg.postgresManCfg.snapShotterCfg.log = LOG;
 cfg.heartbeaterCfg.log = LOG;
 
-// wait 10 seconds before starting manatee - this ensures that previous
-// ephemeral znodes are purged.
-setTimeout(10000, start());
+var shard = new Shard(cfg);
 
-function start() {
-        var shard = new Shard(cfg);
-
-        shard.on('connect', function() {
-                shard.init();
-        });
-}
+shard.on('connect', function() {
+        shard.init();
+});
 
 process.on('uncaughtException', function (err) {
         LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
