@@ -5,7 +5,7 @@
                 "servers": [],
                 "timeout": ZK_TIMEOUT
         },
-        "postgresManCfg": {
+        "postgresMgrCfg": {
                 "pgCtlPath": "/opt/local/bin/pg_ctl",
                 "postgresPath": "/opt/local/bin/postgres",
                 "pgInitDbPath": "/opt/local/bin/initdb",
