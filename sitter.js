@@ -41,9 +41,9 @@ function readConfig() {
 var cfg = readConfig();
 cfg.log = LOG;
 cfg.zkCfg.log = LOG;
-cfg.postgresManCfg.log = LOG;
-cfg.postgresManCfg.backupClientCfg.log = LOG;
-cfg.postgresManCfg.snapShotterCfg.log = LOG;
+cfg.postgresMgrCfg.log = LOG;
+cfg.postgresMgrCfg.backupClientCfg.log = LOG;
+cfg.postgresMgrCfg.snapShotterCfg.log = LOG;
 cfg.heartbeaterCfg.log = LOG;
 
 var startTimeout = cfg.startTimeout || 7000;
