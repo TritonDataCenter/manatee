@@ -45,11 +45,19 @@ cfg.postgresManCfg.backupClientCfg.log = LOG;
 cfg.postgresManCfg.snapShotterCfg.log = LOG;
 cfg.heartbeaterCfg.log = LOG;
 
-var shard = new Shard(cfg);
+var startTimeout = cfg.startTimeout || 7000;
 
-shard.on('connect', function() {
-        shard.init();
-});
+// wait some time before starting shard so that previous emphemeral
+// znodes are purgd from ZK
+
+LOG.info('starting shard in %s seconds', startTimeout / 1000);
+setTimeout(function() {
+        var shard = new Shard(cfg);
+
+        shard.on('connect', function() {
+                shard.init();
+        });
+}, startTimeout);
 
 process.on('uncaughtException', function (err) {
         LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
