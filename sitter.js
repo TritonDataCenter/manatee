@@ -53,11 +53,7 @@ var startTimeout = cfg.startTimeout || 7000;
 
 LOG.info('starting shard in %s seconds', startTimeout / 1000);
 setTimeout(function() {
-        var shard = new Shard(cfg);
-
-        shard.on('connect', function() {
-                shard.init();
-        });
+        new Shard(cfg);
 }, startTimeout);
 
 process.on('uncaughtException', function (err) {
