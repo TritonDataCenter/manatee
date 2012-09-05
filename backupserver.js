@@ -1,3 +1,4 @@
+// Copyright (c) 2012, Joyent, Inc. All rights reserved.
 var bunyan = require('bunyan');
 var fs = require('fs');
 var optimist = require('optimist');

@@ -1,3 +1,4 @@
+// Copyright (c) 2012, Joyent, Inc. All rights reserved.
 var SnapShotter = require('../lib/snapShotter');
 var Logger = require('bunyan');
 var tap = require('tap');

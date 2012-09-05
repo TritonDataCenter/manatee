@@ -1,3 +1,4 @@
+// Copyright (c) 2012, Joyent, Inc. All rights reserved.
 var HeartbeatClient = require('../lib/heartbeatClient');
 var HeartbeatServer = require('../lib/heartbeatServer');
 var Logger = require('bunyan');

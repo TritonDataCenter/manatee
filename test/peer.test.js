@@ -1,3 +1,4 @@
+// Copyright (c) 2012, Joyent, Inc. All rights reserved.
 var Logger = require('bunyan');
 var tap = require('tap');
 var test = require('tap').test;
@@ -65,4 +66,5 @@ test('peer', function(t) {
 
 tap.tearDown(function() {
   process.exit(tap.output.results.fail);
+
 });

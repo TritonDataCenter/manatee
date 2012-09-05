@@ -1,3 +1,4 @@
+// Copyright (c) 2012, Joyent, Inc. All rights reserved.
 var BackupServer = require('../lib/backupServer');
 var BackupSender = require('../lib/backupSender');
 var Logger = require('bunyan');

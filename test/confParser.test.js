@@ -1,3 +1,4 @@
+// Copyright (c) 2012, Joyent, Inc. All rights reserved.
 var Logger = require('bunyan');
 var fs = require('fs');
 var byline = require('byline');

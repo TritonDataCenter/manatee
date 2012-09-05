@@ -1,3 +1,4 @@
+// Copyright (c) 2012, Joyent, Inc. All rights reserved.
 var Logger = require('bunyan');
 var shelljs = require('shelljs');
 var spawn = require('child_process').spawn;
