@@ -28,7 +28,7 @@
     "vargs": "0.1.0",
     "vasync": "1.3.1",
     "verror": "1.3.3",
-    "zkplus": "git://github.com/mcavage/node-zkplus.git#ca4b9bf0076c8bc87b74f1427dff63327723fd75"
+    "zkplus": "git://github.com/mcavage/node-zkplus.git#733906cd7f7faea642cfb81c1db8c5c7f7f1f056"
   },
   "devDependencies": {
     "byline": "2.0.1",
