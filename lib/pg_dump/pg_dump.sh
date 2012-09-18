@@ -1,11 +1,24 @@
 #!/bin/bash
 set -o xtrace
+PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/root/manatee/lib/pg_dump/:$PATH
 
 function fatal
 {
   echo "$(basename $0): fatal error: $*"
   exit 1
 }
+
+my_ip=$(mdata-get sdc:nics.0.ip)
+[[ $? -eq 0 ]] || fatal "Unable to retrieve our own IP address"
+svc_name=$(mdata-get service_name)
+[[ $? -eq 0 ]] || fatal "Unable to retrieve service name"
+zk_ip=$(mdata-get nameservers | cut -d ' ' -f1)
+[[ $? -eq 0 ]] || fatal "Unable to retrieve nameservers from metadata"
+manta_url="http://manta.bh1-kvm1.joyent.us"
+manta_user="poseidon"
+manta_dir_prefix="/manatee_backups/"
+#manta_url=$(mdata-get manta_url)
+#[[ $? -eq 0 ]] || fatal "Unable to retrieve manta_url from metadata"
 
 function backup
 {
@@ -18,15 +31,14 @@ function backup
         echo "dumping and bzipping backup to $snapshot_output"
         zfs send $snapshot | bzip2 > $snapshot_output
         [[ $? -eq 0 ]] || fatal "unable dump snapshot"
+        echo "making backup dir $manta_dir_prefix$svc_name"
+        mmkdir.js -u $manta_url -a $manta_user $manta_dir_prefix$svc_name
+        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
+        time=$(date +%F-%H-%M-%S)
         echo "uploading snapshot to manta"
+        mput.js -u $manta_url -a $manta_user -f $snapshot_output $manda_dir_prefix$svc_name/time/backup.bz2
+        [[ $? -eq 0 ]] || fatal "unable to upload backup"
 }
-
-my_ip=$(mdata-get sdc:nics.0.ip)
-[[ $? -eq 0 ]] || fatal "Unable to retrieve our own IP address"
-svc_name=$(mdata-get service_name)
-[[ $? -eq 0 ]] || fatal "Unable to retrieve service name"
-zk_ip=$(mdata-get nameservers | cut -d ' ' -f1)
-[[ $? -eq 0 ]] || fatal "Unable to retrieve nameservers from metadata"
 
 # s/./\./ to 1.moray.us.... for json
 read -r svc_name_delim< <(echo $svc_name | gsed -e 's|\.|\\.|g')
