@@ -1,10 +1,15 @@
 #!/bin/bash
 set -o xtrace
-PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/root/manatee/lib/pg_dump/:$PATH
+PATH=/opt/smartdc/manatee/build/node/bin:/opt/smartdc/manatee/lib/tools:/opt/local/bin:/usr/sbin/:/usr/bin:/root/manatee/lib/pg_dump/:$PATH
+
+MAANTA_URL='http://manta.coal.joyent.us'
+MANTA_USER='poseidon'
+MANTA_KEY_PATH='/root/.ssh/id_rsa'
 
 function fatal
 {
   echo "$(basename $0): fatal error: $*"
+  rm -rf $snapshot_output
   exit 1
 }
 
@@ -14,17 +19,12 @@ svc_name=$(mdata-get service_name)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve service name"
 zk_ip=$(mdata-get nameservers | cut -d ' ' -f1)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve nameservers from metadata"
-manta_url="http://manta.bh1-kvm1.joyent.us"
-manta_user="poseidon"
-manta_dir_prefix="/manatee_backups/"
-#manta_url=$(mdata-get manta_url)
-#[[ $? -eq 0 ]] || fatal "Unable to retrieve manta_url from metadata"
 
 function backup
 {
-
         echo "backing up"
         echo "getting latest snapshot"
+        local manta_dir_prefix=/manatee_backups
         snapshot=$(zfs list -t snapshot | tail -1 | cut -d ' ' -f1)
         uuid=`uuid`
         snapshot_output="/tmp/$uuid"
@@ -32,12 +32,18 @@ function backup
         zfs send $snapshot | bzip2 > $snapshot_output
         [[ $? -eq 0 ]] || fatal "unable dump snapshot"
         echo "making backup dir $manta_dir_prefix$svc_name"
-        mmkdir.js -u $manta_url -a $manta_user $manta_dir_prefix$svc_name
-        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
         time=$(date +%F-%H-%M-%S)
+        mmkdir.js $manta_dir_prefix
+        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
+        mmkdir.js $manta_dir_prefix/$svc_name
+        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
+        mmkdir.js $manta_dir_prefix/$svc_name/$time
+        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
         echo "uploading snapshot to manta"
-        mput.js -u $manta_url -a $manta_user -f $snapshot_output $manda_dir_prefix$svc_name/time/backup.bz2
+        mput.js -f $snapshot_output $manta_dir_prefix/$svc_name/$time/backup.bz2
         [[ $? -eq 0 ]] || fatal "unable to upload backup"
+        echo "finished backup, removing backup file $snapshot_output"
+        rm -rf $snapshot_output
 }
 
 # s/./\./ to 1.moray.us.... for json
@@ -75,8 +81,6 @@ else
         fi
 fi
 
-#XXX REMOVE
-continue_backup=1
 if [ $continue_backup = '1' ]
 then
         backup
