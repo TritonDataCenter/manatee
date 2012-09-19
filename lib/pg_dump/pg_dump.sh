@@ -2,9 +2,9 @@
 set -o xtrace
 PATH=/opt/smartdc/manatee/build/node/bin:/opt/smartdc/manatee/lib/tools:/opt/local/bin:/usr/sbin/:/usr/bin:/root/manatee/lib/pg_dump/:$PATH
 
-MAANTA_URL='http://manta.coal.joyent.us'
-MANTA_USER='poseidon'
-MANTA_KEY_PATH='/root/.ssh/id_rsa'
+MAANTA_URL="http://manta.coal.joyent.us"
+MANTA_USER="poseidon"
+MANTA_KEY_PATH="/root/.ssh/id_rsa"
 
 function fatal
 {
@@ -33,14 +33,14 @@ function backup
         [[ $? -eq 0 ]] || fatal "unable dump snapshot"
         echo "making backup dir $manta_dir_prefix$svc_name"
         time=$(date +%F-%H-%M-%S)
-        mmkdir.js $manta_dir_prefix
+        mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
-        mmkdir.js $manta_dir_prefix/$svc_name
+        mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix/$svc_name
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
-        mmkdir.js $manta_dir_prefix/$svc_name/$time
+        mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix/$svc_name/$time
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
         echo "uploading snapshot to manta"
-        mput.js -f $snapshot_output $manta_dir_prefix/$svc_name/$time/backup.bz2
+        mput.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH -f $snapshot_output $manta_dir_prefix/$svc_name/$time/backup.bz2
         [[ $? -eq 0 ]] || fatal "unable to upload backup"
         echo "finished backup, removing backup file $snapshot_output"
         rm -rf $snapshot_output
