@@ -2,9 +2,9 @@
 set -o xtrace
 PATH=/opt/smartdc/manatee/build/node/bin:/opt/smartdc/manatee/lib/tools:/opt/local/bin:/usr/sbin/:/usr/bin:/root/manatee/lib/pg_dump/:$PATH
 
-MAANTA_URL="http://manta.coal.joyent.us"
+MANTA_URL="http://manta.coal.joyent.us"
 MANTA_USER="poseidon"
-MANTA_KEY_PATH="/root/.ssh/id_rsa"
+MANTA_KEY_PATH="/root/.ssh/"
 
 function fatal
 {
