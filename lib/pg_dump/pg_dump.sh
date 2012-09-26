@@ -21,11 +21,12 @@ svc_name=$(mdata-get service_name)
 zk_ip=$(mdata-get nameservers | cut -d ' ' -f1)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve nameservers from metadata"
 dump_dir=/tmp/`uuid`
-mkdir dump_dir
+mkdir $dump_dir
 [[ $? -eq 0 ]] || fatal "Unable to make temp dir"
 
 function backup
 {
+        local manta_dir_prefix=/manatee_backups
         echo "making backup dir $manta_dir_prefix$svc_name"
         time=$(date +%F-%H-%M-%S)
         mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix
