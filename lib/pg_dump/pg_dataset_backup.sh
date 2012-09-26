@@ -2,7 +2,7 @@
 set -o xtrace
 PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/usr/sbin:/usr/bin:/opt/smartdc/registrar/build/node/bin:/opt/smartdc/registrar/node_modules/.bin:/opt/smartdc/manatee/lib/tools:/opt/smartdc/manatee/lib/pg_dump/
 
-#XXX need to pickup manta_url from mdata-get
+#XXX need to pickup the url from mdata-get
 MANTA_URL="http://manta.coal.joyent.us"
 MANTA_USER="poseidon"
 MANTA_KEY_PATH="/root/.ssh/"
@@ -10,7 +10,7 @@ MANTA_KEY_PATH="/root/.ssh/"
 function fatal
 {
   echo "$(basename $0): fatal error: $*"
-  rm -rf $dump_dir
+  rm -rf $snapshot_output
   exit 1
 }
 
@@ -20,12 +20,18 @@ svc_name=$(mdata-get service_name)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve service name"
 zk_ip=$(mdata-get nameservers | cut -d ' ' -f1)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve nameservers from metadata"
-dump_dir=/tmp/`uuid`
-mkdir dump_dir
-[[ $? -eq 0 ]] || fatal "Unable to make temp dir"
 
 function backup
 {
+        echo "backing up"
+        echo "getting latest snapshot"
+        local manta_dir_prefix=/manatee_backups
+        snapshot=$(zfs list -t snapshot | tail -1 | cut -d ' ' -f1)
+        uuid=`uuid`
+        snapshot_output="/tmp/$uuid"
+        echo "dumping and bzipping backup to $snapshot_output"
+        zfs send $snapshot | bzip2 > $snapshot_output
+        [[ $? -eq 0 ]] || fatal "unable dump snapshot"
         echo "making backup dir $manta_dir_prefix$svc_name"
         time=$(date +%F-%H-%M-%S)
         mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix
@@ -34,23 +40,11 @@ function backup
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
         mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix/$svc_name/$time
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
-
-        echo "getting db tables"
-        schema=$dump_dir/schema
-        sudo -u postgres psql moray -c '\dt' > $schema
-        for i in `sed 'N;$!P;$!D;$d' /tmp/yunong |tr -d ' '| cut -d '|' -f2`
-        do
-                local dump_file=$dump_dir/$i
-                sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | bzip2 > $dump_file
-                [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
-                echo "uploading dump $i to manta"
-                mput.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH -f $dump_file $manta_dir_prefix/$svc_name/$time/$i.bzip
-                [[ $? -eq 0 ]] || fatal "unable to upload dump $i"
-                echo "removeing dump $dump_file"
-                rm $dump_file
-        done
-        echo "finished backup, removing backup dir $dump_dir"
-        rm -rf $dump_dir
+        echo "uploading snapshot to manta"
+        mput.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH -f $snapshot_output $manta_dir_prefix/$svc_name/$time/backup.bz2
+        [[ $? -eq 0 ]] || fatal "unable to upload backup"
+        echo "finished backup, removing backup file $snapshot_output"
+        rm -rf $snapshot_output
 }
 
 # s/./\./ to 1.moray.us.... for json
