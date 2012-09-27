@@ -2,8 +2,7 @@
 set -o xtrace
 PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/usr/sbin:/usr/bin:/opt/smartdc/registrar/build/node/bin:/opt/smartdc/registrar/node_modules/.bin:/opt/smartdc/manatee/lib/tools:/opt/smartdc/manatee/lib/pg_dump/
 
-#XXX need to pickup manta_url from mdata-get
-MANTA_URL="http://manta.coal.joyent.us"
+MANTA_URL=`mdata-get manta_url`
 MANTA_USER="poseidon"
 MANTA_KEY_PATH="/root/.ssh/"
 
