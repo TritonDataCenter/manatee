@@ -20,7 +20,7 @@ svc_name=$(mdata-get service_name)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve service name"
 zk_ip=$(mdata-get nameservers | cut -d ' ' -f1)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve nameservers from metadata"
-dump_dir=/tmp/`uuid`
+dump_dir=/var/tmp/`uuid`
 mkdir $dump_dir
 [[ $? -eq 0 ]] || fatal "Unable to make temp dir"
 
@@ -49,7 +49,7 @@ function backup
                 echo "uploading dump $i to manta"
                 mput.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH -f $dump_file $manta_dir_prefix/$svc_name/$time/$i.bzip
                 [[ $? -eq 0 ]] || fatal "unable to upload dump $i"
-                echo "removeing dump $dump_file"
+                echo "removing dump $dump_file"
                 rm $dump_file
         done
         echo "finished backup, removing backup dir $dump_dir"
