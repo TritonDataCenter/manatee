@@ -38,8 +38,10 @@ function backup
 
         echo "getting db tables"
         schema=$dump_dir/schema
-        sudo -u postgres psql moray -c '\dt' > $schema
-        for i in `sed 'N;$!P;$!D;$d' /tmp/yunong |tr -d ' '| cut -d '|' -f2`
+                                # trim the first 3 lines of the schema dump
+        sudo -u postgres psql moray -c '\dt' | sed -e '1,3d' > $schema
+        [[ $? -eq 0 ]] || fatal "unable to read db schema"
+        for i in `sed 'N;$!P;$!D;$d' $schema | tr -d ' '| cut -d '|' -f2`
         do
                 local dump_file=$dump_dir/$i
                 sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | bzip2 > $dump_file
