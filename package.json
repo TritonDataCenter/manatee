@@ -30,7 +30,7 @@
     "vasync": "1.3.1",
     "verror": "1.3.3",
     "zkplus": "git://github.com/mcavage/node-zkplus.git#733906cd7f7faea642cfb81c1db8c5c7f7f1f056",
-    "manta": "git+ssh://git@git.joyent.com:node-manta.git#ab592fcbd03ff4cfe40422a00f5f055d249a8032"
+    "manta": "git+ssh://git@git.joyent.com:node-manta.git#60c0efc1db023735b7684c2466138b101c0eb19f"
   },
   "devDependencies": {
     "byline": "2.0.1",
