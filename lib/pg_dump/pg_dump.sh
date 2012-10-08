@@ -4,7 +4,7 @@ PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/usr
 
 MANTA_URL=`mdata-get manta_url`
 MANTA_USER="poseidon"
-MANTA_KEY_PATH="/root/.ssh/"
+MANTA_KEY_ID=`ssh-keygen -lf ~/.ssh/id_rsa.pub | cut -d ' ' -f2`
 
 function fatal
 {
@@ -23,21 +23,24 @@ dump_dir=/var/tmp/`uuid`
 mkdir $dump_dir
 [[ $? -eq 0 ]] || fatal "Unable to make temp dir"
 
+mmkdir='/opt/smartdc/manatee/node_modules/manta/bin/mmkdir'
+mput='/opt/smartdc/manatee/node_modules/manta/bin/mput'
+
 function backup
 {
         local manta_dir_prefix=/manatee_backups
         echo "making backup dir $manta_dir_prefix$svc_name"
         time=$(date +%F-%H-%M-%S)
-        mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix
+        $mmkdir -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $manta_dir_prefix
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
-        mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix/$svc_name
+        $mmkdir -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $manta_dir_prefix/$svc_name
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
-        mmkdir.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH $manta_dir_prefix/$svc_name/$time
+        $mmkdir -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $manta_dir_prefix/$svc_name/$time
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
 
         echo "getting db tables"
         schema=$dump_dir/schema
-                                # trim the first 3 lines of the schema dump
+        # trim the first 3 lines of the schema dump
         sudo -u postgres psql moray -c '\dt' | sed -e '1,3d' > $schema
         [[ $? -eq 0 ]] || fatal "unable to read db schema"
         for i in `sed 'N;$!P;$!D;$d' $schema | tr -d ' '| cut -d '|' -f2`
@@ -46,7 +49,7 @@ function backup
                 sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | bzip2 > $dump_file
                 [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
                 echo "uploading dump $i to manta"
-                mput.js -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_PATH -f $dump_file $manta_dir_prefix/$svc_name/$time/$i.bzip
+                $mput -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID -f $dump_file $manta_dir_prefix/$svc_name/$time/$i.bzip
                 [[ $? -eq 0 ]] || fatal "unable to upload dump $i"
                 echo "removing dump $dump_file"
                 rm $dump_file
