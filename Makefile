@@ -42,8 +42,8 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 # Variables
 #
 
-NODE_PREBUILT_VERSION   := v0.8.5
-NODE_PREBUILT_TAG       := manatee
+NODE_PREBUILT_VERSION   := v0.8.11
+NODE_PREBUILT_TAG       := zone
 
 
 include ./tools/mk/Makefile.defs
@@ -55,6 +55,9 @@ RELEASE_TARBALL         := manatee-pkg-$(STAMP).tar.bz2
 ROOT                    := $(shell pwd)
 TMPDIR                  := /tmp/$(STAMP)
 
+#
+# Hack Variables to make sdc-node play nice in a 64bit zone
+#
 DFLAGS="-L$(TOP)/deps/zookeeper"
 CXXFLAGS="-I$(TOP)/deps/zookeeper"
 LDFLAGS="-L$(TOP)/deps/zookeeper -R $(TOP)/deps/zookeeper -R /opt/smartdc/manatee/deps/zookeeper" 

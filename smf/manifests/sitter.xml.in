@@ -27,6 +27,8 @@
       timeout_seconds="30">
       <method_context working_directory="/opt/smartdc/manatee">
         <method_environment>
+          <envvar name="ZK_LOG_LEVEL"
+            value="1"/>
           <envvar name="PATH"
             value="/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>
           <envvar name="LD_PRELOAD_32"
