@@ -23,12 +23,10 @@
 
     <exec_method type="method"
       name="start"
-      exec="sudo -u postgres /usr/bin/ctrun -l child -o noorphan node sitter.js -d -f etc/sitter.json &amp;"
+      exec="sudo -u postgres ZK_LOG_LEVEL=4 /usr/bin/ctrun -l child -o noorphan node sitter.js -d -f etc/sitter.json &amp;"
       timeout_seconds="30">
       <method_context working_directory="/opt/smartdc/manatee">
         <method_environment>
-          <envvar name="ZK_LOG_LEVEL"
-            value="4"/>
           <envvar name="PATH"
             value="/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>
           <envvar name="LD_PRELOAD_32"
