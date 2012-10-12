@@ -46,15 +46,10 @@ cfg.postgresMgrCfg.backupClientCfg.log = LOG;
 cfg.postgresMgrCfg.snapShotterCfg.log = LOG;
 cfg.heartbeaterCfg.log = LOG;
 
-var startTimeout = cfg.startTimeout || 7000;
-
-// wait some time before starting shard so that previous emphemeral
-// znodes are purgd from ZK
-
-LOG.info('starting shard in %s seconds', startTimeout / 1000);
+LOG.info('starting manatee');
 var shard = new Shard(cfg);
 
-LOG.info('node started', shard);
+LOG.info('manatee started', shard);
 
 process.on('uncaughtException', function (err) {
         LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
