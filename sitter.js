@@ -52,7 +52,9 @@ var startTimeout = cfg.startTimeout || 7000;
 // znodes are purgd from ZK
 
 LOG.info('starting shard in %s seconds', startTimeout / 1000);
-new Shard(cfg);
+var shard = new Shard(cfg);
+
+LOG.info('node started', shard);
 
 process.on('uncaughtException', function (err) {
         LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
