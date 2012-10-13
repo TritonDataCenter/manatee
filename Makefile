@@ -26,10 +26,6 @@ ifeq ($(UNAME), SunOS)
 endif
 
 #
-# Env variables
-#
-PATH            := $(NODE_INSTALL)/bin:${PATH}
-#
 # Files
 #
 DOC_FILES	 = index.restdown
@@ -64,6 +60,11 @@ CXXFLAGS="-I$(TOP)/deps/zookeeper"
 LDFLAGS="-L$(TOP)/deps/zookeeper -R $(TOP)/deps/zookeeper -R /opt/smartdc/manatee/deps/zookeeper" 
 
 #
+# Env variables
+#
+PATH            := $(NODE_INSTALL)/bin:${PATH}
+
+#
 # Repo-specific targets
 #
 .PHONY: all
@@ -74,6 +75,7 @@ $(TAP): | $(NPM_EXEC)
 	DFLAGS=$(DFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS) $(NPM) install
 
 CLEAN_FILES += $(TAP) ./node_modules/tap
+DISTCLEAN_FILES = ./node_modules
 
 .PHONY: test
 test: $(TAP)
