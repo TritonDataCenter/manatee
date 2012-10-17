@@ -1,8 +1,7 @@
 {
         "shardPath": "SHARD_PATH",
         "zkCfg": {
-                "pollInterval": 200,
-                "servers": [],
+                servers": [],
                 "timeout": ZK_TIMEOUT
         },
         "postgresMgrCfg": {
