@@ -28,7 +28,7 @@ mput='/opt/smartdc/manatee/node_modules/manta/bin/mput'
 
 function backup
 {
-        local manta_dir_prefix=/manatee_backups
+        local manta_dir_prefix=/poseidon/stor/manatee_backups
         echo "making backup dir $manta_dir_prefix$svc_name"
         time=$(date +%F-%H-%M-%S)
         $mmkdir -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $manta_dir_prefix
