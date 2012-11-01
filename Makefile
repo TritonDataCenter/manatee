@@ -42,7 +42,7 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 # Variables
 #
 
-NODE_PREBUILT_VERSION   := v0.8.11
+NODE_PREBUILT_VERSION   := v0.8.14
 NODE_PREBUILT_TAG       := zone
 
 
