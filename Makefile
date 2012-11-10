@@ -85,7 +85,7 @@ include ./tools/mk/Makefile.targ
 
 
 .PHONY: release
-release: setup deps docs $(SMF_MANIFESTS)
+release: deps docs $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
 	@mkdir -p $(TMPDIR)/root/opt/smartdc/manatee
 	@mkdir -p $(TMPDIR)/site
