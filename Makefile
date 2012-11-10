@@ -65,10 +65,10 @@ PATH            := $(NODE_INSTALL)/bin:${PATH}
 #
 .PHONY: all
 all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS)
-	DFLAGS=$(DFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS) $(NPM) rebuild
+	$(NPM) rebuild
 
 $(TAP): | $(NPM_EXEC)
-	DFLAGS=$(DFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS) $(NPM) install
+	$(NPM) install
 
 CLEAN_FILES += $(TAP) ./node_modules/tap
 DISTCLEAN_FILES = ./node_modules
@@ -83,9 +83,6 @@ include ./tools/mk/Makefile.node_deps.targ
 include ./tools/mk/Makefile.smf.targ
 include ./tools/mk/Makefile.targ
 
-.PHONY: setup
-setup: | $(NPM_EXEC)
-	DFLAGS=$(DFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS) $(NPM) install
 
 .PHONY: release
 release: setup deps docs $(SMF_MANIFESTS)
