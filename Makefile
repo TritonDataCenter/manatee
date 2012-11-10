@@ -56,13 +56,6 @@ ROOT                    := $(shell pwd)
 TMPDIR                  := /tmp/$(STAMP)
 
 #
-# Hack Variables to make sdc-node play nice in a 64bit zone
-#
-DFLAGS="-L$(TOP)/deps/zookeeper"
-CXXFLAGS="-I$(TOP)/deps/zookeeper"
-LDFLAGS="-L$(TOP)/deps/zookeeper -R $(TOP)/deps/zookeeper -R /opt/smartdc/manatee/deps/zookeeper" 
-
-#
 # Env variables
 #
 PATH            := $(NODE_INSTALL)/bin:${PATH}
