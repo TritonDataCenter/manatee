@@ -2,8 +2,7 @@
         "shardPath": "SHARD_PATH",
         "zkCfg": {
                 "servers": [],
-                "timeout": ZK_TIMEOUT,
-                "pollInterval": 2000
+                "timeout": ZK_TIMEOUT
         },
         "postgresMgrCfg": {
                 "pgCtlPath": "/opt/local/bin/pg_ctl",
