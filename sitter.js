@@ -32,7 +32,7 @@ var LOG = bunyan.createLogger({
 function readConfig() {
         if (!CFG) {
                 CFG = JSON.parse(fs.readFileSync(ARGV.f, 'utf8'));
-                LOG.info({config: CFG, file: ARGV.f}, 'Configuration loaded');
+                LOG.trace({config: CFG, file: ARGV.f}, 'Configuration loaded');
         }
 
         return (CFG);
@@ -49,7 +49,8 @@ cfg.heartbeaterCfg.log = LOG;
 LOG.info('starting manatee');
 var shard = new Shard(cfg);
 
-LOG.info('manatee started', shard);
+LOG.info('manatee started');
+LOG.trace('manatee shard', shard);
 
 process.on('uncaughtException', function (err) {
         LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');

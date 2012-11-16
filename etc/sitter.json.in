@@ -16,6 +16,7 @@
                 "url": "PG_URL",
                 "healthChkInterval": 1000,
                 "opsTimeout": 10000,
+                "replicationTimeout": 30000,
                 "backupClientCfg": {
                         "dataset": "DATASET",
                         "snapshotDir": "SNAPSHOT_DIR",
