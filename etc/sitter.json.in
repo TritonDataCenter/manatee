@@ -17,6 +17,7 @@
                 "healthChkInterval": 1000,
                 "opsTimeout": 10000,
                 "replicationTimeout": 30000,
+                "oneNodeWriteMode": ONE_NODE_WRITE_MODE,
                 "backupClientCfg": {
                         "dataset": "DATASET",
                         "snapshotDir": "SNAPSHOT_DIR",
