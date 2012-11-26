@@ -9,7 +9,7 @@
                 "postgresPath": "/opt/local/bin/postgres",
                 "pgInitDbPath": "/opt/local/bin/initdb",
                 "hbaConf": "/opt/smartdc/manatee/etc/pg_hba.conf",
-                "postgresConf": "/opt/smartdc/manatee/etc/postgresql.conf",
+                "postgresConf": "PG_CONF",
                 "recoveryConf": "/opt/smartdc/manatee/etc/recovery.conf",
                 "dbUser": "postgres",
                 "dataDir": "PG_DIR",
