@@ -19,6 +19,7 @@
     "bunyan": "0.14.5",
     "carrier": "0.1.7",
     "iniparser": "1.0.5",
+    "manta": "git+ssh://git@git.joyent.com:node-manta.git#60c0efc1db023735b7684c2466138b101c0eb19f",
     "node-uuid": "1.3.3",
     "optimist": "0.3.4",
     "pg": "0.7.0",
@@ -30,7 +31,7 @@
     "vasync": "1.3.2",
     "verror": "1.3.3",
     "zkplus": "git://github.com/mcavage/node-zkplus.git",
-    "manta": "git+ssh://git@git.joyent.com:node-manta.git#60c0efc1db023735b7684c2466138b101c0eb19f"
+    "zookeeper": "git://github.com/yunong/node-zookeeper.git"
   },
   "devDependencies": {
     "byline": "2.0.1",
