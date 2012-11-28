@@ -124,7 +124,7 @@ function loadTopology(opts, callback) {
 
                         var count = 0;
                         arg.shards.forEach(function (s) {
-                                var p = '/manatee/' + s;
+                                var p = '/manatee/' + s + '/election';
                                 ZK.readdir(p, function (err, nodes) {
                                         if (err) {
                                                 _cb(err);
