@@ -66,11 +66,11 @@ read -r svc_name_delim< <(echo $svc_name | gsed -e 's|\.|\\.|g')
 shard_info=$($MANATEE_STAT $zk_ip:2181 -s $svc_name)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve shardinfo from zookeeper"
 
-async=$(echo $shard_info | json $svc_name_delim.async.pgUrl)
+async=$(echo $shard_info | json $svc_name_delim.async.ip)
 [[ $? -eq 0 ]] || fatal "unable to parse async peer"
-sync=$(echo $shard_info | json $svc_name_delim.sync.pgUrl)
+sync=$(echo $shard_info | json $svc_name_delim.sync.ip)
 [[ $? -eq 0 ]] || fatal "unable to parse sync peer"
-primary=$(echo $shard_info | json $svc_name_delim.primary.pgUrl)
+primary=$(echo $shard_info | json $svc_name_delim.primary.ip)
 [[ $? -eq 0 ]] || fatal "unable to parse primary peer"
 
 continue_backup=0
