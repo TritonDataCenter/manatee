@@ -47,10 +47,10 @@ function backup
         for i in `sed 'N;$!P;$!D;$d' $schema | tr -d ' '| cut -d '|' -f2`
         do
                 local dump_file=$dump_dir/$i
-                sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | bzip2 > $dump_file
+                sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | gzip -1 > $dump_file
                 [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
                 echo "uploading dump $i to manta"
-                $mput -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID -f $dump_file $manta_dir_prefix/$svc_name/$time/$i.bz2
+                $mput -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID -f $dump_file $manta_dir_prefix/$svc_name/$time/$i.gz
                 [[ $? -eq 0 ]] || fatal "unable to upload dump $i"
                 echo "removing dump $dump_file"
                 rm $dump_file
