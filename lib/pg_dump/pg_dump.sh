@@ -63,14 +63,14 @@ function backup
 read -r svc_name_delim< <(echo $svc_name | gsed -e 's|\.|\\.|g')
 
 # figure out if we are the peer that should perform backups.
-shard_info=$(manatee_stat.js -z $zk_ip:2181 -s $svc_name)
+shard_info=$($MANATEE_STAT $zk_ip:2181 -s $svc_name)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve shardinfo from zookeeper"
 
-async=$(echo $shard_info | json $svc_name_delim.async.url)
+async=$(echo $shard_info | json $svc_name_delim.async.pgUrl)
 [[ $? -eq 0 ]] || fatal "unable to parse async peer"
-sync=$(echo $shard_info | json $svc_name_delim.sync.url)
+sync=$(echo $shard_info | json $svc_name_delim.sync.pgUrl)
 [[ $? -eq 0 ]] || fatal "unable to parse sync peer"
-primary=$(echo $shard_info | json $svc_name_delim.primary.url)
+primary=$(echo $shard_info | json $svc_name_delim.primary.pgUrl)
 [[ $? -eq 0 ]] || fatal "unable to parse primary peer"
 
 continue_backup=0
