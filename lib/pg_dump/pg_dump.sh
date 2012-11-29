@@ -5,6 +5,7 @@ PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/usr
 MANTA_URL=`mdata-get manta_url`
 MANTA_USER="poseidon"
 MANTA_KEY_ID=`ssh-keygen -lf ~/.ssh/id_rsa.pub | cut -d ' ' -f2`
+MANATEE_STAT=/opt/smartdc/manatee/bin/manatee_stat.js
 
 function fatal
 {
