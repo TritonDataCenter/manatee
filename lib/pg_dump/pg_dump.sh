@@ -34,8 +34,7 @@ function backup
         local month=$(date -u +%m)
         local day=$(date -u +%d)
         local hour=$(date -u +%H)
-        local time=$(date +%F-%H-%M-%S)
-        local dir=$manta_dir_prefix/$year/$month/$day/$hour/$svc_name
+        local dir=$manta_dir_prefix/$svc_name/$year/$month/$day/$hour
         $mmkdir -p -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $dir
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
 
@@ -47,6 +46,7 @@ function backup
         for i in `sed 'N;$!P;$!D;$d' $schema | tr -d ' '| cut -d '|' -f2`
         do
                 local dump_file=$dump_dir/$i
+                local time=$(date -u +%F-%H-%M-%S)
                 sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | gzip -1 > $dump_file
                 [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
                 echo "uploading dump $i to manta"
