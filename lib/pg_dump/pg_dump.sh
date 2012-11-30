@@ -30,13 +30,13 @@ mput='/opt/smartdc/manatee/node_modules/manta/bin/mput'
 function backup
 {
         local manta_dir_prefix=/poseidon/stor/manatee_backups
-        echo "making backup dir $manta_dir_prefix$svc_name"
-        time=$(date +%F-%H-%M-%S)
-        $mmkdir -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $manta_dir_prefix
-        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
-        $mmkdir -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $manta_dir_prefix/$svc_name
-        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
-        $mmkdir -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $manta_dir_prefix/$svc_name/$time
+        local year=$(date -u +%Y)
+        local month=$(date -u +%m)
+        local day=$(date -u +%d)
+        local hour=$(date -u +%H)
+        local time=$(date +%F-%H-%M-%S)
+        local dir=$manta_dir_prefix/$year/$month/$day/$hour/$svc_name
+        $mmkdir -p -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $dir
         [[ $? -eq 0 ]] || fatal "unable to create backup dir"
 
         echo "getting db tables"
@@ -50,7 +50,7 @@ function backup
                 sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | gzip -1 > $dump_file
                 [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
                 echo "uploading dump $i to manta"
-                $mput -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID -f $dump_file $manta_dir_prefix/$svc_name/$time/$i.gz
+                $mput -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID -f $dump_file $dir/$i-$time.gz
                 [[ $? -eq 0 ]] || fatal "unable to upload dump $i"
                 echo "removing dump $dump_file"
                 rm $dump_file
