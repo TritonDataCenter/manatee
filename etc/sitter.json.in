@@ -34,13 +34,14 @@
                         "pgUrl": "PG_URL"
                 }
         },
-        "heartbeaterCfg": {
-                "port": 12344
+        "heartbeatServerCfg": {
+                "port": 12344,
+                "expirationTime": 60000,
+                "pollInterval": 1000
         },
         "backupPort": 12345,
         "postgresPort": 5432,
         "url": "ZONE_IP",
-        "heartbeatPort": 12344,
-        "heartbeatInterval": 200,
-        "ttl": 30
+        "heartbeatInterval": 1000,
+        "ttl": 60
 }

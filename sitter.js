@@ -44,7 +44,7 @@ cfg.zkCfg.log = LOG;
 cfg.postgresMgrCfg.log = LOG;
 cfg.postgresMgrCfg.backupClientCfg.log = LOG;
 cfg.postgresMgrCfg.snapShotterCfg.log = LOG;
-cfg.heartbeaterCfg.log = LOG;
+cfg.heartbeatServerCfg.log = LOG;
 
 LOG.info('starting manatee');
 var shard = new Shard(cfg);
