@@ -1,41 +1,45 @@
 {
-  "author": "Yunong Xiao <yunong@joyent.com>",
-  "name": "manatee",
-  "version": "0.0.1",
-  "repository": {
-    "type": "git",
-    "url": "git@git.joyent.com:manatee.git"
-  },
-  "main": "lib/main.js",
-  "directories": {
-    "lib": "./lib"
-  },
-  "engines": {
-    "node": ">=0.8"
-  },
-  "dependencies": {
-    "assert-plus": "0.1.0",
-    "backoff": "0.2.0",
-    "bunyan": "0.14.5",
-    "carrier": "0.1.7",
-    "iniparser": "1.0.5",
-    "node-uuid": "1.3.3",
-    "optimist": "0.3.4",
-    "pg": "0.7.0",
-    "posix-getopt": "1.0.0",
-    "restify": "1.4.4",
-    "sprintf": "0.1.0",
-    "shelljs": "0.0.5pre4",
-    "vargs": "0.1.0",
-    "vasync": "1.3.2",
-    "verror": "1.3.3",
-    "zkplus": "git://github.com/mcavage/node-zkplus.git",
-    "zookeeper": "git://github.com/yunong/node-zookeeper.git",
-    "manta": "git+ssh://git@git.joyent.com:node-manta.git#a8e93b0"
-  },
-  "devDependencies": {
-    "byline": "2.0.1",
-    "nodemock": "0.2.16",
-    "tap": "0.2.0"
-  }
+        "author": "Yunong Xiao <yunong@joyent.com>",
+        "name": "manatee",
+        "version": "1.0.0",
+        "private": true,
+        "description": "Manta H/A Postgres Minder",
+        "repository": {
+                "type": "git",
+                "url": "git@git.joyent.com:manatee.git"
+        },
+        "main": "lib/main.js",
+        "directories": {
+                "lib": "./lib",
+                "bin": "./bin"
+        },
+        "engines": {
+                "node": ">=0.8"
+        },
+        "dependencies": {
+                "assert-plus": "0.1.0",
+                "backoff": "0.2.0",
+                "bunyan": "0.14.5",
+                "carrier": "0.1.7",
+                "iniparser": "1.0.5",
+                "node-uuid": "1.3.3",
+                "optimist": "0.3.4",
+                "pg": "0.7.0",
+                "posix-getopt": "1.0.0",
+                "restify": "1.4.4",
+                "sprintf": "0.1.0",
+                "shelljs": "0.0.5pre4",
+                "vargs": "0.1.0",
+                "vasync": "1.3.2",
+                "verror": "1.3.3",
+                "xtend": "1.0.3",
+                "zkplus": "git://github.com/mcavage/node-zkplus.git",
+                "zookeeper": "git://github.com/yunong/node-zookeeper.git",
+                "manta": "git+ssh://git@git.joyent.com:node-manta.git#a8e93b0"
+        },
+        "devDependencies": {
+                "byline": "2.0.1",
+                "nodemock": "0.2.16",
+                "tap": "0.2.0"
+        }
 }
