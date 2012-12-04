@@ -1,51 +1,102 @@
 // Copyright (c) 2012, Joyent, Inc. All rights reserved.
+var assert = require('assert-plus');
 var bunyan = require('bunyan');
-var optimist = require('optimist');
+var extend = require('xtend');
 var fs = require('fs');
+var getopt = require('posix-getopt');
 var SnapShotter = require('./lib/snapShotter');
 
 
-///--- Mainline
-
-var ARGV = optimist.options({
-  'd': {
-    alias: 'debug',
-    describe: 'debug level'
-  },
-  'f': {
-    alias: 'file',
-    demand: true,
-    describe: 'configuration file'
-  }
-}).argv;
-
-var CFG;
+/**
+ * globals
+ */
+var NAME = 'manatee-snapshotter';
 
 var LOG = bunyan.createLogger({
-  level: ARGV.d ? (ARGV.d > 1 ? 'trace' : 'debug') : 'info',
-  name: 'sitter',
-  serializers: {
-    err: bunyan.stdSerializers.err
-  },
-  src: ARGV.d ? true : false
+        level: (process.env.LOG_LEVEL || 'info'),
+        name: NAME,
+        serializers: {
+                err: bunyan.stdSerializers.err
+        },
+        // always turn source to true, manatee isn't in the data path
+        src: true
 });
 
-function readConfig() {
-  if (!CFG) {
-    CFG = JSON.parse(fs.readFileSync(ARGV.f, 'utf8'));
-    LOG.info({config: CFG, file: ARGV.f}, 'Configuration loaded');
-  }
+var LOG_LEVEL_OVERRIDE = false;
 
-  return (CFG);
+/**
+ * private functions
+ */
+function parseOptions() {
+        var option;
+        var opts = {};
+        var parser = new getopt.BasicParser('vf:(file)', process.argv);
+
+        while ((option = parser.getopt()) !== undefined) {
+                switch (option.option) {
+                case 'f':
+                        opts.file = option.optarg;
+                        break;
+
+                case 'v':
+                        // Allows us to set -vvv -> this little hackery
+                        // just ensures that we're never < TRACE
+                        LOG_LEVEL_OVERRIDE = true;
+                        LOG.level(Math.max(bunyan.TRACE, (LOG.level() - 10)));
+                        if (LOG.level() <= bunyan.DEBUG)
+                                LOG = LOG.child({src: true});
+                        break;
+
+                default:
+                        process.exit(1);
+                        break;
+                }
+        }
+
+        return (opts);
 }
 
-var cfg = readConfig();
-cfg.log = LOG;
+function readConfig(options) {
+        assert.object(options);
 
-setTimeout(function(){ startSnapshotter(); }, cfg.startupDelay);
+        var cfg;
+
+        try {
+                cfg = JSON.parse(fs.readFileSync(options.file, 'utf8'));
+        } catch (e) {
+                LOG.fatal({
+                        err: e,
+                        file: options.file
+                }, 'Unable to read/parse configuration file');
+                process.exit(1);
+        }
+
+        return (extend({}, cfg, options));
+}
+
+/**
+ * mainline
+ */
+var _config;
+var _options = parseOptions();
+
+LOG.debug({options: _options}, 'command line options parsed');
+_config = readConfig(_options);
+LOG.debug({config: _config}, 'configuration loaded');
+
+if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
+        if (bunyan.resolveLevel(_config.logLevel)) {
+                LOG.level(_config.logLevel);
+        }
+}
+
+_config.log = LOG;
+
+// set a timeout so we don't collide with the snapshot taken from the sitter
+setTimeout(function(){ startSnapshotter(); }, _config.startupDelay);
 
 function startSnapshotter() {
-  var snapShotter = new SnapShotter(cfg);
+  var snapShotter = new SnapShotter(_config);
 
   snapShotter.on('err', function(err) {
     // only exit if zfs snapshotting fails.
