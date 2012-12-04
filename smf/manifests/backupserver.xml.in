@@ -20,7 +20,7 @@
 
 <exec_method type="method"
              name="start"
-             exec="sudo -u postgres node backupserver.js -d -f etc/backupserver.json &amp;"
+             exec="sudo -u postgres node backupserver.js -v -f etc/backupserver.json &amp;"
              timeout_seconds="30">
     <method_context working_directory="/opt/smartdc/manatee">
         <method_environment>

@@ -20,7 +20,7 @@
 
 <exec_method type="method"
              name="start"
-             exec="sudo -u postgres node snapshotter.js -d -f etc/snapshotter.json &amp;"
+             exec="sudo -u postgres node snapshotter.js -v -f etc/snapshotter.json &amp;"
              timeout_seconds="30">
     <method_context working_directory="/opt/smartdc/manatee">
         <method_environment>

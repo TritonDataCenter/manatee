@@ -20,8 +20,8 @@
 
     <exec_method type="method"
       name="start"
-      exec="sudo -u postgres /usr/bin/ctrun -l child -o noorphan node sitter.js -d -f etc/sitter.json &amp;"
-      timeout_seconds="30">
+      exec="sudo -u postgres /usr/bin/ctrun -l child -o noorphan node sitter.js -v -f etc/sitter.json &amp;"
+      timeout_seconds="65">
       <method_context working_directory="/opt/smartdc/manatee">
         <method_environment>
           <envvar name="PATH"
