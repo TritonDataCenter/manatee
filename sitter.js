@@ -1,53 +1,104 @@
 // Copyright (c) 2012, Joyent, Inc. All rights reserved.
+var assert = require('assert-plus');
 var bunyan = require('bunyan');
+var extend = require('xtend');
 var fs = require('fs');
-var optimist = require('optimist');
+var getopt = require('posix-getopt');
 var Shard = require('./lib/shard');
 
-///--- Mainline
-
-var ARGV = optimist.options({
-        'd': {
-                alias: 'debug',
-                describe: 'debug level'
-        },
-        'f': {
-                alias: 'file',
-                demand: true,
-                describe: 'configuration file'
-        }
-}).argv;
-
-var CFG;
+/**
+ * globals
+ */
+var NAME = 'manatee-sitter';
 
 var LOG = bunyan.createLogger({
-        level: ARGV.d ? (ARGV.d > 1 ? 'trace' : 'debug') : 'info',
-        name: 'pg-sitter',
+        level: (process.env.LOG_LEVEL || 'info'),
+        name: NAME,
         serializers: {
                 err: bunyan.stdSerializers.err
         },
-        src: ARGV.d ? true : false
+        // always turn source to true, manatee isn't in the data path
+        src: true
 });
 
-function readConfig() {
-        if (!CFG) {
-                CFG = JSON.parse(fs.readFileSync(ARGV.f, 'utf8'));
-                LOG.trace({config: CFG, file: ARGV.f}, 'Configuration loaded');
+var LOG_LEVEL_OVERRIDE = false;
+
+/**
+ * private functions
+ */
+function parseOptions() {
+        var option;
+        var opts = {};
+        var parser = new getopt.BasicParser('vf:(file)', process.argv);
+
+        while ((option = parser.getopt()) !== undefined) {
+                switch (option.option) {
+                case 'f':
+                        opts.file = option.optarg;
+                        break;
+
+                case 'v':
+                        // Allows us to set -vvv -> this little hackery
+                        // just ensures that we're never < TRACE
+                        LOG_LEVEL_OVERRIDE = true;
+                        LOG.level(Math.max(bunyan.TRACE, (LOG.level() - 10)));
+                        if (LOG.level() <= bunyan.DEBUG)
+                                LOG = LOG.child({src: true});
+                        break;
+
+                default:
+                        process.exit(1);
+                        break;
+                }
         }
 
-        return (CFG);
+        return (opts);
 }
 
-var cfg = readConfig();
-cfg.log = LOG;
-cfg.zkCfg.log = LOG;
-cfg.postgresMgrCfg.log = LOG;
-cfg.postgresMgrCfg.backupClientCfg.log = LOG;
-cfg.postgresMgrCfg.snapShotterCfg.log = LOG;
-cfg.heartbeatServerCfg.log = LOG;
+function readConfig(options) {
+        assert.object(options);
+
+        var cfg;
+
+        try {
+                cfg = JSON.parse(fs.readFileSync(options.file, 'utf8'));
+        } catch (e) {
+                LOG.fatal({
+                        err: e,
+                        file: options.file
+                }, 'Unable to read/parse configuration file');
+                process.exit(1);
+        }
+
+        return (extend({}, cfg, options));
+}
+
+/**
+ * mainline
+ */
+var _config;
+var _options = parseOptions();
+
+LOG.debug({options: _options}, 'command line options parsed');
+_config = readConfig(_options);
+LOG.debug({config: _config}, 'configuration loaded');
+
+if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
+        if (bunyan.resolveLevel(_config.logLevel)) {
+                LOG.level(_config.logLevel);
+        }
+}
+
+// set loggers of the sub components
+_config.log = LOG;
+_config.zkCfg.log = LOG;
+_config.postgresMgrCfg.log = LOG;
+_config.postgresMgrCfg.backupClientCfg.log = LOG;
+_config.postgresMgrCfg.snapShotterCfg.log = LOG;
+_config.heartbeatServerCfg.log = LOG;
 
 LOG.info('starting manatee');
-var shard = new Shard(cfg);
+var shard = new Shard(_config);
 
 LOG.info('manatee started');
 LOG.trace('manatee shard', shard);
