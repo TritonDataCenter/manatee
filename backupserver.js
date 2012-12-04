@@ -74,7 +74,9 @@ function readConfig(options) {
         return (extend({}, cfg, options));
 }
 
-///--- Mainline
+/**
+ * mainline
+ */
 var _config;
 var _options = parseOptions();
 
