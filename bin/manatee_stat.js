@@ -244,6 +244,12 @@ function pgStatus(topology, callback) {
                         var node = topology[s][k];
                         var url = node.pgUrl;
 
+                        if (!url) {
+                                if (++count === total)
+                                        callback();
+                                return;
+                        }
+
                         var q = k !== 'async' ? PG_REPL_STAT : PG_REPL_LAG;
 
                         query(url, q, function (err ,res) {
