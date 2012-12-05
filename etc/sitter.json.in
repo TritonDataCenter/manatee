@@ -15,7 +15,7 @@
                 "dataDir": "PG_DIR",
                 "url": "PG_URL",
                 "healthChkInterval": 1000,
-                "healthChkTimeout: 60000,
+                "healthChkTimeout": 60000,
                 "opsTimeout": 10000,
                 "replicationTimeout": 30000,
                 "oneNodeWriteMode": ONE_NODE_WRITE_MODE,
