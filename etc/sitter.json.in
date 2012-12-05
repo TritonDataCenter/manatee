@@ -14,7 +14,7 @@
                 "dbUser": "postgres",
                 "dataDir": "PG_DIR",
                 "url": "PG_URL",
-                "healthChkInterval": 1000,
+                "healthChkInterval": 10000,
                 "healthChkTimeout": 60000,
                 "opsTimeout": 10000,
                 "replicationTimeout": 30000,
