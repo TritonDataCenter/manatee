@@ -154,6 +154,21 @@ function loadTopology(opts, callback) {
                                                 cb();
                                 });
                         });
+                },
+                function errorStatus(arg, cb) {
+                        var count = 0;
+                        arg.shards.forEach(function (s) {
+                                var p = '/manatee/' + s + '/error';
+                                ZK.get(p, function (err, object) {
+                                        count++;
+                                        if (object) {
+                                                topology[s].error = object;
+                                        }
+
+                                        if (count === arg.shards.length)
+                                                cb();
+                                });
+                        });
                 }
         ];
         var topology = {}
