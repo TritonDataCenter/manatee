@@ -35,7 +35,7 @@
                 "xtend": "1.0.3",
                 "zkplus": "git://github.com/mcavage/node-zkplus.git",
                 "zookeeper": "git://github.com/yunong/node-zookeeper.git",
-                "manta": "git@github.com:joyent/node-manta.git#a091795711"
+                "manta": "git+ssh://git@github.com:joyent/node-manta.git:a091795711"
         },
         "devDependencies": {
                 "byline": "2.0.1",
