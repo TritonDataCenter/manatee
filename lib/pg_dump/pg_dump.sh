@@ -1,6 +1,5 @@
 #!/bin/bash
 echo ""   # blank line in log file helps scroll btwn instances
-set -o errexit
 export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 set -o xtrace
 
