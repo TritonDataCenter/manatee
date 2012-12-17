@@ -18,7 +18,7 @@
         },
         "dependencies": {
                 "assert-plus": "0.1.0",
-                "backoff": "0.2.0",
+                "backoff": "1.2.0",
                 "bunyan": "0.14.5",
                 "carrier": "0.1.7",
                 "iniparser": "1.0.5",
