@@ -31,5 +31,5 @@
 # appropriate (usually the "deps" or "all" target).
 #
 
-REPO_DEPS   := $(REPO_MODULES:src/node-%=node_modules/%)
+REPO_DEPS    = $(REPO_MODULES:src/node-%=node_modules/%)
 CLEAN_FILES += $(REPO_DEPS)

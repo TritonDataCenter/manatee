@@ -66,6 +66,12 @@
 #				with the default.
 #				(default: master)
 #
+#	NODE_PREBUILT_CC_VERSION	If you have a C compiler version that differs
+#				from that used for sdcnode builds, then you can set this to
+#				the prebuilt cc version you'd like to use. See
+#				<https://download.joyent.com/pub/build/sdcnode/master-latest/sdcnode/>
+#				for available builds.
+#
 #	BUILD			top-level directory for built binaries
 #				(default: "build")
 #
@@ -106,7 +112,7 @@ NODE_PREBUILT_CC := $(CC)
 ifeq ($(shell $(CC) --version | head -1 | awk '{print $$2}'),(GCC))
 	NODE_PREBUILT_CC := gcc
 endif
-NODE_PREBUILT_CC_VERSION := $(shell $(CC) --version | head -1 | awk '{print $$3}')
+NODE_PREBUILT_CC_VERSION ?= $(shell $(CC) --version | head -1 | awk '{print $$3}')
 NODE_PREBUILT_NAME := $(NODE_PREBUILT_VERSION)-$(NODE_PREBUILT_CC)$(NODE_PREBUILT_CC_VERSION)
 ifeq ($(NODE_PREBUILT_TAG),)
 	NODE_PREBUILT_NAME := $(NODE_PREBUILT_VERSION)-$(NODE_PREBUILT_CC)$(NODE_PREBUILT_CC_VERSION)

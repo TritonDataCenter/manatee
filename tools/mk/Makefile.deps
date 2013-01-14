@@ -23,6 +23,11 @@ JSL		?= $(JSL_EXEC)
 $(JSL_EXEC): | deps/javascriptlint/.git
 	cd deps/javascriptlint && make install
 
+distclean::
+	if [[ -f deps/javascriptlint/Makefile ]]; then \
+		cd deps/javascriptlint && make clean; \
+	fi
+
 #
 # jsstyle
 #
@@ -35,5 +40,5 @@ $(JSSTYLE_EXEC): | deps/jsstyle/.git
 # restdown
 #
 RESTDOWN_EXEC	?= deps/restdown/bin/restdown
-RESTDOWN	?= python2.6 $(RESTDOWN_EXEC)
+RESTDOWN	?= python $(RESTDOWN_EXEC)
 $(RESTDOWN_EXEC): | deps/restdown/.git
