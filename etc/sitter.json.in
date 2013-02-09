@@ -19,8 +19,9 @@
                 "opsTimeout": 10000,
                 "replicationTimeout": 30000,
                 "oneNodeWriteMode": ONE_NODE_WRITE_MODE,
-                "backupClientCfg": {
+                "zfsClientCfg": {
                         "dataset": "DATASET",
+                        "parentDataset": "PARENT_DATASET",
                         "snapshotDir": "SNAPSHOT_DIR",
                         "zfsHost": "ZONE_IP",
                         "zfsPort": 1234,
