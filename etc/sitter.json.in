@@ -26,7 +26,7 @@
                         "zfsHost": "ZONE_IP",
                         "zfsPort": 1234,
                         "pollInterval": 1000,
-                        "zfsRecvPath": "/opt/smartdc/manatee/bin/zfs_recv",
+                        "zfsRecvPath": "/usr/vm/sbin/zfs_recv",
                         "mountpoint": "/manatee/pg/"
                 },
                 "snapShotterCfg": {

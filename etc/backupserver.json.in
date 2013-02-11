@@ -3,7 +3,7 @@
     "port": BACKUP_SERVER_PORT
   },
   "backupSenderCfg": {
-    "zfsSendPath": "ZFS_SEND_PATH",
+    "zfsSendPath": "/usr/vm/sbin/zfs_send",
     "dataset": "DATASET",
     "snapshotDir": "SNAPSHOT_DIR"
   }
