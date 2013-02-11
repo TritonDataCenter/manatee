@@ -93,7 +93,7 @@ if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
 _config.log = LOG;
 _config.zkCfg.log = LOG;
 _config.postgresMgrCfg.log = LOG;
-_config.postgresMgrCfg.backupClientCfg.log = LOG;
+_config.postgresMgrCfg.zfsClientCfg.log = LOG;
 _config.postgresMgrCfg.snapShotterCfg.log = LOG;
 _config.heartbeatServerCfg.log = LOG;
 
