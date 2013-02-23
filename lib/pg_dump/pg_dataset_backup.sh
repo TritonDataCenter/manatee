@@ -44,7 +44,7 @@ function backup
 
         echo "sending snapshot $snapshot to manta"
         local snapshot_manta_name=$(echo $snapshot | gsed -e 's|\/|\-|g')
-        zfs send $snapshot | $mput $dir/$snapshot_manta_name -H "max-content-length: $snapshot_size"
+        zfs send $snapshot | $mput -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID -H "max-content-length: $snapshot_size" $dir/$snapshot_manta_name
         [[ $? -eq 0 ]] || fatal "unable to send snapshot $snapshot"
 
         echo "successfully backed up snapshot $snapshot to manta file $dir/$snapshot_manta_name"
