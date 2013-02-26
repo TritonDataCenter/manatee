@@ -13,14 +13,15 @@ var vasync = require('vasync');
 var zkplus = require('zkplus');
 
 
+exports.loadTopology = loadTopology;
+exports.createZkClient = createZkClient;
 
 ///--- Globals
 
 var Client = pg.Client;
 
-var NAME = 'manatee_stat';
 var LOG = bunyan.createLogger({
-        name: path.basename(process.argv[1]),
+        name: 'manatee_common',
         level: (process.env.LOG_LEVEL || 'fatal'),
         src: true,
         serializers: {
@@ -31,11 +32,11 @@ var LOG = bunyan.createLogger({
 var PG_REPL_STAT = 'select * from pg_stat_replication;';
 var PG_REPL_LAG = 'SELECT now() - pg_last_xact_replay_timestamp() AS time_lag;';
 
-var ZK;
+exports.loadTopology = loadTopology;
+exports.createZkClient = createZkClient;
+exports.printTopology = printTopology;
+exports.pgStatus = pgStatus;
 
-
-
-///--- Internal Functions
 
 function compareNodeNames(a, b) {
         var seqA = parseInt(a.substring(a.lastIndexOf('-') + 1), 10);
@@ -58,7 +59,6 @@ function createZkClient(opts, cb) {
 
         zk.connect();
 }
-
 
 function formatNodes(nodes) {
         var output = {};
@@ -104,11 +104,10 @@ function ifError(err) {
         }
 }
 
-
-function loadTopology(opts, callback) {
+function loadTopology(zk, callback) {
         var tasks = [
                 function listAllShards(arg, cb) {
-                        ZK.readdir('/manatee', function(err, shards) {
+                        zk.readdir('/manatee', function(err, shards) {
                                 arg.shards = shards;
                                 cb(err);
                         });
@@ -125,7 +124,7 @@ function loadTopology(opts, callback) {
                         var count = 0;
                         arg.shards.forEach(function (s) {
                                 var p = '/manatee/' + s + '/election';
-                                ZK.readdir(p, function (err, nodes) {
+                                zk.readdir(p, function (err, nodes) {
                                         if (err) {
                                                 _cb(err);
                                                 return;
@@ -146,7 +145,7 @@ function loadTopology(opts, callback) {
                                 var path = '/' +
                                            s.split('.').reverse().join('/') +
                                            '/pg';
-                                ZK.get(path, function(err, object) {
+                                zk.get(path, function(err, object) {
                                         topology[s].registrar = object;
                                         count++;
 
@@ -159,7 +158,7 @@ function loadTopology(opts, callback) {
                         var count = 0;
                         arg.shards.forEach(function (s) {
                                 var p = '/manatee/' + s + '/error';
-                                ZK.get(p, function (err, object) {
+                                zk.get(p, function (err, object) {
                                         count++;
                                         if (object) {
                                                 topology[s].error = object;
@@ -171,7 +170,7 @@ function loadTopology(opts, callback) {
                         });
                 }
         ];
-        var topology = {}
+        var topology = {};
 
         vasync.pipeline({
                 funcs: tasks,
@@ -185,47 +184,6 @@ function loadTopology(opts, callback) {
                 callback(err, topology);
         });
 }
-
-function parseOptions() {
-        var option;
-        var opts = {};
-        var parser = new getopt.BasicParser('hpvs:', process.argv);
-
-        while ((option = parser.getopt()) !== undefined) {
-                switch (option.option) {
-                case 'h':
-                        usage();
-                        break;
-
-                case 's':
-                        opts.shard = option.optarg;
-                        break;
-
-                case 'p':
-                        opts.postgres = true;
-                        break;
-
-                case 'v':
-                        LOG.level(Math.max(bunyan.TRACE, (LOG.level() - 10)));
-                        if (LOG.level() <= bunyan.DEBUG)
-                                LOG = LOG.child({src: true});
-                        break;
-
-                default:
-                        usage('invalid option: ' + option.option);
-                        process.exit(1);
-                        break;
-                }
-        }
-
-        if (parser.optind() >= process.argv.length)
-                usage('missing required argument: "zookeeper_ip"');
-
-        opts.zk = process.argv[parser.optind()];
-
-        return (opts);
-}
-
 
 function pgStatus(topology, callback) {
         LOG.debug({
@@ -263,7 +221,6 @@ function pgStatus(topology, callback) {
         });
 }
 
-
 function printTopology(opts, topology) {
         if (opts.shard) {
                 if (!topology[opts.shard]) {
@@ -277,7 +234,6 @@ function printTopology(opts, topology) {
         }
         process.exit(0);
 }
-
 
 function query(url, query, callback) {
         LOG.debug({
@@ -299,46 +255,9 @@ function query(url, query, callback) {
         });
 }
 
-
 function transformPgUrl(url) {
         if (!url)
                 return ('');
 
         return ('tcp://postgres@' + url.split('-')[0] + ':5432/postgres');
 }
-
-
-function usage(msg) {
-        if (msg)
-                console.error(msg);
-
-        var str = 'usage: ' + path.basename(process.argv[1]);
-        str += '[-h] [-p] [-v] [-s shard] zookeeper_ip';
-        console.error(str);
-        process.exit(msg ? 1 : 0);
-}
-
-
-
-///--- Mainline
-
-var _opts = parseOptions();
-
-createZkClient(_opts, function (err, zk) {
-        ifError(err);
-
-        ZK = zk;
-        loadTopology(_opts, function (err, topology) {
-                ifError(err);
-
-                if (_opts.postgres) {
-                        pgStatus(topology, function (err) {
-                                ifError(err);
-
-                                printTopology(_opts, topology);
-                        });
-                } else {
-                        printTopology(_opts, topology);
-                }
-        });
-});

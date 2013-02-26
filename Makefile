@@ -29,7 +29,7 @@ endif
 # Files
 #
 DOC_FILES	 = index.restdown
-JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
+JS_FILES	:= $(shell ls *.js) $(shell find lib test bin -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
@@ -42,7 +42,7 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 # Variables
 #
 
-NODE_PREBUILT_VERSION   := v0.8.14
+NODE_PREBUILT_VERSION   := v0.8.21
 NODE_PREBUILT_TAG       := zone
 NODE_PREBUILT_CC_VERSION := 4.6.2
 
