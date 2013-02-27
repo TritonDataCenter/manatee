@@ -14,16 +14,6 @@ var pg = require('pg');
 var vasync = require('vasync');
 var verror = require('verror');
 
-var LOG = bunyan.createLogger({
-        name: path.basename(process.argv[1]),
-        level: (process.env.LOG_LEVEL || 'fatal'),
-        level: 'trace',
-        src: true,
-        serializers: {
-                err: bunyan.stdSerializers.err
-        }
-});
-
 var parseOptions = function() {
         var options;
         var opts = {};

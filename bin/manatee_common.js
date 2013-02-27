@@ -15,6 +15,8 @@ var zkplus = require('zkplus');
 
 exports.loadTopology = loadTopology;
 exports.createZkClient = createZkClient;
+exports.printTopology = printTopology;
+exports.pgStatus = pgStatus;
 
 ///--- Globals
 
@@ -31,11 +33,6 @@ var LOG = bunyan.createLogger({
 
 var PG_REPL_STAT = 'select * from pg_stat_replication;';
 var PG_REPL_LAG = 'SELECT now() - pg_last_xact_replay_timestamp() AS time_lag;';
-
-exports.loadTopology = loadTopology;
-exports.createZkClient = createZkClient;
-exports.printTopology = printTopology;
-exports.pgStatus = pgStatus;
 
 
 function compareNodeNames(a, b) {
@@ -95,7 +92,6 @@ function formatNodes(nodes) {
 
         return (output);
 }
-
 
 function ifError(err) {
         if (err) {

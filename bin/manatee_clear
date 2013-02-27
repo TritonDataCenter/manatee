@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // -*- mode: js -*-
-// recover a shard in error
+// recover a manatee shard in error
 
 var exec = require('child_process').exec;
 var path = require('path');
@@ -17,7 +17,7 @@ var zkplus = require('zkplus');
 
 var LOG = bunyan.createLogger({
         name: path.basename(process.argv[1]),
-        level: (process.env.LOG_LEVEL || 'fatal'),
+        level: (process.env.LOG_LEVEL || 'info'),
         src: true,
         serializers: {
                 err: bunyan.stdSerializers.err
@@ -27,12 +27,17 @@ var LOG = bunyan.createLogger({
 var parseOptions = function() {
         var options;
         var opts = {};
-        var parser = new getopt.BasicParser('h', process.argv);
+        var parser = new getopt.BasicParser('hv', process.argv);
 
         while((option = parser.getopt()) !== undefined) {
                 switch (option.option) {
                 case 'h':
                         usage();
+                        break;
+                case 'v':
+                        LOG.level(Math.max(bunyan.TRACE, (LOG.level() - 10)));
+                        if (LOG.level() <= bunyan.DEBUG)
+                                LOG = LOG.child({src: true});
                         break;
                 default:
                         usage('invalid option: ' + option.option);
@@ -74,7 +79,6 @@ var usage = function(msg) {
         process.exit(msg ? 1 : 0);
 }
 
-
 var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
         LOG.debug({
                 shardId: shardId,
@@ -85,8 +89,12 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
         var tasks = [
                 // look up in zookeeper to see who was the primary
                 function createZkClient(arg, cb) {
-                        manatee.createZkClient({log: LOG, zk: zookeeperIp},
-                                                    function (err, zk)
+                        var zkLog = LOG.child({
+                                component: 'zookeeper',
+                                level: LOG.level
+                        });
+                        manatee.createZkClient({log: zkLog, zk: zookeeperIp},
+                                               function (err, zk)
                         {
                                 arg.zk = zk;
                                 return cb(err);
@@ -117,7 +125,7 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                 return cb();
                         }
                         var path = '/manatee/' + shardId + '/error';
-                        LOG.debug({
+                        LOG.info({
                                 path: path
                         }, 'removing error node');
                         arg.zk.rmr(path, cb);
@@ -129,8 +137,8 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                 return cb();
                         }
                         cmd = 'svcadm disable manatee-sitter; ' +
-                                'svcadm enable manatee-sitter';
-                        LOG.debug({cmd: cmd}, 'exec');
+                              'svcadm enable manatee-sitter';
+                        LOG.info({cmd: cmd}, 'restarting manatee-sitter');
 
                         exec(cmd, cb);
                 },
@@ -140,8 +148,8 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                 LOG.debug('not standby');
                                 return cb();
                         }
-                        LOG.debug('waiting for error node to be removed by ' +
-                                  'primary');
+                        LOG.info('waiting for error node to be removed by ' +
+                                 'primary');
                         arg.zk.watch('/manatee/' + shardId + '/error',
                                  function(err, listener)
                         {
@@ -149,7 +157,7 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                         return cb(err);
                                 }
                                 listener.once('delete', function() {
-                                        LOG.debug('error node deleted');
+                                        LOG.info('error node deleted');
                                         return cb();
                                 });
                         });
@@ -161,14 +169,14 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                 LOG.debug('not standby');
                                 return cb();
                         }
-                        LOG.debug('waiting for primary to come online');
+                        LOG.info('waiting for primary to come online');
                         arg.zk.watch('/manatee/' + shardId + '/election',
                                  { method: 'list' }, function(err, listener) {
 
                                 listener.on('children', function(children) {
-                                        LOG.debug({
+                                        LOG.info({
                                                 nodes: children
-                                        }, 'got primary node(s)');
+                                        }, 'primary online');
                                         return cb();
                                 });
                         });
@@ -180,8 +188,8 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                 return cb();
                         }
                         cmd = 'svcadm disable manatee-sitter; ' +
-                                'svcadm enable manatee-sitter';
-                        LOG.debug({cmd: cmd}, 'exec');
+                              'svcadm enable manatee-sitter';
+                        LOG.info({cmd: cmd}, 'restarting manatee-sitter');
                         exec(cmd, cb);
                 }
         ];
@@ -193,7 +201,6 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
 }
 
 var _opts = parseOptions();
-console.log(_opts);
 
 cleanupManatee(_opts.shardId, _opts.myIp, _opts.zookeeperIp, function(err) {
         if (err) {
