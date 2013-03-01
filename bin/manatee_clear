@@ -129,7 +129,7 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                         LOG.info({
                                 path: path_
                         }, 'removing error node');
-                        arg.zk.rmr(path, cb);
+                        arg.zk.rmr(path_, cb);
                         return (undefined);
                 },
                 // restart manatee
