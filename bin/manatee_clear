@@ -25,7 +25,7 @@ var LOG = bunyan.createLogger({
 });
 
 var parseOptions = function() {
-        var options;
+        var option;
         var opts = {};
         var parser = new getopt.BasicParser('hv', process.argv);
 
@@ -63,7 +63,7 @@ var parseOptions = function() {
         opts.zookeeperIp = process.argv[parser.optind() + 2];
 
         return opts;
-}
+};
 
 var usage = function(msg) {
         if (msg) {
@@ -74,10 +74,10 @@ var usage = function(msg) {
         str += '\nusage: ' + path.basename(process.argv[1]);
         str += ' shard_id my_ip zookeeper_ip';
         str += '\nexample: ./manatee_clear 1.moray.joyent.us 10.99.99.32 ' +
-               '10.99.99.13'
+               '10.99.99.13';
         console.error(str);
         process.exit(msg ? 1 : 0);
-}
+};
 
 var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
         LOG.debug({
@@ -113,10 +113,11 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                                 'shard is not in error state'));
                                 }
 
-                                arg.isPrimary = (IP === arg.myShard.error.ip);
+                                arg.isPrimary = (myIp === arg.myShard.error.ip);
                                 return cb();
                         });
 
+                        return (undefined);
                 },
                 // if primary delete error node
                 function deleteErrorNode(arg, cb) {
@@ -124,11 +125,12 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                 LOG.debug('not primary');
                                 return cb();
                         }
-                        var path = '/manatee/' + shardId + '/error';
+                        var path_ = '/manatee/' + shardId + '/error';
                         LOG.info({
-                                path: path
+                                path: path_
                         }, 'removing error node');
                         arg.zk.rmr(path, cb);
+                        return (undefined);
                 },
                 // restart manatee
                 function restartPrimarySitter(arg, cb) {
@@ -136,11 +138,12 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                 LOG.debug('not primary');
                                 return cb();
                         }
-                        cmd = 'svcadm disable manatee-sitter; ' +
+                        var cmd = 'svcadm disable manatee-sitter; ' +
                               'svcadm enable manatee-sitter';
                         LOG.info({cmd: cmd}, 'restarting manatee-sitter');
 
                         exec(cmd, cb);
+                        return (undefined);
                 },
                 // if not primary, watch for error node to go away
                 function watchErrorNode(arg, cb) {
@@ -160,7 +163,9 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                         LOG.info('error node deleted');
                                         return cb();
                                 });
+                                return (undefined);
                         });
+                        return (undefined);
                 },
                 // watch election, if there's a node under the path, then the
                 // primary has started, so it's safe to restart standby
@@ -180,6 +185,7 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                         return cb();
                                 });
                         });
+                        return (undefined);
                 },
                 // restart manatee
                 function restartStdbySitter(arg, cb) {
@@ -187,10 +193,11 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                 LOG.debug('not standby');
                                 return cb();
                         }
-                        cmd = 'svcadm disable manatee-sitter; ' +
+                        var cmd = 'svcadm disable manatee-sitter; ' +
                               'svcadm enable manatee-sitter';
                         LOG.info({cmd: cmd}, 'restarting manatee-sitter');
                         exec(cmd, cb);
+                        return (undefined);
                 }
         ];
 
@@ -198,7 +205,7 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                 LOG.debug({err: err}, 'finished cleanupManatee');
                 return callback(err);
         });
-}
+};
 
 var _opts = parseOptions();
 

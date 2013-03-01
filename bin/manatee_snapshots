@@ -15,7 +15,7 @@ var vasync = require('vasync');
 var verror = require('verror');
 
 var parseOptions = function() {
-        var options;
+        var option;
         var opts = {};
         var parser = new getopt.BasicParser('h', process.argv);
 
@@ -38,7 +38,7 @@ var parseOptions = function() {
         opts.dataset = process.argv[parser.optind()];
 
         return opts;
-}
+};
 
 var usage = function(msg) {
         if (msg) {
@@ -49,7 +49,7 @@ var usage = function(msg) {
         str += ' dataset';
         console.error(str);
         process.exit(msg ? 1 : 0);
-}
+};
 
 var getSnapshots = function(dataset, cb) {
         var cmd = 'zfs list -Hp -t snapshot | grep ' + dataset;
@@ -92,7 +92,7 @@ var getSnapshots = function(dataset, cb) {
                 console.log(stderr);
                 return cb(err);
         });
-}
+};
 
 var _opts = parseOptions();
 

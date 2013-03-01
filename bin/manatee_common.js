@@ -71,8 +71,8 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                 LOG.debug({
                         node: pathPrefix + '/' + node
                 }, 'getting node');
-                var zkGetCb = function(i, err, obj) {
-                        switch(i) {
+                var zkGetCb = function(j, err, obj) {
+                        switch(j) {
                                 case 0:
                                         output['primary'] = !err ? {
                                                 ip: obj.ip,
@@ -95,7 +95,7 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                                         } : JSON.stringify(err);
                                         break;
                                 default:
-                                        var asyncNumber = i - 2;
+                                        var asyncNumber = j - 2;
                                         output['async' + asyncNumber] = !err ? {
                                                 ip: obj.ip,
                                                 pgUrl: transformPgUrl(obj.ip),
@@ -113,7 +113,7 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                         }
 
                         return (undefined);
-                }
+                };
                 // bind the function at invocation time to capture i
                 zk.get(pathPrefix + '/' + node, zkGetCb.bind(null, i));
         }
@@ -286,6 +286,8 @@ function query(url, _query, callback) {
                         client.end();
                         return callback(err2, result);
                 });
+
+                return (undefined);
         });
 }
 

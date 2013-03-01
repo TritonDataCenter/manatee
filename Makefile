@@ -29,7 +29,7 @@ endif
 # Files
 #
 DOC_FILES	 = index.restdown
-JS_FILES	:= $(shell ls *.js) $(shell find lib test bin -name '*.js')
+JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js') $(shell ls ./bin/*)
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)

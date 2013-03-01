@@ -87,12 +87,12 @@ var _opts = parseOptions();
 manatee.createZkClient(_opts, function (err, zk) {
         ifError(err);
 
-        manatee.loadTopology(zk, function (err, topology) {
-                ifError(err);
+        manatee.loadTopology(zk, function (err2, topology) {
+                ifError(err2);
 
                 if (_opts.postgres) {
-                        manatee.pgStatus(topology, function (err) {
-                                ifError(err);
+                        manatee.pgStatus(topology, function (err3) {
+                                ifError(err3);
 
                                manatee.printTopology(_opts, topology);
                         });
