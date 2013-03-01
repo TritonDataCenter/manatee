@@ -71,44 +71,45 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
 
         var count = 0;
         for (var i = 0; i < nodes.length; i++) {
+                var currNode = i;
                 var node = nodes[i];
                 LOG.debug({
                         node: pathPrefix + '/' + node
                 }, 'getting node');
-                zk.get(pathPrefix + '/' + node, function(err, obj) {
+                var zkgetCb = function(i, err, obj) {
                         if (err) {
                                 return cb(err);
                         }
-                        switch(i) {
-                        case 0:
-                                output['primary'] = {
-                                        ip: node.split('-')[0],
-                                        pgUrl: transformPgUrl(node),
-                                        zoneId: obj.zoneId
-                                };
-                                break;
-                        case 1:
-                                output['sync'] = {
-                                        ip: node.split('-')[0],
-                                        pgUrl: transformPgUrl(node),
-                                        zoneId: obj.zoneId
-                                };
-                                break;
-                        case 2:
-                                output['async'] = {
-                                        ip: node.split('-')[0],
-                                        pgUrl: transformPgUrl(node),
-                                        zoneId: obj.zoneId
-                                };
-                                break;
-                        default:
-                                var asyncNumber = i - 2;
-                                output['async' + asyncNumber] = {
-                                        ip: node.split('-')[0],
-                                        pgUrl: transformPgUrl(node),
-                                        zoneId: obj.zoneId
-                                };
-                                break;
+                        switch(currNode) {
+                                case 0:
+                                        output['primary'] = {
+                                                ip: node.split('-')[0],
+                                                pgUrl: transformPgUrl(node),
+                                                zoneId: obj.zoneId
+                                        };
+                                        break;
+                                case 1:
+                                        output['sync'] = {
+                                                ip: node.split('-')[0],
+                                                pgUrl: transformPgUrl(node),
+                                                zoneId: obj.zoneId
+                                        };
+                                        break;
+                                case 2:
+                                        output['async'] = {
+                                                ip: node.split('-')[0],
+                                                pgUrl: transformPgUrl(node),
+                                                zoneId: obj.zoneId
+                                        };
+                                        break;
+                                default:
+                                        var asyncNumber = currNode - 2;
+                                        output['async' + asyncNumber] = {
+                                                ip: node.split('-')[0],
+                                                pgUrl: transformPgUrl(node),
+                                                zoneId: obj.zoneId
+                                        };
+                                        break;
                         }
                         count++;
                         LOG.trace({
@@ -120,7 +121,9 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                         }
 
                         return (undefined);
-                });
+                }
+                // bind the function at invocation time to capture i
+                zk.get(pathPrefix + '/' + node, zkGetCb.bind(null, i));
         }
         return (undefined);
 }
