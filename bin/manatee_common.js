@@ -76,7 +76,7 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                 LOG.debug({
                         node: pathPrefix + '/' + node
                 }, 'getting node');
-                var zkgetCb = function(i, err, obj) {
+                var zkGetCb = function(i, err, obj) {
                         if (err) {
                                 return cb(err);
                         }
