@@ -118,9 +118,11 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                         if (count === nodes.length) {
                                 return cb(null, output);
                         }
+
+                        return (undefined);
                 });
         }
-
+        return (undefined);
 }
 
 function ifError(err) {
@@ -153,34 +155,37 @@ function loadTopology(zk, callback) {
                                 zk.readdir(p, function (err, nodes) {
                                         if (err) {
                                                 _cb(err);
-                                                return;
+                                                return (undefined);
                                         }
                                         LOG.debug({
                                                 nodes: nodes
                                         }, 'got nodes');
 
                                         nodes.sort(compareNodeNames);
-                                        formatNodes(nodes, zk, p, function(err, output) {
-                                                if (err) {
-                                                        return cb(err);
+                                        formatNodes(nodes, zk, p, function(err2, output) {
+                                                if (err2) {
+                                                        return cb(err2);
                                                 }
                                                 topology[s] = output;
                                                 count++;
                                                 if (count === arg.shards.length) {
                                                         return cb();
                                                 }
+
+                                                return (undefined);
                                         });
 
+                                        return (undefined);
                                 });
                         });
                 },
                 function registrarStatus(arg, cb) {
                         var count = 0;
                         arg.shards.forEach(function (s) {
-                                var path = '/' +
+                                var path2 = '/' +
                                            s.split('.').reverse().join('/') +
                                            '/pg';
-                                zk.get(path, function(err, object) {
+                                zk.get(path2, function(err, object) {
                                         topology[s].registrar = object;
                                         count++;
 
@@ -270,19 +275,19 @@ function printTopology(opts, topology) {
         process.exit(0);
 }
 
-function query(url, query, callback) {
+function query(url, _query, callback) {
         LOG.debug({
                 url: url,
-                query: query
+                query: _query
         }, 'query: entering.');
 
         var client = new Client(url);
         client.connect(function (err) {
                 ifError(err);
                 LOG.debug({
-                        sql: query
+                        sql: _query
                 }, 'query: connected to pg, executing sql');
-                client.query(query, function(err2, result) {
+                client.query(_query, function(err2, result) {
                         ifError(err2);
                         client.end();
                         callback(err2, result);
