@@ -82,21 +82,21 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                                 case 0:
                                         output['primary'] = {
                                                 ip: obj.ip,
-                                                pgUrl: transformPgUrl(node),
+                                                pgUrl: transformPgUrl(obj.ip),
                                                 zoneId: obj.zoneId
                                         };
                                         break;
                                 case 1:
                                         output['sync'] = {
                                                 ip: obj.ip,
-                                                pgUrl: transformPgUrl(node),
+                                                pgUrl: transformPgUrl(obj.ip),
                                                 zoneId: obj.zoneId
                                         };
                                         break;
                                 case 2:
                                         output['async'] = {
                                                 ip: obj.ip,
-                                                pgUrl: transformPgUrl(node),
+                                                pgUrl: transformPgUrl(obj.ip),
                                                 zoneId: obj.zoneId
                                         };
                                         break;
@@ -104,7 +104,7 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                                         var asyncNumber = i - 2;
                                         output['async' + asyncNumber] = {
                                                 ip: obj.ip,
-                                                pgUrl: transformPgUrl(node),
+                                                pgUrl: transformPgUrl(obj.ip),
                                                 zoneId: obj.zoneId
                                         };
                                         break;
@@ -297,8 +297,9 @@ function query(url, _query, callback) {
 }
 
 function transformPgUrl(url) {
-        if (!url)
+        if (!url) {
                 return ('');
+        }
 
-        return ('tcp://postgres@' + url.split('-')[0] + ':5432/postgres');
+        return ('tcp://postgres@' + url + ':5432/postgres');
 }
