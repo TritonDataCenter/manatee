@@ -66,6 +66,9 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
         var output = {};
 
         var count = 0;
+        if (nodes.length === 0) {
+                return cb();
+        }
         for (var i = 0; i < nodes.length; i++) {
                 var node = nodes[i];
                 LOG.debug({
@@ -155,7 +158,7 @@ function loadTopology(zk, callback) {
                                                 if (err2) {
                                                         return cb(err2);
                                                 }
-                                                topology[s] = output;
+                                                topology[s] = output ? output : {};
                                                 if (++count === arg.shards.length) {
                                                         return cb();
                                                 }
@@ -225,19 +228,32 @@ function pgStatus(topology, callback) {
         shards.forEach(function (s) {
                 var peers = Object.keys(topology[s]);
                 total += peers.length;
+                LOG.debug({peers: peers, shard: s}, 'got peers');
 
                 process.nextTick(peers.forEach.bind(peers, function (k) {
-                        var node = topology[s][k];
-                        var url = node.pgUrl;
-
-                        if (!url) {
+                        if (k === 'error' || k === 'registrar') {
+                                LOG.debug('skipping error/registrar node');
                                 if (++count === total)
                                         callback();
                                 return;
                         }
+                        var node = topology[s][k];
+                        LOG.debug({
+                                node: node
+                        }, 'current shard is');
+                        if (!node) {
+                                LOG.debug('no node, skipping pgStatus');
+                                if (++count === total)
+                                        callback();
+                                return;
+                        }
+                        var url = node.pgUrl;
 
                         var q = k !== 'async' ? PG_REPL_STAT : PG_REPL_LAG;
 
+                        LOG.debug({
+                                url: url
+                        }, 'querying postgres status');
                         query(url, q, function (err, res) {
                                 if (err) {
                                         node.repl = JSON.stringify(err);
