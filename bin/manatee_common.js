@@ -57,40 +57,70 @@ function createZkClient(opts, cb) {
         zk.connect();
 }
 
-function formatNodes(nodes) {
+function getNodeZoneId(zk, node, cb) {
+        LOG.debug({
+                node: node
+        }, 'getting zoneid for node');
+        zk.get(node, function(err, obj) {
+                return cb(err, obj.zoneId);
+        });
+}
+
+function formatNodes(nodes, zk, pathPrefix, cb) {
         var output = {};
+
+        var count = 0;
         for (var i = 0; i < nodes.length; i++) {
                 var node = nodes[i];
-                switch(i) {
-                case 0:
-                        output['primary'] = {
-                                ip: node.split('-')[0],
-                                pgUrl: transformPgUrl(node)
-                        };
-                        break;
-                case 1:
-                        output['sync'] = {
-                                ip: node.split('-')[0],
-                                pgUrl: transformPgUrl(node)
-                        };
-                        break;
-                case 2:
-                        output['async'] = {
-                                ip: node.split('-')[0],
-                                pgUrl: transformPgUrl(node)
-                        };
-                        break;
-                default:
-                        var asyncNumber = i - 2;
-                        output['async' + asyncNumber] = {
-                                ip: node.split('-')[0],
-                                pgUrl: transformPgUrl(node)
-                        };
-                        break;
-                }
+                LOG.debug({
+                        node: pathPrefix + '/' + node
+                }, 'getting node');
+                zk.get(pathPrefix + '/' + node, function(err, obj) {
+                        if (err) {
+                                return cb(err);
+                        }
+                        switch(i) {
+                        case 0:
+                                output['primary'] = {
+                                        ip: node.split('-')[0],
+                                        pgUrl: transformPgUrl(node),
+                                        zoneId: obj.zoneId
+                                };
+                                break;
+                        case 1:
+                                output['sync'] = {
+                                        ip: node.split('-')[0],
+                                        pgUrl: transformPgUrl(node),
+                                        zoneId: obj.zoneId
+                                };
+                                break;
+                        case 2:
+                                output['async'] = {
+                                        ip: node.split('-')[0],
+                                        pgUrl: transformPgUrl(node),
+                                        zoneId: obj.zoneId
+                                };
+                                break;
+                        default:
+                                var asyncNumber = i - 2;
+                                output['async' + asyncNumber] = {
+                                        ip: node.split('-')[0],
+                                        pgUrl: transformPgUrl(node),
+                                        zoneId: obj.zoneId
+                                };
+                                break;
+                        }
+                        count++;
+                        LOG.trace({
+                                count: count,
+                                nodeLength: nodes.length
+                        }, 'count is');
+                        if (count === nodes.length) {
+                                return cb(null, output);
+                        }
+                });
         }
 
-        return (output);
 }
 
 function ifError(err) {
@@ -125,13 +155,22 @@ function loadTopology(zk, callback) {
                                                 _cb(err);
                                                 return;
                                         }
+                                        LOG.debug({
+                                                nodes: nodes
+                                        }, 'got nodes');
 
                                         nodes.sort(compareNodeNames);
-                                        topology[s] = formatNodes(nodes);
+                                        formatNodes(nodes, zk, p, function(err, output) {
+                                                if (err) {
+                                                        return cb(err);
+                                                }
+                                                topology[s] = output;
+                                                count++;
+                                                if (count === arg.shards.length) {
+                                                        return cb();
+                                                }
+                                        });
 
-                                        count++;
-                                        if (count === arg.shards.length)
-                                                cb();
                                 });
                         });
                 },
