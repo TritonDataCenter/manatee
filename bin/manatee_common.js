@@ -1,7 +1,3 @@
-#!/usr/bin/env node
-// -*- mode: js -*-
-// Display status of the manatee shards
-
 var path = require('path');
 var util = require('util');
 
@@ -18,7 +14,11 @@ exports.createZkClient = createZkClient;
 exports.printTopology = printTopology;
 exports.pgStatus = pgStatus;
 
-///--- Globals
+
+/**
+ * Common manatee utils
+ */
+
 
 var Client = pg.Client;
 
@@ -49,19 +49,16 @@ function createZkClient(opts, cb) {
                 timeout: 30000
         });
 
+        var timeoutId;
         zk.once('connect', function () {
                 cb(null, zk);
+                clearTimeout(timeoutId);
         });
 
         zk.connect();
-}
-
-function getNodeZoneId(zk, node, cb) {
-        LOG.debug({
-                node: node
-        }, 'getting zoneid for node');
-        zk.get(node, function(err, obj) {
-                return cb(err, obj.zoneId);
+        timeoutId = setTimeout(10000, function() {
+                console.error('zookeeper connect timed out');
+                process.exit(0);
         });
 }
 
@@ -75,38 +72,35 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                         node: pathPrefix + '/' + node
                 }, 'getting node');
                 var zkGetCb = function(i, err, obj) {
-                        if (err) {
-                                return cb(err);
-                        }
                         switch(i) {
                                 case 0:
-                                        output['primary'] = {
+                                        output['primary'] = !err ? {
                                                 ip: obj.ip,
                                                 pgUrl: transformPgUrl(obj.ip),
                                                 zoneId: obj.zoneId
-                                        };
+                                        } : JSON.stringify(err);
                                         break;
                                 case 1:
-                                        output['sync'] = {
+                                        output['sync'] = !err ? {
                                                 ip: obj.ip,
                                                 pgUrl: transformPgUrl(obj.ip),
                                                 zoneId: obj.zoneId
-                                        };
+                                        } : JSON.stringify(err);
                                         break;
                                 case 2:
-                                        output['async'] = {
+                                        output['async'] = !err ? {
                                                 ip: obj.ip,
                                                 pgUrl: transformPgUrl(obj.ip),
                                                 zoneId: obj.zoneId
-                                        };
+                                        } : JSON.stringify(err);
                                         break;
                                 default:
                                         var asyncNumber = i - 2;
-                                        output['async' + asyncNumber] = {
+                                        output['async' + asyncNumber] = !err ? {
                                                 ip: obj.ip,
                                                 pgUrl: transformPgUrl(obj.ip),
                                                 zoneId: obj.zoneId
-                                        };
+                                        } : JSON.stringify(err);
                                         break;
                         }
                         count++;
@@ -123,14 +117,8 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                 // bind the function at invocation time to capture i
                 zk.get(pathPrefix + '/' + node, zkGetCb.bind(null, i));
         }
-        return (undefined);
-}
 
-function ifError(err) {
-        if (err) {
-                console.error(err.toString());
-                process.exit(1);
-        }
+        return (undefined);
 }
 
 function loadTopology(zk, callback) {
@@ -168,8 +156,7 @@ function loadTopology(zk, callback) {
                                                         return cb(err2);
                                                 }
                                                 topology[s] = output;
-                                                count++;
-                                                if (count === arg.shards.length) {
+                                                if (++count === arg.shards.length) {
                                                         return cb();
                                                 }
 
@@ -251,12 +238,17 @@ function pgStatus(topology, callback) {
 
                         var q = k !== 'async' ? PG_REPL_STAT : PG_REPL_LAG;
 
-                        query(url, q, function (err ,res) {
-                                ifError(err);
+                        query(url, q, function (err, res) {
+                                if (err) {
+                                        node.repl = JSON.stringify(err);
+                                } else {
+                                        node.repl =
+                                                res.rows[0] ? res.rows[0] : {};
+                                }
 
-                                node.repl = res.rows[0] ? res.rows[0] : {};
-                                if (++count === total)
+                                if (++count === total) {
                                         callback();
+                                }
                         });
                 }));
         });
@@ -284,14 +276,15 @@ function query(url, _query, callback) {
 
         var client = new Client(url);
         client.connect(function (err) {
-                ifError(err);
+                if (err) {
+                        return callback(err);
+                }
                 LOG.debug({
                         sql: _query
                 }, 'query: connected to pg, executing sql');
                 client.query(_query, function(err2, result) {
-                        ifError(err2);
                         client.end();
-                        callback(err2, result);
+                        return callback(err2, result);
                 });
         });
 }
