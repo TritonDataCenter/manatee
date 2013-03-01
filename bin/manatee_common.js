@@ -81,29 +81,29 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                         switch(i) {
                                 case 0:
                                         output['primary'] = {
-                                                ip: node.split('-')[0],
+                                                ip: obj.ip,
                                                 pgUrl: transformPgUrl(node),
                                                 zoneId: obj.zoneId
                                         };
                                         break;
                                 case 1:
                                         output['sync'] = {
-                                                ip: node.split('-')[0],
+                                                ip: obj.ip,
                                                 pgUrl: transformPgUrl(node),
                                                 zoneId: obj.zoneId
                                         };
                                         break;
                                 case 2:
                                         output['async'] = {
-                                                ip: node.split('-')[0],
+                                                ip: obj.ip,
                                                 pgUrl: transformPgUrl(node),
                                                 zoneId: obj.zoneId
                                         };
                                         break;
                                 default:
-                                        var asyncNumber = currNode - 2;
+                                        var asyncNumber = i - 2;
                                         output['async' + asyncNumber] = {
-                                                ip: node.split('-')[0],
+                                                ip: obj.ip,
                                                 pgUrl: transformPgUrl(node),
                                                 zoneId: obj.zoneId
                                         };
