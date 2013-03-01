@@ -42,7 +42,6 @@ function compareNodeNames(a, b) {
         return (seqA - seqB);
 }
 
-
 function createZkClient(opts, cb) {
         var zk = zkplus.createClient({
                 log: LOG,
@@ -71,7 +70,6 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
 
         var count = 0;
         for (var i = 0; i < nodes.length; i++) {
-                var currNode = i;
                 var node = nodes[i];
                 LOG.debug({
                         node: pathPrefix + '/' + node
@@ -80,7 +78,7 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                         if (err) {
                                 return cb(err);
                         }
-                        switch(currNode) {
+                        switch(i) {
                                 case 0:
                                         output['primary'] = {
                                                 ip: node.split('-')[0],
