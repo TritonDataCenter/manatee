@@ -113,7 +113,8 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
                                                 'shard is not in error state'));
                                 }
 
-                                arg.isPrimary = (myIp === arg.myShard.error.ip);
+                                arg.isPrimary =
+                                        (myIp === arg.myShard.error.primary);
                                 return cb();
                         });
 
