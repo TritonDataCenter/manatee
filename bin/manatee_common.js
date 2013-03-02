@@ -56,10 +56,10 @@ function createZkClient(opts, cb) {
         });
 
         zk.connect();
-        timeoutId = setTimeout(10000, function() {
+        timeoutId = setTimeout(function() {
                 console.error('zookeeper connect timed out');
                 process.exit(0);
-        });
+        }, 10000);
 }
 
 function formatNodes(nodes, zk, pathPrefix, cb) {
