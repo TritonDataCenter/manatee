@@ -36,6 +36,6 @@ do
 done
 
 # find a sdc manatee zone
-MANATEE_ZONE_ID=sdc-role list | grep manatee | head -n 1 | tr -s ' ' | cut -d ' ' -f3
+MANATEE_ZONE_ID=$(sdc-role list | grep manatee | head -n 1 | tr -s ' ' | cut -d ' ' -f3)
 
-zlogin $MANATEE_ZONE_ID "manatee-stat"
+zlogin $MANATEE_ZONE_ID "source ~/.bashrc; manatee-stat"
