@@ -1,0 +1,93 @@
+#!/bin/bash
+
+#
+# sdc-manatee-clear-error: clear manatee from error state
+#
+
+function usage() {
+        cat << HERE
+        usage: $0 shard_id
+
+        Clear a manatee shard from the error state.
+
+        OPTIONS:
+          -h Show this message
+          -v Verbose
+
+        EXAMPLE:
+          ./sdc-manatee-clear-error "sdc"
+HERE
+}
+
+set -o errexit
+
+while getopts "hs:v" OPTION
+do
+        case $OPTION in
+                h)
+                        usage
+                        exit 1
+                        ;;
+                v)
+                        set -o xtrace
+                        verbose="1"
+                        ;;
+                ?)
+                        usage
+                        exit
+                        ;;
+        esac
+done
+
+if [[ -z $verbose ]]
+then
+        SHARD=$1
+else
+        SHARD=$2
+fi
+
+if [[ -z $SHARD ]]
+then
+        echo "must specify a shard_id"
+        usage
+        exit 1
+fi
+
+ROOT=/opt/smartdc/bin
+
+shard_info=$(sdc-manatee-stat -s $SHARD)
+[[ $? -eq 0 ]] || fatal "unable to retrieve shard info"
+
+if [[ -z $shard_info ]]
+then
+        echo "shard $SHARD doesn't exist"
+        exit 1
+fi
+
+error=$(echo $shard_info | json "error")
+
+if [[ -z $error ]]
+then
+        echo "shard $SHARD is not in error"
+        exit 1
+fi
+
+primary=$(echo $error | json "primary")
+primary_zone_id=$(echo $error | json "zoneId")
+echo "got primary zone id $primary_zone_id"
+standby=$(echo $error | json "standby")
+
+async_zone_id=$(sdc-role list | grep manatee | grep -v $primary | grep -v $standby | head -n 1 | tr -s ' ' | cut -d ' ' -f3);
+echo "got async zone_id $async_zone_id"
+
+if [[ $standby_zone_id ]]
+then
+        sdc-oneachzone -n $standby_zone_id "source ~/.bashrc; manatee-clear" &
+fi
+if [[ $async_zone_id ]]
+then
+        sdc-oneachzone -n $async_zone_id "source ~/.bashrc; manatee-clear" &
+fi
+echo "sleeping for 10s before invoking manatee-clear on primary"
+sleep 10
+sdc-oneachzone -n $primary_zone_id "source ~/.bashrc; manatee-clear" &

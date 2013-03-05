@@ -1,0 +1,41 @@
+#!/bin/bash
+
+#
+# sdc-manatee-stat: display the status of all sdc manatee shards
+#
+
+function usage() {
+        cat << HERE
+        usage: $0
+
+        Display the status of manatee shards.
+
+        OPTIONS:
+          -h Show this message
+          -v Verbose
+HERE
+}
+
+set -o errexit
+
+while getopts "hs:v" OPTION
+do
+        case $OPTION in 
+                h)
+                        usage
+                        exit 1
+                        ;;
+                v)
+                        set -o xtrace
+                        ;;
+                ?)
+                        usage
+                        exit
+                        ;;
+        esac
+done
+
+# find a sdc manatee zone
+MANATEE_ZONE_ID=sdc-role list | grep manatee | head -n 1 | tr -s ' ' | cut -d ' ' -f3
+
+zlogin $MANATEE_ZONE_ID "manatee-stat"
