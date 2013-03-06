@@ -42,6 +42,12 @@ do
         esac
 done
 
+# XXX replace the vmadm and zlogin with sdc-role list and sdc-oneachnode once
+# moray supports readonly mode on manatee errors. presently all of the moray
+# dependent tools fail since there's no manatee. We will require this when
+# manatee is x-dc and we can no longer find all manatee instances via vmadm |
+# grep
+
 # find a sdc manatee zone
 MANATEE_ZONE_ID=$(vmadm list | grep manatee | head -1 | tr -s ' ' | \
         cut -d ' ' -f1)

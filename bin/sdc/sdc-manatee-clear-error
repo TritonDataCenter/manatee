@@ -88,8 +88,9 @@ echo "got primary zone id $primary_zone_id"
 # dependent tools fail since there's no manatee. We will require this when
 # manatee is x-dc and we can no longer find all manatee instances via vmadm |
 # grep
+
 standby=$(echo $error | json "standby")
-standby_zone_id=$( vmadm list -o uuid,alias,nics.0.ip | grep manatee | \
+standby_zone_id=$(vmadm list -o uuid,alias,nics.0.ip | grep manatee | \
         grep $standby | head -n 1 | tr -s ' ' | cut -d ' ' -f1);
 echo "got standby zone id $standby_zone_id"
 
