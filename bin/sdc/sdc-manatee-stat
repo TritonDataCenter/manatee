@@ -36,7 +36,8 @@ do
 done
 
 # find a sdc manatee zone
-MANATEE_ZONE_ID=$(sdc-role list | grep manatee | head -n 1\
-        | tr -s ' ' | cut -d ' ' -f3)
+MANATEE_ZONE_ID=$(vmadm list | grep manatee | head -1 | tr -s ' ' | \
+        cut -d ' ' -f1)
+[[ $? -eq 0 ]] || fatal "Unable to retrieve a manatee zone from sdc-role list"
 
 zlogin $MANATEE_ZONE_ID "source ~/.bashrc; manatee-stat"

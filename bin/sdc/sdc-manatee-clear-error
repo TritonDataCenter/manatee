@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# sdc-manatee-clear-error: clear manatee from error state
+# sdc-manatee-clear-error: clear sdc manatee from error state
 #
 
 function usage() {
@@ -15,7 +15,7 @@ function usage() {
           -v Verbose
 
         EXAMPLE:
-          ./sdc-manatee-clear-error
+          ./sdc-manatee-clear-error sdc
 HERE
 }
 
@@ -39,15 +39,28 @@ do
         esac
 done
 
+if [[ -z $verbose ]]
+then
+        SHARD=$1
+else
+        SHARD=$2
+fi
+
+if [[ -z $SHARD ]]
+then
+        echo "must specify a shard_id"
+        usage
+        exit 1
+fi
+
 ROOT=/opt/smartdc/bin
 
-echo $SHARD
-shard_info=$(sdc-manatee-stat)
+shard_info=$(sdc-manatee-stat | json $SHARD)
 [[ $? -eq 0 ]] || fatal "unable to retrieve shard info"
 
 if [[ -z $shard_info ]]
 then
-        echo "shard $SHARD doesn't exist"
+        echo "shard info doesn't exist"
         exit 1
 fi
 
@@ -55,7 +68,7 @@ error=$(echo $shard_info | json "error")
 
 if [[ -z $error ]]
 then
-        echo "shard $SHARD is not in error"
+        echo "shard is not in error"
         exit 1
 fi
 
@@ -70,12 +83,15 @@ echo "got async zone_id $async_zone_id"
 
 if [[ $standby_zone_id ]]
 then
+        echo "running manatee-clear on standby $standby_zone_id"
         sdc-oneachzone -n $standby_zone_id "source ~/.bashrc; manatee-clear" &
 fi
 if [[ $async_zone_id ]]
 then
+        echo "running manatee-clear on async $async_zone_id"
         sdc-oneachzone -n $async_zone_id "source ~/.bashrc; manatee-clear" &
 fi
 echo "sleeping for 10s before invoking manatee-clear on primary"
 sleep 10
+echo "running manatee-clear on primary $primary_zone_id"
 sdc-oneachzone -n $primary_zone_id "source ~/.bashrc; manatee-clear" &
