@@ -4,6 +4,13 @@
 # sdc-manatee-clear-error: clear sdc manatee from error state
 #
 
+if [[ -n "$TRACE" ]]; then
+        export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+        set -o xtrace
+fi
+set -o errexit
+set -o pipefail
+
 function usage() {
         cat << HERE
         usage: $0 shard_id
