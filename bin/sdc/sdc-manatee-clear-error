@@ -26,8 +26,6 @@ function usage() {
 HERE
 }
 
-set -o errexit
-
 while getopts "h:v" OPTION
 do
         case $OPTION in
