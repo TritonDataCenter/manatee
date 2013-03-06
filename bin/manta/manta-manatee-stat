@@ -1,0 +1,60 @@
+#!/bin/bash
+
+#
+# manatee-stat: display the status of all manatee shards
+#
+
+if [[ -n "$TRACE" ]]; then
+        export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+        set -o xtrace
+fi
+set -o errexit
+set -o pipefail
+
+function usage() {
+        cat << HERE
+        usage: $0
+
+        Display the status of manatee shards.
+
+        OPTIONS:
+          -h Show this message
+          -s Only show this shard
+          -v Verbose
+HERE
+}
+
+while getopts "hs:v" OPTION
+do
+        case $OPTION in 
+                h)
+                        usage
+                        exit 1
+                        ;;
+                s)
+                        SHARD=$OPTARG
+                        ;;
+                v)
+                        set -o xtrace
+                        ;;
+                ?)
+                        usage
+                        exit
+                        ;;
+        esac
+done
+
+ROOT=/opt/smartdc/manta
+
+PATH=$ROOT/node_modules/.bin:$ROOT/build/node/bin:$PATH
+
+# query for manatee status
+if [[ -z $SHARD ]]
+then
+        manta-oneachzone -1 -j -z postgres 'source ~/.bashrc; manatee-stat' | \
+                json 0.result.stdout
+else
+        manta-oneachzone -1 -j -z postgres 'source ~/.bashrc; manatee-stat' | \
+                json 0.result.stdout | json "[\"$SHARD\"]"
+fi
+
