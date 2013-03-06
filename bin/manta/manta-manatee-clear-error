@@ -62,7 +62,7 @@ ROOT=/opt/smartdc/manta
 
 PATH=$ROOT/node_modules/.bin:$ROOT/build/node/bin:$PATH
 
-shard_info=$(manatee-stat -s $SHARD)
+shard_info=$(manta-manatee-stat -s $SHARD)
 [[ $? -eq 0 ]] || fatal "unable to retrieve shard info"
 
 if [[ -z $shard_info ]]
