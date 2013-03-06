@@ -75,23 +75,33 @@ fi
 primary=$(echo $error | json "primary")
 primary_zone_id=$(echo $error | json "zoneId")
 echo "got primary zone id $primary_zone_id"
-standby=$(echo $error | json "standby")
 
-async_zone_id=$(sdc-role list | grep manatee | grep -v $primary | \
-        grep -v $standby | head -n 1 | tr -s ' ' | cut -d ' ' -f3);
+# XXX replace the vmadm and zlogin with sdc-role list and sdc-oneachnode once
+# moray supports readonly mode on manatee errors. presently all of the moray
+# dependent tools fail since there's no manatee. We will require this when
+# manatee is x-dc and we can no longer find all manatee instances via vmadm |
+# grep
+standby=$(echo $error | json "standby")
+standby_zone_id=$( vmadm list -o uuid,alias,nics.0.ip | grep manatee | \
+        grep $standby | head -n 1 | tr -s ' ' | cut -d ' ' -f1);
+echo "got standby zone id $standby_zone_id"
+
+async_zone_id=$( vmadm list -o uuid,alias,nics.0.ip | grep manatee | \
+        grep -v $primary | grep -v $standby | head -n 1 | tr -s ' ' | \
+        cut -d ' ' -f1);
 echo "got async zone_id $async_zone_id"
 
 if [[ $standby_zone_id ]]
 then
         echo "running manatee-clear on standby $standby_zone_id"
-        sdc-oneachzone -n $standby_zone_id "source ~/.bashrc; manatee-clear" &
+        zlogin $standby_zone_id "source ~/.bashrc; manatee-clear" &
 fi
 if [[ $async_zone_id ]]
 then
         echo "running manatee-clear on async $async_zone_id"
-        sdc-oneachzone -n $async_zone_id "source ~/.bashrc; manatee-clear" &
+        zlogin $async_zone_id "source ~/.bashrc; manatee-clear" &
 fi
 echo "sleeping for 10s before invoking manatee-clear on primary"
 sleep 10
 echo "running manatee-clear on primary $primary_zone_id"
-sdc-oneachzone -n $primary_zone_id "source ~/.bashrc; manatee-clear" &
+zlogin $primary_zone_id "source ~/.bashrc; manatee-clear" &
