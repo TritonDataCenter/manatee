@@ -12,13 +12,13 @@ var Shard = require('./lib/shard');
 var NAME = 'manatee-sitter';
 
 var LOG = bunyan.createLogger({
-        level: (process.env.LOG_LEVEL || 'info'),
-        name: NAME,
-        serializers: {
-                err: bunyan.stdSerializers.err
-        },
-        // always turn source to true, manatee isn't in the data path
-        src: true
+    level: (process.env.LOG_LEVEL || 'info'),
+    name: NAME,
+    serializers: {
+        err: bunyan.stdSerializers.err
+    },
+    // always turn source to true, manatee isn't in the data path
+    src: true
 });
 
 var LOG_LEVEL_OVERRIDE = false;
@@ -27,50 +27,50 @@ var LOG_LEVEL_OVERRIDE = false;
  * private functions
  */
 function parseOptions() {
-        var option;
-        var opts = {};
-        var parser = new getopt.BasicParser('vf:(file)', process.argv);
+    var option;
+    var opts = {};
+    var parser = new getopt.BasicParser('vf:(file)', process.argv);
 
-        while ((option = parser.getopt()) !== undefined) {
-                switch (option.option) {
-                case 'f':
-                        opts.file = option.optarg;
-                        break;
+    while ((option = parser.getopt()) !== undefined) {
+        switch (option.option) {
+            case 'f':
+                opts.file = option.optarg;
+                break;
 
-                case 'v':
-                        // Allows us to set -vvv -> this little hackery
-                        // just ensures that we're never < TRACE
-                        LOG_LEVEL_OVERRIDE = true;
-                        LOG.level(Math.max(bunyan.TRACE, (LOG.level() - 10)));
-                        if (LOG.level() <= bunyan.DEBUG)
-                                LOG = LOG.child({src: true});
-                        break;
+            case 'v':
+                // Allows us to set -vvv -> this little hackery
+                // just ensures that we're never < TRACE
+                LOG_LEVEL_OVERRIDE = true;
+                LOG.level(Math.max(bunyan.TRACE, (LOG.level() - 10)));
+                if (LOG.level() <= bunyan.DEBUG)
+                    LOG = LOG.child({src: true});
+                break;
 
-                default:
-                        process.exit(1);
-                        break;
-                }
+            default:
+                process.exit(1);
+                break;
         }
+    }
 
-        return (opts);
+    return (opts);
 }
 
 function readConfig(options) {
-        assert.object(options);
+    assert.object(options);
 
-        var cfg;
+    var cfg;
 
-        try {
-                cfg = JSON.parse(fs.readFileSync(options.file, 'utf8'));
-        } catch (e) {
-                LOG.fatal({
-                        err: e,
-                        file: options.file
-                }, 'Unable to read/parse configuration file');
-                process.exit(1);
-        }
+    try {
+        cfg = JSON.parse(fs.readFileSync(options.file, 'utf8'));
+    } catch (e) {
+        LOG.fatal({
+            err: e,
+            file: options.file
+        }, 'Unable to read/parse configuration file');
+        process.exit(1);
+    }
 
-        return (extend({}, cfg, options));
+    return (extend({}, cfg, options));
 }
 
 /**
@@ -84,9 +84,9 @@ _config = readConfig(_options);
 LOG.debug({config: _config}, 'configuration loaded');
 
 if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
-        if (bunyan.resolveLevel(_config.logLevel)) {
-                LOG.level(_config.logLevel);
-        }
+    if (bunyan.resolveLevel(_config.logLevel)) {
+        LOG.level(_config.logLevel);
+    }
 }
 
 // set loggers of the sub components
@@ -104,6 +104,6 @@ LOG.info('manatee started');
 LOG.trace('manatee shard', shard);
 
 process.on('uncaughtException', function (err) {
-        LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
-        process.exit(1);
+    LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
+    process.exit(1);
 });

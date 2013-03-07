@@ -1,52 +1,52 @@
 {
-        "backupPort": 12345,
-        "heartbeatInterval": 1000,
-        "postgresPort": 5432,
-        "shardPath": "SHARD_PATH",
-        "ttl": 60,
-        "url": "ZONE_IP",
-        "zoneId": "ZONE_ID",
+    "backupPort": 12345,
+    "heartbeatInterval": 1000,
+    "postgresPort": 5432,
+    "shardPath": "SHARD_PATH",
+    "ttl": 60,
+    "url": "ZONE_IP",
+    "zoneId": "ZONE_ID",
 
-        "heartbeatServerCfg": {
-                "expirationTime": 60000,
-                "pollInterval": 1000,
-                "port": 12344
+    "heartbeatServerCfg": {
+        "expirationTime": 60000,
+        "pollInterval": 1000,
+        "port": 12344
+    },
+    "postgresMgrCfg": {
+        "dataDir": "PG_DIR",
+        "dbUser": "postgres",
+        "hbaConf": "/opt/smartdc/manatee/etc/pg_hba.conf",
+        "healthChkInterval": 10000,
+        "healthChkTimeout": 60000,
+        "oneNodeWriteMode": ONE_NODE_WRITE_MODE,
+        "opsTimeout": 10000,
+        "pgCtlPath": "/opt/local/bin/pg_ctl",
+        "pgInitDbPath": "/opt/local/bin/initdb",
+        "postgresConf": "PG_CONF",
+        "postgresPath": "/opt/local/bin/postgres",
+        "recoveryConf": "/opt/smartdc/manatee/etc/recovery.conf",
+        "replicationTimeout": 30000,
+        "snapShotterCfg": {
+            "dataset": "DATASET",
+            "snapshotDir": "SNAPSHOT_DIR",
+            "pollInterval": 5000,
+            "snapshotNumber": 5,
+            "pgUrl": "PG_URL"
         },
-        "postgresMgrCfg": {
-                "dataDir": "PG_DIR",
-                "dbUser": "postgres",
-                "hbaConf": "/opt/smartdc/manatee/etc/pg_hba.conf",
-                "healthChkInterval": 10000,
-                "healthChkTimeout": 60000,
-                "oneNodeWriteMode": ONE_NODE_WRITE_MODE,
-                "opsTimeout": 10000,
-                "pgCtlPath": "/opt/local/bin/pg_ctl",
-                "pgInitDbPath": "/opt/local/bin/initdb",
-                "postgresConf": "PG_CONF",
-                "postgresPath": "/opt/local/bin/postgres",
-                "recoveryConf": "/opt/smartdc/manatee/etc/recovery.conf",
-                "replicationTimeout": 30000,
-                "snapShotterCfg": {
-                        "dataset": "DATASET",
-                        "snapshotDir": "SNAPSHOT_DIR",
-                        "pollInterval": 5000,
-                        "snapshotNumber": 5,
-                        "pgUrl": "PG_URL"
-                },
-                "url": "PG_URL",
-                "zfsClientCfg": {
-                        "dataset": "DATASET",
-                        "parentDataset": "PARENT_DATASET",
-                        "snapshotDir": "SNAPSHOT_DIR",
-                        "zfsHost": "ZONE_IP",
-                        "zfsPort": 1234,
-                        "pollInterval": 1000,
-                        "zfsRecvPath": "/usr/vm/sbin/zfs_recv",
-                        "mountpoint": "/manatee/pg/"
-                }
-        },
-        "zkCfg": {
-                "servers": [],
-                "timeout": 60000
+        "url": "PG_URL",
+        "zfsClientCfg": {
+            "dataset": "DATASET",
+            "parentDataset": "PARENT_DATASET",
+            "snapshotDir": "SNAPSHOT_DIR",
+            "zfsHost": "ZONE_IP",
+            "zfsPort": 1234,
+            "pollInterval": 1000,
+            "zfsRecvPath": "/usr/vm/sbin/zfs_recv",
+            "mountpoint": "/manatee/pg/"
         }
+    },
+    "zkCfg": {
+        "servers": [],
+        "timeout": 60000
+    }
 }

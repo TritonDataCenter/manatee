@@ -15,92 +15,92 @@ var vasync = require('vasync');
 var verror = require('verror');
 
 var parseOptions = function() {
-        var option;
-        var opts = {};
-        var parser = new getopt.BasicParser('h', process.argv);
+    var option;
+    var opts = {};
+    var parser = new getopt.BasicParser('h', process.argv);
 
-        while((option = parser.getopt()) !== undefined) {
-                switch (option.option) {
-                case 'h':
-                        usage();
-                        break;
-                default:
-                        usage('invalid option: ' + option.option);
-                        process.exit(1);
-                        break;
-                }
+    while((option = parser.getopt()) !== undefined) {
+        switch (option.option) {
+            case 'h':
+                usage();
+                break;
+            default:
+                usage('invalid option: ' + option.option);
+                process.exit(1);
+                break;
         }
+    }
 
-        if (parser.optind() >= process.argv.length) {
-                usage('missing required argument: "dataset"');
-        }
+    if (parser.optind() >= process.argv.length) {
+        usage('missing required argument: "dataset"');
+    }
 
-        opts.dataset = process.argv[parser.optind()];
+    opts.dataset = process.argv[parser.optind()];
 
-        return opts;
+    return opts;
 };
 
 var usage = function(msg) {
-        if (msg) {
-                console.error(msg);
-        }
+    if (msg) {
+        console.error(msg);
+    }
 
-        var str = 'usage: ' + path.basename(process.argv[1]);
-        str += ' dataset';
-        console.error(str);
-        process.exit(msg ? 1 : 0);
+    var str = 'usage: ' + path.basename(process.argv[1]);
+    str += ' dataset';
+    console.error(str);
+    process.exit(msg ? 1 : 0);
 };
 
 var getSnapshots = function(dataset, cb) {
-        var cmd = 'zfs list -Hp -t snapshot | grep ' + dataset;
-        exec(cmd, function(err, stdout, stderr) {
-                if (stdout) {
-                        var stdoutArray = stdout.split('\n');
-                        for (var j = 0; j < stdoutArray.length; j++) {
-                                var snapshot  = stdoutArray[j];
-                                if (!snapshot) {
-                                        continue;
-                                }
-                                var snapshotArray = snapshot.split('\t');
-                                var snapshotMap = {};
-                                for (var i = 0; i < snapshotArray.length; i++) {
-                                        var field = snapshotArray[i];
-                                        switch (i) {
-                                        case 0:
-                                                snapshotMap['NAME'] = field;
-                                                break;
-                                        case 1:
-                                                snapshotMap['USED'] = field;
-                                                break;
-                                        case 2:
-                                                snapshotMap['AVAIL'] = field;
-                                                break;
-                                        case 3:
-                                                snapshotMap['REFER'] = field;
-                                                break;
-                                        case 4:
-                                                snapshotMap['MOUNTPOINT'] =
-                                                        field;
-                                                break;
-                                        default:
-                                                throw new Error('wtf');
-                                        }
-                                }
-                                console.log(JSON.stringify(snapshotMap));
-                        }
+    var cmd = 'zfs list -Hp -t snapshot | grep ' + dataset;
+    exec(cmd, function(err, stdout, stderr) {
+        if (stdout) {
+            var stdoutArray = stdout.split('\n');
+            for (var j = 0; j < stdoutArray.length; j++) {
+                var snapshot  = stdoutArray[j];
+                if (!snapshot) {
+                    continue;
                 }
-                console.log(stderr);
-                return cb(err);
-        });
+                var snapshotArray = snapshot.split('\t');
+                var snapshotMap = {};
+                for (var i = 0; i < snapshotArray.length; i++) {
+                    var field = snapshotArray[i];
+                    switch (i) {
+                        case 0:
+                            snapshotMap['NAME'] = field;
+                            break;
+                        case 1:
+                            snapshotMap['USED'] = field;
+                            break;
+                        case 2:
+                            snapshotMap['AVAIL'] = field;
+                            break;
+                        case 3:
+                            snapshotMap['REFER'] = field;
+                            break;
+                        case 4:
+                            snapshotMap['MOUNTPOINT'] =
+                            field;
+                            break;
+                        default:
+                            throw new Error('wtf');
+                    }
+                }
+                console.log(JSON.stringify(snapshotMap));
+            }
+        }
+        console.log(stderr);
+        return cb(err);
+    });
 };
 
 var _opts = parseOptions();
 
 getSnapshots(_opts.dataset, function(err) {
-        if (err) {
-                console.log('unable to get snapshot with err %s', err);
-                process.exit(1);
-        }
+    if (err) {
+        console.log('unable to get snapshot with err %s', err);
+        process.exit(1);
+    }
 
-        process.exit(0);
+    process.exit(0);
 });

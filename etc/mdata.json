@@ -1,17 +1,17 @@
 {
-  "set_customer_metadata": {
-    "MANATEE_BACKUP_SERVER_PORT": "12345",
-    "MANATEE_REGISTRAR_PATH": "/registrar/1",
-    "MANATEE_REGISTRAR_PATH_PREFIX": "/registrar",
-    "MANATEE_SHARD_PATH": "/shard/1",
-    "MANATEE_SHARD_ID": "1",
-    "MANATEE_SNAPSHOT_INTERVAL": "60000",
-    "MANATEE_SNAPSHOT_NUMBER": "5",
-    "MANATEE_ZK_URL": "10.88.88.52:2181",
-    "MANATEE_TTL": "10",
-    "MANATEE_ZK_TIMEOUT": "200",
-    "MANATEE_ZFS_RECV_PORT": "1234",
-    "MANATEE_ZFS_RECV_PATH": "/opt/smardc/manatee/bin/zfs_recv",
-    "MANATEE_ZFS_SEND_PATH": "/opt/smardc/manatee/bin/zfs_send"
-  }
+    "set_customer_metadata": {
+        "MANATEE_BACKUP_SERVER_PORT": "12345",
+        "MANATEE_REGISTRAR_PATH": "/registrar/1",
+        "MANATEE_REGISTRAR_PATH_PREFIX": "/registrar",
+        "MANATEE_SHARD_PATH": "/shard/1",
+        "MANATEE_SHARD_ID": "1",
+        "MANATEE_SNAPSHOT_INTERVAL": "60000",
+        "MANATEE_SNAPSHOT_NUMBER": "5",
+        "MANATEE_ZK_URL": "10.88.88.52:2181",
+        "MANATEE_TTL": "10",
+        "MANATEE_ZK_TIMEOUT": "200",
+        "MANATEE_ZFS_RECV_PORT": "1234",
+        "MANATEE_ZFS_RECV_PATH": "/opt/smardc/manatee/bin/zfs_recv",
+        "MANATEE_ZFS_SEND_PATH": "/opt/smardc/manatee/bin/zfs_send"
+    }
 }

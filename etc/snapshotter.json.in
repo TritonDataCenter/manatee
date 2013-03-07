@@ -1,8 +1,8 @@
 {
-  "dataset": "DATASET",
-  "snapshotDir": "SNAPSHOT_DIR",
-  "pollInterval": SNAPSHOT_INTERVAL,
-  "snapshotNumber": SNAPSHOT_NUMBER,
-  "pgUrl": "PG_URL",
-  "startupDelay": 90000
+    "dataset": "DATASET",
+    "snapshotDir": "SNAPSHOT_DIR",
+    "pollInterval": SNAPSHOT_INTERVAL,
+    "snapshotNumber": SNAPSHOT_NUMBER,
+    "pgUrl": "PG_URL",
+    "startupDelay": 90000
 }
