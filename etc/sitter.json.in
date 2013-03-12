@@ -1,12 +1,19 @@
 {
     "backupPort": 12345,
-    "heartbeatInterval": 1000,
     "postgresPort": 5432,
     "shardPath": "SHARD_PATH",
     "ttl": 60,
     "url": "ZONE_IP",
     "zoneId": "ZONE_ID",
-
+    "heartbeatClientCfg": {
+        "connectTimeout": 2000,
+        "heartbeatInterval": 1000,
+        "requestTimeout": 10000,
+        "url": "ZONE_IP",
+        "retry": {
+            "retry": 2
+        }
+    },
     "heartbeatServerCfg": {
         "expirationTime": 60000,
         "pollInterval": 1000,
