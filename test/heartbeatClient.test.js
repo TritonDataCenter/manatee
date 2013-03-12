@@ -9,7 +9,7 @@ var uuid = require('node-uuid');
 var log = new Logger({
         name: 'heartbeat-test',
         src: true,
-        level: 'trace'
+        level: 'info'
 });
 
 //var server = new HeartbeatServer({
@@ -26,4 +26,8 @@ var heartbeatClient= new HeartbeatClient({
         primaryUrl: 'http://0.0.0.0:12222'
 });
 
-heartbeatClient.start(function(){});
+setInterval(function() {
+        heartbeatClient.postHeartbeat(function(err) {});
+}, 300);
+
+
