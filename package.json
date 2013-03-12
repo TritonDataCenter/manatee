@@ -27,7 +27,7 @@
         "once": "1.1.1",
         "pg": "0.7.0",
         "posix-getopt": "1.0.0",
-        "restify": "1.4.4",
+        "restify": "2.3.4",
         "sprintf": "0.1.0",
         "shelljs": "0.0.5pre4",
         "uuid": "0.0.2",
