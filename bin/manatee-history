@@ -90,9 +90,9 @@ var getHistory = function(shardId, zookeeperIp, callback) {
                 });
         },
         function listHistory(arg, cb) {
-            var path = '/manatee/' + shardId + '/history';
-            LOG.debug({path: path}, 'listing zk path');
-            arg.zk.readdir(path, function(err, nodes) {
+            var _path = '/manatee/' + shardId + '/history';
+            LOG.debug({path: _path}, 'listing zk path');
+            arg.zk.readdir(_path, function(err, nodes) {
                 arg.nodes = nodes;
                 LOG.debug({
                     err: err,
