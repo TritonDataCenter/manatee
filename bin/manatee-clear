@@ -90,8 +90,7 @@ var cleanupManatee = function(shardId, myIp, zookeeperIp, callback) {
         // look up in zookeeper to see who was the primary
         function createZkClient(arg, cb) {
             var zkLog = LOG.child({
-                component: 'zookeeper',
-                level: LOG.level
+                component: 'zookeeper'
             });
             manatee.createZkClient({log: zkLog, zk: zookeeperIp},
                 function (err, zk)

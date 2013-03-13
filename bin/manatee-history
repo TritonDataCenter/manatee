@@ -80,8 +80,7 @@ var getHistory = function(shardId, zookeeperIp, callback) {
     var tasks = [
         function createZkClient(arg, cb) {
             var zkLog = LOG.child({
-                component: 'zookeeper',
-                level: LOG.level
+                component: 'zookeeper'
             });
             manatee.createZkClient({log: zkLog, zk: zookeeperIp},
                 function (err, zk)
@@ -156,6 +155,7 @@ var _opts = parseOptions();
 
 getHistory(_opts.shardId, _opts.zookeeperIp, function(err, history) {
     if (err) {
+        console.log(err);
         LOG.fatal({err: err}, 'unable to get shard transition history.');
         process.exit(err);
     }
