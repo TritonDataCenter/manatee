@@ -109,24 +109,28 @@ var getHistory = function(shardId, zookeeperIp, callback) {
                 arg.nodes[i] = {};
                 var node = arg.nodes[i];
                 for (var j = 0; j < fNode.length; j++) {
+                    var entry = fNode[j] ? fNode[j] : "";
                     switch (j) {
                         case 0:
-                            node['time'] = fNode[j];
+                            node['time'] = entry;
                             break;
                         case 1:
-                            node['ip'] = fNode[j];
+                            node['ip'] = entry;
                             break;
                         case 2:
-                            node['role'] = fNode[j];
+                            node['action'] = entry;
                             break;
                         case 3:
-                            node['master'] = fNode[j];
+                            node['role'] = entry;
                             break;
                         case 4:
-                            node['slave'] = fNode[j];
+                            node['master'] = entry;
                             break;
                         case 5:
-                            node['zkSeq'] = fNode[j];
+                            node['slave'] = entry;
+                            break;
+                        case 6:
+                            node['zkSeq'] = entry;
                             break;
                         default:
                             break;
