@@ -1,0 +1,78 @@
+#!/bin/bash
+
+#
+# manatee-history: display the history of manatee-shards
+#
+
+if [[ -n "$TRACE" ]]; then
+    export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+    set -o xtrace
+fi
+set -o errexit
+set -o pipefail
+
+function usage() {
+cat << HERE
+usage: $0
+
+Display the status of manatee shards.
+
+OPTIONS:
+-h Show this message
+-v Verbose
+
+EXAMPLE:
+$0 1.moray.us-beta.com
+HERE
+}
+
+while getopts "h:v" OPTION
+do
+    case $OPTION in 
+        h)
+            usage
+            exit 1
+            ;;
+        v)
+            verbose=true
+            set -o xtrace
+            ;;
+        ?)
+            usage
+            exit
+            ;;
+    esac
+done
+
+if [[ -z $verbose ]]
+then
+    SHARD=$1
+else
+    SHARD=$2
+fi
+
+if [[ -z $SHARD ]]
+then
+    echo "must specify a shard_id"
+    usage
+    exit 1
+fi
+
+ROOT=/opt/smartdc/manta
+
+PATH=$ROOT/node_modules/.bin:$ROOT/build/node/bin:$PATH
+
+shard_info=$(manta-manatee-stat -s $SHARD)
+[[ $? -eq 0 ]] || fatal "unable to retrieve shard info"
+
+if [[ -z $shard_info ]]
+then
+    echo "shard $SHARD doesn't exist"
+    exit 1
+fi
+
+primary=$(echo $shard_info | json "primary" | json "zoneId");
+
+# query for manatee status
+
+manta-oneachzone -z $primary "source ~/.bashrc; manatee-history"

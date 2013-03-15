@@ -22,7 +22,7 @@ OPTIONS:
 -v Verbose
 
 EXAMPLE:
-./manatee-clear-error "1\.moray\.beta1\.joyent\.us"
+$0 "1\.moray\.beta1\.joyent\.us"
 HERE
 }
 
