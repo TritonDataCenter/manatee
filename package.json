@@ -36,8 +36,8 @@
         "vasync": "1.3.2",
         "verror": "1.3.3",
         "xtend": "1.0.3",
-        "zkplus": "git://github.com/mcavage/node-zkplus.git",
-        "zookeeper": "git://github.com/yunong/node-zookeeper.git"
+        "zkplus": "git://github.com/mcavage/node-zkplus.git#d0ea1da5fe26afd52e09e6c14d9ddd911a7d957c",
+        "zookeeper": "git://github.com/yunong/node-zookeeper.git#3a0545d174bb83b669777a705e73ffdc134a5f00"
     },
     "devDependencies": {
         "byline": "2.0.1",
