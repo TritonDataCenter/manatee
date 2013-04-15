@@ -26,7 +26,7 @@
         "healthChkInterval": 10000,
         "healthChkTimeout": 60000,
         "oneNodeWriteMode": ONE_NODE_WRITE_MODE,
-        "opsTimeout": 10000,
+        "opsTimeout": 20000,
         "pgCtlPath": "/opt/local/bin/pg_ctl",
         "pgInitDbPath": "/opt/local/bin/initdb",
         "postgresConf": "PG_CONF",
