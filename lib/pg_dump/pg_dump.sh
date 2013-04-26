@@ -4,8 +4,9 @@ export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}
 set -o xtrace
 
 PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/usr/sbin:/usr/bin:/opt/smartdc/registrar/build/node/bin:/opt/smartdc/registrar/node_modules/.bin:/opt/smartdc/manatee/lib/tools:/opt/smartdc/manatee/lib/pg_dump/
+CFG=/opt/smartdc/manatee/etc/backup.json
 
-MANTA_URL=`mdata-get manta_url`
+MANTA_URL=$(cat $CFG | json -a manta_url)
 MANTA_USER="poseidon"
 MANTA_KEY_ID=`ssh-keygen -lf ~/.ssh/id_rsa.pub | cut -d ' ' -f2`
 MANATEE_STAT=/opt/smartdc/manatee/bin/manatee-stat
@@ -19,9 +20,9 @@ function fatal
 
 my_ip=$(mdata-get sdc:nics.0.ip)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve our own IP address"
-svc_name=$(mdata-get service_name)
+svc_name=$(cat $CFG | json -a service_name)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve service name"
-zk_ip=$(mdata-get nameservers | cut -d ' ' -f1)
+zk_ip=$(cat $CFG | json -a zkCfg.servers.0.host)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve nameservers from metadata"
 dump_dir=/var/tmp/`uuid`
 mkdir $dump_dir
