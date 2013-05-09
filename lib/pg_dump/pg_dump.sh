@@ -9,6 +9,7 @@ CFG=/opt/smartdc/manatee/etc/backup.json
 MANTA_URL=$(cat $CFG | json -a manta_url)
 MANTA_USER="poseidon"
 MANTA_KEY_ID=`ssh-keygen -lf ~/.ssh/id_rsa.pub | cut -d ' ' -f2`
+MANTA_TLS_INSECURE=$(cat $CFG | json -a manta_tls_insecure)
 MANATEE_STAT=/opt/smartdc/manatee/bin/manatee-stat
 
 function fatal
