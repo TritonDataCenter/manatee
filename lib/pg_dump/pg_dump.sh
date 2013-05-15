@@ -6,10 +6,11 @@ set -o xtrace
 PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/usr/sbin:/usr/bin:/opt/smartdc/registrar/build/node/bin:/opt/smartdc/registrar/node_modules/.bin:/opt/smartdc/manatee/lib/tools:/opt/smartdc/manatee/lib/pg_dump/
 CFG=/opt/smartdc/manatee/etc/backup.json
 
-MANTA_URL=$(cat $CFG | json -a manta_url)
-MANTA_USER="poseidon"
-MANTA_KEY_ID=`ssh-keygen -lf ~/.ssh/id_rsa.pub | cut -d ' ' -f2`
-MANTA_TLS_INSECURE=$(cat $CFG | json -a manta_tls_insecure)
+# The 'm' commands will pick these up automagically if they are exported.
+export MANTA_URL=$(cat $CFG | json -a manta_url)
+export MANTA_USER="poseidon"
+export MANTA_KEY_ID=`ssh-keygen -lf ~/.ssh/id_rsa.pub | cut -d ' ' -f2`
+export MANTA_TLS_INSECURE=$(cat $CFG | json -a manta_tls_insecure)
 MANATEE_STAT=/opt/smartdc/manatee/bin/manatee-stat
 
 function fatal
@@ -40,7 +41,7 @@ function backup
     local day=$(date -u +%d)
     local hour=$(date -u +%H)
     local dir=$manta_dir_prefix/$svc_name/$year/$month/$day/$hour
-    $mmkdir -p -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $dir
+    $mmkdir -p $dir
     [[ $? -eq 0 ]] || fatal "unable to create backup dir"
 
     echo "getting db tables"
@@ -55,7 +56,7 @@ function backup
         sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | gzip -1 > $dump_file
         [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
         echo "uploading dump $i to manta"
-        $mput -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID -f $dump_file $dir/$i-$time.gz
+        $mput -f $dump_file $dir/$i-$time.gz
         [[ $? -eq 0 ]] || fatal "unable to upload dump $i"
         echo "removing dump $dump_file"
         rm $dump_file
