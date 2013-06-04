@@ -19,7 +19,7 @@
     "dependencies": {
         "assert-plus": "0.1.0",
         "backoff": "1.2.0",
-        "bunyan": "0.20.0",
+        "bunyan": "0.21.3",
         "carrier": "0.1.7",
         "iniparser": "1.0.5",
         "manta": "git+ssh://git@github.com:joyent/node-manta.git#master",
