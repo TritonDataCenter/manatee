@@ -1,0 +1,5 @@
+{
+    "name": "manatee-snapshotter",
+    "path": "/opt/smartdc/manatee/etc/snapshotter.json",
+	"master": true
+}

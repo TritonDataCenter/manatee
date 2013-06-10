@@ -1,0 +1,5 @@
+{
+    "name": "manatee-backup",
+    "path": "/opt/smartdc/manatee/etc/backup.json",
+	"master": true
+}

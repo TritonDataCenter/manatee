@@ -101,6 +101,7 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(ROOT)/snapshotter.js \
 		$(ROOT)/node_modules \
 		$(ROOT)/package.json \
+		$(ROOT)/sapi_manifests \
 		$(ROOT)/smf \
 		$(ROOT)/etc \
 		$(TMPDIR)/root/opt/smartdc/manatee/

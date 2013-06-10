@@ -1,0 +1,16 @@
+{
+    "manta_url": "{{MANTA_URL}}",
+    "manta_tls_insecure": "{{MANTA_TLS_INSECURE}}",
+    "service_name": "{{SERVICE_NAME}}",
+    "zkCfg": {
+        "servers": [
+         {{#ZK_SERVERS}}
+            {
+              "host": "{{host}}",
+              "port": {{port}}
+            }{{^last}}, {{/last}}
+        {{/ZK_SERVERS}}
+        ],
+        "timeout": 60000
+    }
+}
