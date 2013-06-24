@@ -59,6 +59,7 @@ function backup
 
 function upload
 {
+    local upload_error=0;
     local manta_dir_prefix=/poseidon/stor/manatee_backups
     for f in $(ls $dump_dir)
     do
@@ -69,13 +70,25 @@ function upload
         local name=$(echo $f | cut -d _ -f 2-)
         local dir=$manta_dir_prefix/$svc_name/$year/$month/$day/$hour
         $mmkdir -p $dir
-        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
+        if [[ $? -ne 0 ]]
+        then
+            echo "unable to create backup dir"
+            upload_error=1
+            continue;
+        fi
         echo "uploading dump $f to manta"
         $mput -f $dump_dir/$f $dir/$name
-        [[ $? -eq 0 ]] || fatal "unable to upload dump $dump_dir/$f"
-        echo "removing dump $dump_dir/$f"
-        rm $dump_dir/$f
+        if [[ $? -ne 0 ]]
+        then
+            echo "unable to upload dump $dump_dir/$f"
+            upload_error=1
+        else
+            echo "removing dump $dump_dir/$f"
+            rm $dump_dir/$f
+        fi
     done
+
+    return $upload_error
 }
 
 # s/./\./ to 1.moray.us.... for json
@@ -116,7 +129,20 @@ fi
 if [ $continue_backup = '1' ]
 then
     backup
-    upload
+    for tries in {1..5}
+    do
+        echo "upload attempt $tries"
+        upload
+        if [[ $? -eq 0 ]]
+        then
+            echo "successfully finished uploading attempt $tries, exiting"
+            exit 0
+        else
+            echo "attempt $tries failed"
+        fi
+    done
+
+    fatal "unable to upload all pg dumps"
 else
     echo "not performing backup, not lowest peer in shard"
     exit 0
