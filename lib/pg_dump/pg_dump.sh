@@ -50,6 +50,10 @@ function backup
         sudo -u postgres pg_dump moray -a -t $i | sqlToJson.js | gzip -1 > $dump_file
         [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
     done
+    # dump the entire moray db as well for manatee backups.
+    full_dump_file=$dump_dir/$year-$month-$day-$hour'_'moray-$time.gz
+    sudo -u postgres pg_dump moray | gzip -1 > $full_dump_file
+    [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump full moray db")
     rm $schema
 }
 
