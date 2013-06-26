@@ -65,7 +65,7 @@ PATH            := $(NODE_INSTALL)/bin:${PATH}
 # Repo-specific targets
 #
 .PHONY: all
-all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS)
+all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS) scripts
 	$(NPM) rebuild
 
 $(TAP): | $(NPM_EXEC)
@@ -89,10 +89,12 @@ include ./tools/mk/Makefile.targ
 release: all deps docs $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
 	@mkdir -p $(TMPDIR)/root/opt/smartdc/manatee
+	@mkdir -p $(TMPDIR)/root/opt/smartdc/boot
 	@mkdir -p $(TMPDIR)/site
 	@touch $(TMPDIR)/site/.do-not-delete-me
 	@mkdir -p $(TMPDIR)/root
 	cp -r   $(ROOT)/build \
+		$(ROOT)/boot \
 		$(ROOT)/lib \
 		$(ROOT)/bin \
 		$(ROOT)/deps \
@@ -105,6 +107,11 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(ROOT)/smf \
 		$(ROOT)/etc \
 		$(TMPDIR)/root/opt/smartdc/manatee/
+	mv $(TMPDIR)/root/opt/smartdc/manatee/build/scripts \
+	    $(TMPDIR)/root/opt/smartdc/manatee/boot
+	ln -s /opt/smartdc/manatee/boot/configure.sh \
+	    $(TMPDIR)/root/opt/smartdc/boot/configure.sh
+	chmod 755 $(TMPDIR)/root/opt/smartdc/manatee/boot/configure.sh
 	(cd $(TMPDIR) && $(TAR) -jcf $(ROOT)/$(RELEASE_TARBALL) root site)
 	@rm -rf $(TMPDIR)
 

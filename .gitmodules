@@ -7,3 +7,6 @@
 [submodule "deps/jsstyle"]
 	path = deps/jsstyle
 	url = git://github.com/davepacheco/jsstyle.git
+[submodule "deps/manta-scripts"]
+	path = deps/manta-scripts
+	url = git@git.joyent.com:manta-scripts.git
