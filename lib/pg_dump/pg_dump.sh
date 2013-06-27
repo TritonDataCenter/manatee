@@ -46,25 +46,24 @@ function upload_zfs_snapshot
     echo "getting latest snapshot"
     snapshot=$(zfs list -Hp -t snapshot | grep $DATASET | tail -n 1 | cut -f1)
     [[ $? -eq 0 ]] || fatal "Unable to retrieve latest snapshot"
-    # column 4 is the refer size
-    local snapshot_size=$(zfs list -Hp -t snapshot | grep $DATASET | tail -n 1 | cut -f4)
-    [[ $? -eq 0 ]] || fatal "Unable to retrieve snapshot size"
-    # pad the snapshot_size by 5% since there's some zfs overhead, note the
-    # last bit just takes the floor of the floating point value
-    local snapshot_size=$(echo "$snapshot_size * 1.05" | bc | cut -d '.' -f1)
-    local manta_dir_prefix=/poseidon/stor/manatee_backups
-    local year=$(date -u +%Y)
-    local month=$(date -u +%m)
-    local day=$(date -u +%d)
-    local hour=$(date -u +%H)
-    local dir=$manta_dir_prefix/$svc_name/$year/$month/$day/$hour
-    $mmkdir -p -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $dir
-    [[ $? -eq 0 ]] || fatal "unable to create backup dir"
-
 
     # only upload the snapshot if the flag is set
     if [[ UPLOAD_SNAPSHOT -eq 1 ]]
     then
+        # column 4 is the refer size
+        local snapshot_size=$(zfs list -Hp -t snapshot | grep $DATASET | tail -n 1 | cut -f4)
+        [[ $? -eq 0 ]] || fatal "Unable to retrieve snapshot size"
+        # pad the snapshot_size by 5% since there's some zfs overhead, note the
+        # last bit just takes the floor of the floating point value
+        local snapshot_size=$(echo "$snapshot_size * 1.05" | bc | cut -d '.' -f1)
+        local manta_dir_prefix=/poseidon/stor/manatee_backups
+        local year=$(date -u +%Y)
+        local month=$(date -u +%m)
+        local day=$(date -u +%d)
+        local hour=$(date -u +%H)
+        local dir=$manta_dir_prefix/$svc_name/$year/$month/$day/$hour
+        $mmkdir -p -u $MANTA_URL -a $MANTA_USER -k $MANTA_KEY_ID $dir
+        [[ $? -eq 0 ]] || fatal "unable to create backup dir"
         echo "sending snapshot $snapshot to manta"
         local snapshot_manta_name=$(echo $snapshot | gsed -e 's|\/|\-|g')
         zfs send $snapshot | $mput $dir/$snapshot_manta_name -H "max-content-length: $snapshot_size"
@@ -73,7 +72,6 @@ function upload_zfs_snapshot
         echo "successfully backed up snapshot $snapshot to manta file $dir/$snapshot_manta_name"
     fi
 }
-
 
 function mount_data_set
 {
@@ -95,7 +93,6 @@ function mount_data_set
     sleep 20
     echo "postgres started"
 }
-
 
 function backup
 {
