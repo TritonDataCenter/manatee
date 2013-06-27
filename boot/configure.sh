@@ -46,6 +46,12 @@ function manta_setup_manatee_env {
 
 # Mainline
 
+# XXX See MANTA-1613.  These manifests are shipped for SDC but aren't relevant
+# for the manta image, so remove them until the situation with SDC/manta
+# manifests is resolved.
+rm -rf $SVC_ROOT/sapi_manifests/registrar
+rm -rf $SVC_ROOT/sapi_manifests/sitter
+
 echo "Running common setup scripts"
 manta_common_presetup
 
