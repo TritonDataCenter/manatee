@@ -98,38 +98,15 @@ read -r svc_name_delim< <(echo $svc_name | gsed -e 's|\.|\\.|g')
 shard_info=$($MANATEE_STAT $zk_ip:2181 -s $svc_name)
 [[ $? -eq 0 ]] || fatal "Unable to retrieve shardinfo from zookeeper"
 
-async=$(echo $shard_info | json $svc_name_delim.async.ip)
-[[ $? -eq 0 ]] || fatal "unable to parse async peer"
-sync=$(echo $shard_info | json $svc_name_delim.sync.ip)
-[[ $? -eq 0 ]] || fatal "unable to parse sync peer"
 primary=$(echo $shard_info | json $svc_name_delim.primary.ip)
 [[ $? -eq 0 ]] || fatal "unable to parse primary peer"
 
 continue_backup=0
-if [ "$async" = "$my_ip" ]
-then
-    continue_backup=1
-fi
 
-if [ -z "$async" ] && [ "$sync" = "$my_ip" ]
-then
-    continue_backup=1
-fi
-
-if [ -z "$sync" ] && [ -z "$async" ] && [ "$primary" = "$my_ip" ]
-then
-    continue_backup=1
-else
-    if [ -z "$sync" ] && [ -z "$async" ]
-    then
-        fatal "not primary but async/sync dne, exiting 1"
-    fi
-fi
-
-if [ $continue_backup = '1' ]
+if [ "$primary" = "$my_ip" ]
 then
     backup
-    for tries in {1..5}
+    for tries in {0..4}
     do
         echo "upload attempt $tries"
         upload
