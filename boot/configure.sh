@@ -58,7 +58,7 @@ manta_common_presetup
 echo "Adding local manifest directories"
 manta_add_manifest_dir "/opt/smartdc/manatee"
 
-manta_common_setup
+manta_common_setup "manatee"
 manta_setup_manatee_env
 
 ZONE_UUID=`zoneadm list -p | cut -d ':' -f2`
