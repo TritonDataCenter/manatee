@@ -87,7 +87,7 @@ function mount_data_set
     [[ $? -eq 0 ]] || fatal "unable to start postgres"
 
     echo 'sleep some seconds so we wait for pg to start'
-    sleep 3
+    sleep 30
     echo "postgres started"
 }
 
