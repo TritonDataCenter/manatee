@@ -4,6 +4,7 @@ var bunyan = require('bunyan');
 var extend = require('xtend');
 var fs = require('fs');
 var getopt = require('posix-getopt');
+var panic = require('panic');
 var Shard = require('./lib/shard');
 
 /**
@@ -76,6 +77,12 @@ function readConfig(options) {
 /**
  * mainline
  */
+
+panic.enablePanicOnCrash({
+    'skipDump': true,
+    'abortOnPanic': true
+});
+
 var _config;
 var _options = parseOptions();
 
@@ -103,8 +110,3 @@ var shard = new Shard(_config);
 
 LOG.info('manatee started');
 LOG.trace('manatee shard', shard);
-
-process.on('uncaughtException', function (err) {
-    LOG.fatal({err: err}, 'uncaughtException (exiting error code 1)');
-    process.exit(1);
-});
