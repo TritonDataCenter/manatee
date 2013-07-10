@@ -107,11 +107,17 @@ var checkLock = function(lockPath, zookeeperIp, callback) {
 var _opts = parseOptions();
 
 checkLock(_opts.lockPath, _opts.zookeeperIp, function(err, history) {
-    if (err) {
+    if (err && err.code && err.code !== -101) {
         console.log(err);
         LOG.fatal({err: err}, 'unable to get lockPath.');
         process.exit(err);
     }
+    if (err && err.code === -101) {
+        LOG.info('lock dne');
+        process.exit(0);
+    }
 
-    process.exit(0);
+    // else we were able to get the lock, so exit 1
+    LOG.info('lock exists');
+    process.exit(1);
 });
