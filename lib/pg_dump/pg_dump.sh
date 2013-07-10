@@ -16,11 +16,13 @@ CFG=/opt/smartdc/manatee/etc/backup.json
 DATASET=
 DUMP_DATASET=
 DUMP_DIR=/var/tmp/upload
+MANATEE_LOCK=/opt/smartdc/manatee/bin/manatee-lock
 MANATEE_STAT=/opt/smartdc/manatee/bin/manatee-stat
 MANTA_DIR_PREFIX=/poseidon/stor/manatee_backups
 MMKDIR=/opt/smartdc/manatee/node_modules/manta/bin/mmkdir
 MPUT=/opt/smartdc/manatee/node_modules/manta/bin/mput
 MY_IP=
+LOCK_PATH=/pg_dump_lock
 PG_DIR=
 PG_PID=
 SHARD_NAME=
@@ -35,6 +37,12 @@ function fatal
     kill -9 $PG_PID
     zfs destroy -R $DUMP_DATASET
     exit 1
+}
+
+function check_lock
+{
+    $MANATEE_LOCK $LOCK_PATH $ZK_IP
+    [[ $? -eq 0 ]] || fatal "lock either exists or unable to check lock"
 }
 
 function take_zfs_snapshot
@@ -202,6 +210,7 @@ ZK_IP=$(cat $CFG | json -a zkCfg.servers.0.host)
 get_self_role
 if [[ $? = '1' ]]; then
     take_zfs_snapshot
+    check_lock
     mount_data_set
     backup
     for tries in {1..5}; do
