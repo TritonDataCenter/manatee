@@ -1,0 +1,117 @@
+#!/usr/bin/env node
+// -*- mode: js -*-
+// checks for a path in zk
+
+var exec = require('child_process').exec;
+var path = require('path');
+var util = require('util');
+
+var bunyan = require('bunyan');
+var getopt = require('posix-getopt');
+var manatee = require('./manatee_common');
+var vasync = require('vasync');
+
+var LOG = bunyan.createLogger({
+    name: path.basename(process.argv[1]),
+    level: (process.env.LOG_LEVEL || 'info'),
+    src: true,
+    serializers: {
+        err: bunyan.stdSerializers.err
+    }
+});
+
+var parseOptions = function() {
+    var option;
+    var opts = {};
+    var parser = new getopt.BasicParser('hv', process.argv);
+
+    while((option = parser.getopt()) !== undefined) {
+        switch (option.option) {
+            case 'h':
+                usage();
+                break;
+            case 'v':
+                LOG.level(Math.max(bunyan.TRACE, (LOG.level() - 10)));
+                if (LOG.level() <= bunyan.DEBUG)
+                    LOG = LOG.child({src: true});
+                break;
+            default:
+                usage('invalid option: ' + option.option);
+                process.exit(1);
+                break;
+        }
+    }
+
+    if (parser.optind() >= process.argv.length) {
+        usage('missing required argument: "lock_path"');
+    }
+
+    if (parser.optind() + 1 >= process.argv.length) {
+        usage('missing required argument: "zookeeper_ip"');
+    }
+
+    opts.lockPath = process.argv[parser.optind()];
+    opts.zookeeperIp = process.argv[parser.optind() + 1];
+
+    return opts;
+};
+
+var usage = function(msg) {
+    if (msg) {
+        console.error(msg);
+    }
+
+    var binName = path.basename(process.argv[1]);
+    var str = 'checks for existence of a lock path';
+    str += '\nusage: ' + binName + ' lock_path zookeeper_ip';
+    str += '\nexample: ' + binName + '/pg_dump_lock 10.99.99.13';
+    console.error(str);
+    process.exit(msg ? 1 : 0);
+};
+
+var checkLock = function(lockPath, zookeeperIp, callback) {
+    LOG.debug({
+        lockPath: lockPath,
+        zookeeperIp: zookeeperIp
+    }, 'manatee-lock.checkLock: entering');
+
+    var tasks = [
+        function createZkClient(arg, cb) {
+            var zkLog = LOG.child({
+                component: 'zookeeper'
+            });
+            manatee.createZkClient({log: zkLog, zk: zookeeperIp},
+                function (err, zk)
+                {
+                    arg.zk = zk;
+                    return cb(err);
+                });
+        },
+        function getLock(arg, cb) {
+            LOG.debug({path: lockPath}, 'listing zk path');
+            arg.zk.readdir(lockPath, function(err, nodes) {
+                LOG.debug({
+                    err: err,
+                    nodes: nodes
+                }, 'returned from getLock');
+                return cb(err);
+            });
+        },
+    ];
+
+    vasync.pipeline({funcs: tasks, arg: {}}, function(err) {
+        return callback(err);
+    });
+};
+
+var _opts = parseOptions();
+
+checkLock(_opts.lockPath, _opts.zookeeperIp, function(err, history) {
+    if (err) {
+        console.log(err);
+        LOG.fatal({err: err}, 'unable to get lockPath.');
+        process.exit(err);
+    }
+
+    process.exit(0);
+});
