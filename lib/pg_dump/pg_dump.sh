@@ -114,7 +114,8 @@ function backup
     do
         local time=$(date -u +%F-%H-%M-%S)
         local dump_file=$DUMP_DIR/$date'_'$i-$time.gz
-        sudo -u postgres pg_dump -p 23456 moray -a -t $i | sqlToJson.js | gzip -1 > $dump_file
+        sudo -u postgres pg_dump -p 23456 moray -a -t $i | gsed 's/\\\\/\\/g' |\
+            sqlToJson.js | gzip -1 > $dump_file
         [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
     done
     # dump the entire moray db as well for manatee backups.
