@@ -294,10 +294,10 @@ We may have missed some pg_dumps if this process took longer than an hour. You c
 
 Look for any missing hours. If hours are missing, re-mount the zfs dataset and upload the dumps. **TODO** add docs about re-uploading dumps.
 
-# Drop rows from the Old DB
+# Drop rows from the old DB
 Now we'll want to clean up any rows in shard 1 that still maps to the re-mapped vnodes. On the primary, run:
 
-        sudo -u postgres psql moray -c 'delete from manta where _vnode in (0, 105, 943, 689)
+        sudo -u postgres psql moray -c 'delete from manta where _vnode in (0, 105, 943, 689)'
 
 Grab your favourite beverage, do a dance, and you're done!
 
