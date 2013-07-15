@@ -249,22 +249,30 @@ function pgStatus(topology, callback) {
             }
             var url = node.pgUrl;
 
-            var q = k !== 'async' ? PG_REPL_STAT : PG_REPL_LAG;
-
             LOG.debug({
                 url: url
             }, 'querying postgres status');
-            query(url, q, function (err, res) {
+
+            query(url, PG_REPL_STAT, function (err, res) {
                 if (err) {
                     node.repl = JSON.stringify(err);
                 } else {
-                    node.repl =
-                    res.rows[0] ? res.rows[0] : {};
+                    node.repl = res.rows[0] ? res.rows[0] : {};
                 }
 
-                if (++count === total) {
-                    callback();
-                }
+                query(url, PG_REPL_LAG, function (err, res) {
+                    if (k !== 'primary' && k !== 'sync') {
+                        if (err) {
+                            node.lag = JSON.stringify(err);
+                        } else {
+                            node.lag = res.rows[0] ? res.rows[0] : {};
+                        }
+                    }
+                    if (++count === total) {
+                        callback();
+                    }
+                });
+
             });
         }));
     });
