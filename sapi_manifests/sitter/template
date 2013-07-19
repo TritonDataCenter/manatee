@@ -27,7 +27,7 @@
         "healthChkInterval": 10000,
         "healthChkTimeout": 60000,
         "oneNodeWriteMode": {{^ONE_NODE_WRITE_MODE}}false{{/ONE_NODE_WRITE_MODE}}{{{ONE_NODE_WRITE_MODE}}},
-        "opsTimeout": 90000,
+        "opsTimeout": 300000,
         "pgCtlPath": "/opt/local/bin/pg_ctl",
         "pgInitDbPath": "/opt/local/bin/initdb",
         "postgresConf": "/opt/smartdc/manatee/etc/postgresql.sdc.conf",
