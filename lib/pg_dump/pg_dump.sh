@@ -25,6 +25,7 @@ MY_IP=
 LOCK_PATH=/pg_dump_lock
 PG_DIR=
 PG_PID=
+PG_START_TIMEOUT=300
 SHARD_NAME=
 UPLOAD_SNAPSHOT=
 ZFS_CFG=/opt/smartdc/manatee/etc/snapshotter.json
@@ -94,8 +95,8 @@ function mount_data_set
     PG_PID=$!
     [[ $? -eq 0 ]] || fatal "unable to start postgres"
 
-    echo 'sleep some seconds so we wait for pg to start'
-    sleep 30
+    echo 'sleep some seconds while we wait for pg to start'
+    sleep $PG_START_TIMEOUT
     echo "postgres started"
 }
 
