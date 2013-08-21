@@ -1,4 +1,13 @@
-// Copyright (c) 2012, Joyent, Inc. All rights reserved.
+/* Copyright (c) 2013, Joyent, Inc. All rights reserved.
+ *
+ *                   _.---.._
+ *      _        _.-' \  \    ''-.
+ *    .'  '-,_.-'   /  /  /       '''.
+ *   (       _                     o  :
+ *    '._ .-'  '-._         \  \-  ---]
+ *                  '-.___.-')  )..-'
+ *                           (_/
+ */
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
 var extend = require('xtend');
