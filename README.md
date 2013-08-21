@@ -1,3 +1,14 @@
+# Manatee
+                       _.---.._
+          _        _.-' \  \    ''-.
+        .'  '-,_.-'   /  /  /       '''.
+       (       _                     o  :
+        '._ .-'  '-._         \  \-  ---]
+                      '-.___.-')  )..-'
+                               (_/
+
+A highly available PostgreSQL cluster with automated failover.
+
 # Components
 Manatee consists of 3 seperate node processes, the manatee-sitter,
 manatee-snapshotter, and manatee-backupservice
@@ -92,4 +103,7 @@ postgres replication stats. The output of which look like:
             }
         }
 
+# Internals
+A good place to start would be in ./lib/shard.js, any questions/comments are
+welcome.
 
