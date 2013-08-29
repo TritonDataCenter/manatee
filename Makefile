@@ -65,7 +65,7 @@ PATH            := $(NODE_INSTALL)/bin:${PATH}
 # Repo-specific targets
 #
 .PHONY: all
-all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS) scripts
+all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS) scripts sdc-scripts
 	$(NPM) rebuild
 
 $(TAP): | $(NPM_EXEC)
@@ -109,6 +109,11 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(TMPDIR)/root/opt/smartdc/manatee/
 	mv $(TMPDIR)/root/opt/smartdc/manatee/build/scripts \
 	    $(TMPDIR)/root/opt/smartdc/manatee/boot
+	@mkdir -p $(TMPDIR)/root/opt/smartdc/sdc-boot
+	cp $(ROOT)/sdc-boot/*.sh \
+	    $(TMPDIR)/root/opt/smartdc/sdc-boot/
+	mv $(TMPDIR)/root/opt/smartdc/manatee/build/sdc-scripts \
+	    $(TMPDIR)/root/opt/smartdc/sdc-boot/scripts
 	ln -s /opt/smartdc/manatee/boot/configure.sh \
 	    $(TMPDIR)/root/opt/smartdc/boot/configure.sh
 	chmod 755 $(TMPDIR)/root/opt/smartdc/manatee/boot/configure.sh
