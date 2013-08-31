@@ -17,7 +17,7 @@ role=manatee
 CONFIG_AGENT_LOCAL_MANIFESTS_DIRS=/opt/smartdc/$role
 
 # Include common utility functions (then run the boilerplate)
-source /opt/smartdc/sdc-boot/scripts/util.sh
+source /opt/smartdc/sdc-boot/lib/util.sh
 sdc_common_setup
 
 # Cookie to identify this as a SmartDC zone and its role

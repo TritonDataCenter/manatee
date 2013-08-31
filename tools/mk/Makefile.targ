@@ -147,13 +147,6 @@ scripts: deps/manta-scripts/.git
 	cp deps/manta-scripts/*.sh $(BUILD)/scripts
 
 #
-# This rule installs the common SDC scripts into the build/scripts directory.
-#
-sdc-scripts: deps/sdc-scripts/.git
-	mkdir -p $(BUILD)/sdc-scripts
-	cp deps/sdc-scripts/*.sh $(BUILD)/sdc-scripts
-
-#
 # These recipes make heavy use of dynamically-created phony targets. The parent
 # Makefile defines a list of input files like BASH_FILES. We then say that each
 # of these files depends on a fake target called filename.bashchk, and then we
