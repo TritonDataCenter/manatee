@@ -129,4 +129,4 @@ publish: release
 	mkdir -p $(BITS_DIR)/manatee
 	cp $(ROOT)/$(RELEASE_TARBALL) $(BITS_DIR)/manatee/$(RELEASE_TARBALL)
 
-sdc-scripts: deps/%/.git
+sdc-scripts: deps/sdc-scripts/.git
