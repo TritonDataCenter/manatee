@@ -94,7 +94,6 @@ release: all deps docs $(SMF_MANIFESTS)
 	@touch $(TMPDIR)/site/.do-not-delete-me
 	@mkdir -p $(TMPDIR)/root
 	cp -r   $(ROOT)/build \
-		$(ROOT)/boot \
 		$(ROOT)/lib \
 		$(ROOT)/bin \
 		$(ROOT)/deps \
@@ -107,16 +106,13 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(ROOT)/smf \
 		$(ROOT)/etc \
 		$(TMPDIR)/root/opt/smartdc/manatee/
-	mv $(TMPDIR)/root/opt/smartdc/manatee/build/scripts \
-	    $(TMPDIR)/root/opt/smartdc/manatee/boot
-	mkdir -p $(TMPDIR)/root/opt/smartdc/sdc-boot
+	mkdir -p $(TMPDIR)/root/opt/smartdc/boot/scripts
+	cp -R $(TMPDIR)/root/opt/smartdc/manatee/build/scripts/* \
+	    $(TMPDIR)/root/opt/smartdc/boot/scripts/
 	cp -R $(ROOT)/deps/sdc-scripts/* \
-	    $(TMPDIR)/root/opt/smartdc/sdc-boot/
-	cp -R $(ROOT)/sdc-boot/* \
-	    $(TMPDIR)/root/opt/smartdc/sdc-boot/
-	ln -s /opt/smartdc/manatee/boot/configure.sh \
-	    $(TMPDIR)/root/opt/smartdc/boot/configure.sh
-	chmod 755 $(TMPDIR)/root/opt/smartdc/manatee/boot/configure.sh
+	    $(TMPDIR)/root/opt/smartdc/boot/
+	cp -R $(ROOT)/boot/* \
+	    $(TMPDIR)/root/opt/smartdc/boot/
 	(cd $(TMPDIR) && $(TAR) -jcf $(ROOT)/$(RELEASE_TARBALL) root site)
 	@rm -rf $(TMPDIR)
 
