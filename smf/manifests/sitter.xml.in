@@ -5,7 +5,7 @@
  -->
 
 <service_bundle type="manifest" name="manatee">
-    <service name="sds/application/manatee-sitter" type="service" version="1">
+    <service name="manta/application/manatee-sitter" type="service" version="1">
 
         <dependency name="network" grouping="require_all" restart_on="error" type="service">
             <service_fmri value="svc:/network/physical" />
