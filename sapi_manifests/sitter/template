@@ -55,13 +55,20 @@
     },
     "zkCfg": {
         "servers": [
-         {{#ZK_SERVERS}}
-            {
-              "host": "{{{host}}}",
-              "port": {{{port}}}
-            }{{^last}}, {{/last}}
+        {{#ZK_HA_SERVERS}}
+          {
+            "host": "{{host}}",
+            "port": {{port}}
+          }{{^last}}, {{/last}}
+        {{/ZK_HA_SERVERS}}
+        {{^ZK_HA_SERVERS}}
+        {{#ZK_SERVERS}}
+          {
+            "host": "{{host}}",
+            "port": {{port}}
+          }{{^last}}, {{/last}}
         {{/ZK_SERVERS}}
-        ],
+        {{/ZK_HA_SERVERS}}        ],
         "timeout": 60000
     }
 }
