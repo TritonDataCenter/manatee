@@ -58,6 +58,8 @@ function sdc_manatee_setup {
     echo "export PATH=\$PATH:/opt/smartdc/$role/build/node/bin:/opt/smartdc/$role/node_modules/.bin" >>/root/.profile
 
     common_manatee_setup
+
+    common_enable_services
 }
 
 function manta_manatee_setup {
