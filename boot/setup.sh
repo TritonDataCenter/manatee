@@ -225,10 +225,9 @@ else # ${FLAVOR} == "sdc"
     source /opt/smartdc/boot/lib/util.sh
     sdc_common_setup
 
-    add_manatee_profile_functions
-
     # Do the SDC-specific manatee stuff.
     sdc_manatee_setup
+    add_manatee_profile_functions
 
     # All done, run boilerplate end-of-setup
     sdc_setup_complete
