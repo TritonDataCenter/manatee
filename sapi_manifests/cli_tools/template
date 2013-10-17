@@ -1,0 +1,10 @@
+ZK_IPS=
+# This becomes a bit redundant because of SAPI templating.
+{{#ZK_HA_SERVERS}}
+ZK_IPS="$ZK_IPS {{host}}"
+{{/ZK_HA_SERVERS}}
+{{^ZK_HA_SERVERS}}
+{{#ZK_SERVERS}}
+ZK_IPS="$ZK_IPS {{host}}"
+{{/ZK_SERVERS}}
+{{/ZK_HA_SERVERS}}
