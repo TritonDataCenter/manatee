@@ -111,6 +111,7 @@ _config.zkCfg.log = LOG;
 _config.postgresMgrCfg.log = LOG;
 _config.postgresMgrCfg.zfsClientCfg.log = LOG;
 _config.postgresMgrCfg.snapShotterCfg.log = LOG;
+_config.postgresMgrCfg.syncStateCheckerCfg.log = LOG;
 _config.heartbeatServerCfg.log = LOG;
 _config.heartbeatClientCfg.log = LOG;
 
