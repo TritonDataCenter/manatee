@@ -74,10 +74,6 @@ $(TAP): | $(NPM_EXEC)
 CLEAN_FILES += $(TAP) ./node_modules/tap
 DISTCLEAN_FILES = ./node_modules
 
-.PHONY: test
-test: $(TAP)
-	TAP=1 $(TAP) test/*.test.js
-
 include ./tools/mk/Makefile.deps
 include ./tools/mk/Makefile.node_prebuilt.targ
 include ./tools/mk/Makefile.node_deps.targ

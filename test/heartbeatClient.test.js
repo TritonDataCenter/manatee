@@ -12,22 +12,20 @@ var log = new Logger({
         level: 'info'
 });
 
-//var server = new HeartbeatServer({
-  //log: log,
-  //port: 12222
-//});
+var server = new HeartbeatServer({
+  log: log,
+  port: 12222
+});
 
-//server.init();
+server.init();
 
-var heartbeatClient= new HeartbeatClient({
+var heartbeatClient = new HeartbeatClient({
         log: log,
         heartbeatInterval: 200,
         url: 'http://foo/baz',
         primaryUrl: 'http://0.0.0.0:12222'
 });
 
-setInterval(function() {
-        heartbeatClient.postHeartbeat(function(err) {});
+setInterval(function () {
+        heartbeatClient.postHeartbeat(function (err) {});
 }, 300);
-
-

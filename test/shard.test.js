@@ -72,6 +72,6 @@ var shardCfg = {
 
 var shard = new Shard(shardCfg);
 
-shard.on('connect', function() {
+shard.on('connect', function () {
         shard.init();
 });

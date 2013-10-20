@@ -64,8 +64,8 @@ var POSGRESQL_CONF_STR = [
   'default_text_search_config = \'pg_catalog.english\''
 ];
 
-test('test read', function(t) {
-  confparser.read(POSTGRESQL_CONF, function(err, conf) {
+test('test read', function (t) {
+  confparser.read(POSTGRESQL_CONF, function (err, conf) {
     if (err) {
       t.fail(err);
       t.end();
@@ -77,9 +77,9 @@ test('test read', function(t) {
   });
 });
 
-test('test write', function(t) {
+test('test write', function (t) {
   var path = '/tmp/' + uuid();
-  confparser.write(path, POSTGRESQL_CONF_OBJ, function(err) {
+  confparser.write(path, POSTGRESQL_CONF_OBJ, function (err) {
     if (err) {
       t.fail(err);
       t.end();
@@ -89,7 +89,7 @@ test('test write', function(t) {
   var stream = fs.createReadStream(path);
   stream = byline.createStream(stream);
   var i = 0;
-  stream.on('data', function(line) {
+  stream.on('data', function (line) {
     console.log(i);
     console.log(POSGRESQL_CONF_STR[i]);
     console.log(line);
@@ -102,7 +102,7 @@ test('test write', function(t) {
 
 });
 
-test('test set', function(t) {
+test('test set', function (t) {
   var conf = POSTGRESQL_CONF_OBJ;
   var value = '\'foo, bar\'';
   confparser.set(conf, 'synchronous_standby_names', value);
@@ -110,6 +110,6 @@ test('test set', function(t) {
   t.end();
 });
 
-tap.tearDown(function() {
+tap.tearDown(function () {
   process.exit(tap.output.results.fail);
 });
