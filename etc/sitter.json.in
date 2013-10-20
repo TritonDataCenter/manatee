@@ -40,6 +40,10 @@
             "snapshotNumber": 5,
             "pgUrl": "PG_URL"
         },
+        "syncStateCheckerCfg": {
+            "interval": 1000,
+            "cookieLocation": "/var/tmp/manatee_sync_state"
+        },
         "url": "PG_URL",
         "zfsClientCfg": {
             "dataset": "DATASET",
