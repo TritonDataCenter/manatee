@@ -66,11 +66,11 @@
 #				with the default.
 #				(default: master)
 #
-#	NODE_PREBUILT_CC_VERSION	If you have a C compiler version that differs
-#				from that used for sdcnode builds, then you can set this to
-#				the prebuilt cc version you'd like to use. See
+#	NODE_PREBUILT_IMAGE		If you have a zone image that differs from that
+#				for an sdcnode build that you want to use (potential compat
+#				issues be damned), then set this to the UUID of the sdcnode
+#				build you want. See here for available build image uuids:
 #				<https://download.joyent.com/pub/build/sdcnode/master-latest/sdcnode/>
-#				for available builds.
 #
 #	BUILD			top-level directory for built binaries
 #				(default: "build")
@@ -82,15 +82,14 @@
 # Dev Notes:
 #
 # This works by getting "NODE_PREBUILT_NAME" from the provided "NODE_PREBUILT_*"
-# vars and the current compiler version. The compiler version is included
-# to ensure an exact match with the build machine, because of sketchy
-# cross-version C++ compat. This name (e.g. "v0.6.18-gcc4.6.1") is used to
-# find a matching "sdcnode-$name-*.tgz" build in "NODE_PREBUILT_DIR"
-# (either a local directory or a URL). That tarball is downloaded and
-# extracted into "NODE_INSTALL".
+# vars and the image version (via 'mdata-get sdc:image_uuid'). The image uuid is
+# included to ensure an exact match with the build machine. This name (e.g.
+# "v0.6.18-zone-$uuid") is used to find a matching "sdcnode-$name-*.tgz" build
+# in "NODE_PREBUILT_DIR" (either a local directory or a URL). That tarball is
+# downloaded and extracted into "NODE_INSTALL".
 #
 # The "*_EXEC" vars are set to named symlinks, e.g.
-# "build/prebuilt-node-v0.6.18-gcc4.6.1", so that a change of selected node
+# "build/prebuilt-node-v0.6.18-$uuid", so that a change of selected node
 # build (say the developer changes NODE_PREBUILT_VERSION) will recreate the
 # node install.
 #
@@ -108,19 +107,14 @@ DISTCLEAN_FILES	+= $(NODE_INSTALL) \
 	$(BUILD)/prebuilt-node-* $(BUILD)/prebuilt-npm-*
 
 NODE_PREBUILT_BRANCH ?= master
-NODE_PREBUILT_CC := $(CC)
-ifeq ($(shell $(CC) --version | head -1 | awk '{print $$2}'),(GCC))
-	NODE_PREBUILT_CC := gcc
-endif
-NODE_PREBUILT_CC_VERSION ?= $(shell $(CC) --version | head -1 | awk '{print $$3}')
-NODE_PREBUILT_NAME := $(NODE_PREBUILT_VERSION)-$(NODE_PREBUILT_CC)$(NODE_PREBUILT_CC_VERSION)
+NODE_PREBUILT_IMAGE ?= $(shell pfexec mdata-get sdc:image_uuid)
 ifeq ($(NODE_PREBUILT_TAG),)
-	NODE_PREBUILT_NAME := $(NODE_PREBUILT_VERSION)-$(NODE_PREBUILT_CC)$(NODE_PREBUILT_CC_VERSION)
+	NODE_PREBUILT_NAME := $(NODE_PREBUILT_VERSION)-$(NODE_PREBUILT_IMAGE)
 else
-	NODE_PREBUILT_NAME := $(NODE_PREBUILT_VERSION)-$(NODE_PREBUILT_CC)$(NODE_PREBUILT_CC_VERSION)-$(NODE_PREBUILT_TAG)
+	NODE_PREBUILT_NAME := $(NODE_PREBUILT_VERSION)-$(NODE_PREBUILT_TAG)-$(NODE_PREBUILT_IMAGE)
 endif
 NODE_PREBUILT_PATTERN := sdcnode-$(NODE_PREBUILT_NAME)-$(NODE_PREBUILT_BRANCH)-.*\.tgz
-NODE_PREBUILT_DIR ?= https://download.joyent.com/pub/build/sdcnode/$(NODE_PREBUILT_BRANCH)-latest/sdcnode/
+NODE_PREBUILT_DIR ?= https://download.joyent.com/pub/build/sdcnode/$(NODE_PREBUILT_IMAGE)/$(NODE_PREBUILT_BRANCH)-latest/sdcnode/
 ifeq ($(shell echo $(NODE_PREBUILT_DIR) | cut -c 1-4),http)
 	NODE_PREBUILT_BASE := $(shell curl -ksS --fail --connect-timeout 5 $(NODE_PREBUILT_DIR) | grep 'href=' | cut -d'"' -f2 | grep "^$(NODE_PREBUILT_PATTERN)$$" | sort | tail -1)
 	ifneq ($(NODE_PREBUILT_BASE),)

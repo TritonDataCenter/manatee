@@ -58,9 +58,13 @@
 #	JSL_FILES_NODE	JavaScript files to check with Node config file.
 #	JSL_FILES_WEB	JavaScript files to check with Web config file.
 #
+#	JSON_FILES	JSON files to be validated
+#
+#	JSSTYLE_FILES	JavaScript files to be style-checked
+#
 # You can also override these variables:
 #
-#	BASH		Path to bash (default: bash)
+#	BASH		Path to bash (default: "bash")
 #
 #	CSCOPE_DIRS	Directories to search for source files for the cscope
 #			index. (default: ".")
@@ -71,9 +75,15 @@
 #	JSL_FLAGS_WEB
 #	JSL_FLAGS
 #
-#	JSSTYLE		Path to jsstyle (default: jsstyle)
+#	JSON		Path to json tool (default: "json")
+#
+#	JSSTYLE		Path to jsstyle (default: "jsstyle")
 #
 #	JSSTYLE_FLAGS	Additional flags to pass through to jsstyle
+#
+#	RESTDOWN_EXT	By default '.restdown' is required for DOC_FILES
+#			(see above). If you want to use, say, '.md' instead, then
+#			set 'RESTDOWN_EXT=.md' in your Makefile.
 #
 
 #
@@ -85,10 +95,12 @@ CP		?= cp
 CSCOPE		?= cscope
 CSCOPE_DIRS	?= .
 JSL		?= jsl
+JSON		?= json
 JSSTYLE		?= jsstyle
 MKDIR		?= mkdir -p
 MV		?= mv
 RESTDOWN_FLAGS	?=
+RESTDOWN_EXT	?= .restdown
 RMTREE		?= rm -rf
 JSL_FLAGS  	?= --nologo --nosummary
 
@@ -138,14 +150,6 @@ endif
 deps/%/.git:
 	git submodule update --init deps/$*
 
-
-#
-# This rule installs the common manta scripts into the build/scripts directory.
-#
-scripts: deps/manta-scripts/.git
-	mkdir -p $(BUILD)/scripts
-	cp deps/manta-scripts/*.sh $(BUILD)/scripts
-
 #
 # These recipes make heavy use of dynamically-created phony targets. The parent
 # Makefile defines a list of input files like BASH_FILES. We then say that each
@@ -164,6 +168,12 @@ check-bash: $(BASH_FILES:%=%.bashchk) $(BASH_FILES:%=%.bashstyle)
 
 %.bashstyle: %
 	$(BASHSTYLE) $^
+
+.PHONY: check-json
+check-json: $(JSON_FILES:%=%.jsonchk)
+
+%.jsonchk: %
+	$(JSON) --validate -f $^
 
 #
 # The above approach can be slow when there are many files to check because it
@@ -191,7 +201,7 @@ check-jsstyle:  $(JSSTYLE_EXEC)
 	$(JSSTYLE) $(JSSTYLE_FLAGS) $(JSSTYLE_FILES)
 
 .PHONY: check
-check: check-jsl $(JSSTYLE_TARGET) check-bash
+check: check-jsl check-json $(JSSTYLE_TARGET) check-bash
 	@echo check ok
 
 .PHONY: clean
@@ -247,25 +257,25 @@ DOC_MEDIA_FILES_BUILD := $(DOC_MEDIA_FILES:%=$(DOC_BUILD)/media/%)
 #
 .PHONY: docs
 docs:							\
-    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.html)		\
-    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.json)		\
-    $(DOC_MEDIA_FILES_BUILD)
+	$(DOC_FILES:%$(RESTDOWN_EXT)=$(DOC_BUILD)/%.html)		\
+	$(DOC_FILES:%$(RESTDOWN_EXT)=$(DOC_BUILD)/%.json)		\
+	$(DOC_MEDIA_FILES_BUILD)
 
 #
 # We keep the intermediate files so that the next build can see whether the
 # files in DOC_BUILD are up to date.
 #
 .PRECIOUS:					\
-    $(DOC_FILES:%.restdown=docs/%.html)		\
-    $(DOC_FILES:%.restdown=docs/%json)
+	$(DOC_FILES:%$(RESTDOWN_EXT)=docs/%.html)		\
+	$(DOC_FILES:%$(RESTDOWN_EXT)=docs/%json)
 
 #
 # We do clean those intermediate files, as well as all of DOC_BUILD.
 #
 CLEAN_FILES +=					\
-    $(DOC_BUILD)				\
-    $(DOC_FILES:%.restdown=docs/%.html)		\
-    $(DOC_FILES:%.restdown=docs/%.json)
+	$(DOC_BUILD)				\
+	$(DOC_FILES:%$(RESTDOWN_EXT)=docs/%.html)		\
+	$(DOC_FILES:%$(RESTDOWN_EXT)=docs/%.json)
 
 #
 # Before installing the files, we must make sure the directories exist. The |
@@ -278,7 +288,7 @@ $(DOC_MEDIA_FILES_BUILD): | $(DOC_MEDIA_DIRS_BUILD)
 $(DOC_BUILD)/%: docs/% | $(DOC_BUILD)
 	$(CP) $< $@
 
-docs/%.json docs/%.html: docs/%.restdown | $(DOC_BUILD) $(RESTDOWN_EXEC)
+docs/%.json docs/%.html: docs/%$(RESTDOWN_EXT) | $(DOC_BUILD) $(RESTDOWN_EXEC)
 	$(RESTDOWN) $(RESTDOWN_FLAGS) -m $(DOC_BUILD) $<
 
 $(DOC_BUILD):

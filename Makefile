@@ -44,7 +44,8 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 
 NODE_PREBUILT_VERSION   := v0.8.21
 NODE_PREBUILT_TAG       := zone
-NODE_PREBUILT_CC_VERSION := 4.6.2
+# Allow building on a SmartOS image other than smartos-1.6.3.
+NODE_PREBUILT_IMAGE=01b2c898-945f-11e1-a523-af1afbe22822
 
 
 include ./tools/mk/Makefile.defs
@@ -84,6 +85,10 @@ include ./tools/mk/Makefile.node_deps.targ
 include ./tools/mk/Makefile.smf.targ
 include ./tools/mk/Makefile.targ
 
+.PHONY: scripts
+scripts: deps/manta-scripts/.git
+       mkdir -p $(BUILD)/scripts
+       cp deps/manta-scripts/*.sh $(BUILD)/scripts
 
 .PHONY: release
 release: all deps docs $(SMF_MANIFESTS)

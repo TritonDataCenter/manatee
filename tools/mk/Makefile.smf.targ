@@ -17,5 +17,5 @@ check-manifests: $(SMF_MANIFESTS:%=%.smfchk)
 
 check: check-manifests
 
-smf/manifests/%: smf/manifests/%.in
+$(SMF_MANIFESTS): %: %.in
 	$(SED) -e 's#@@NODE@@#@@PREFIX@@/$(NODE_INSTALL)/bin/node#' $< > $@
