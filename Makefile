@@ -87,8 +87,8 @@ include ./tools/mk/Makefile.targ
 
 .PHONY: scripts
 scripts: deps/manta-scripts/.git
-       mkdir -p $(BUILD)/scripts
-       cp deps/manta-scripts/*.sh $(BUILD)/scripts
+	mkdir -p $(BUILD)/scripts
+	cp deps/manta-scripts/*.sh $(BUILD)/scripts
 
 .PHONY: release
 release: all deps docs $(SMF_MANIFESTS)
