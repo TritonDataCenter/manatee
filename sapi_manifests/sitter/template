@@ -41,6 +41,10 @@
             "snapshotNumber": 5,
             "pgUrl": "tcp://postgres@{{{PRIMARY_IP}}}:5432/postgres"
         },
+        "syncStateCheckerCfg": {
+            "interval": 1000,
+            "cookieLocation": "/var/tmp/manatee_sync_state"
+        },
         "url": "tcp://postgres@{{{PRIMARY_IP}}}:5432/postgres",
         "zfsClientCfg": {
             "dataset": "zones/{{{ZONE_UUID}}}/data/manatee",
