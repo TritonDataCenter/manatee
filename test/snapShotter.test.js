@@ -17,16 +17,17 @@ var log = new Logger({
 var snapShotter = new SnapShotter({
         log: log,
         dataset: 'zones/a6354a44-6d08-40fb-b4fe-7f58100d6d14/data',
+        /* JSSTYLED */
         snapshotDir: '/zones/a6354a44-6d08-40fb-b4fe-7f58100d6d14/data/.zfs/snapshot/',
         pollInterval: 5000,
         snapshotNumber: 5,
         pgUrl: 'tcp://yunong@10.99.99.17:5432/postgres'
 });
 
-snapShotter.on('err', function(err) {
+snapShotter.on('err', function (err) {
         log.error('got error from snapshotter', err);
 });
 
-snapShotter.start(function() {
+snapShotter.start(function () {
         log.info('started snapshotter');
 });

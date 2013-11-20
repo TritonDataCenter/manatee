@@ -1,4 +1,5 @@
-/* Copyright (c) 2013, Joyent, Inc. All rights reserved.
+/*
+ * Copyright (c) 2013, Joyent, Inc. All rights reserved.
  *
  *                   _.---.._
  *      _        _.-' \  \    ''-.
@@ -7,6 +8,7 @@
  *    '._ .-'  '-._         \  \-  ---]
  *                  '-.___.-')  )..-'
  *                           (_/
+ *
  */
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
@@ -109,12 +111,12 @@ if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
 _config.log = LOG;
 
 // set a timeout so we don't collide with the snapshot taken from the sitter
-setTimeout(function(){ startSnapshotter(); }, _config.startupDelay);
+setTimeout(function () { startSnapshotter(); }, _config.startupDelay);
 
 function startSnapshotter() {
     var snapShotter = new SnapShotter(_config);
 
-    snapShotter.on('err', function(err) {
+    snapShotter.on('err', function (err) {
         // only exit if zfs snapshotting fails.
         if (err.snapshotErr) {
             LOG.fatal('got error from snapshotter', err);
@@ -122,7 +124,7 @@ function startSnapshotter() {
         }
     });
 
-    snapShotter.start(function() {
+    snapShotter.start(function () {
         LOG.info('started snapshotter');
     });
 }

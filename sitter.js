@@ -1,4 +1,5 @@
-/* Copyright (c) 2013, Joyent, Inc. All rights reserved.
+/*
+ * Copyright (c) 2013, Joyent, Inc. All rights reserved.
  *
  *                   _.---.._
  *      _        _.-' \  \    ''-.
@@ -7,6 +8,7 @@
  *    '._ .-'  '-._         \  \-  ---]
  *                  '-.___.-')  )..-'
  *                           (_/
+ *
  */
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
@@ -111,6 +113,7 @@ _config.zkCfg.log = LOG;
 _config.postgresMgrCfg.log = LOG;
 _config.postgresMgrCfg.zfsClientCfg.log = LOG;
 _config.postgresMgrCfg.snapShotterCfg.log = LOG;
+_config.postgresMgrCfg.syncStateCheckerCfg.log = LOG;
 _config.heartbeatServerCfg.log = LOG;
 _config.heartbeatClientCfg.log = LOG;
 

@@ -6,21 +6,23 @@ var test = require('tap').test;
 var uuid = require('node-uuid');
 
 var log = new Logger({
-  name: 'primaryServer-test',
-  src: true,
-  level: 'info'
+    name: 'primaryServer-test',
+    src: true,
+    level: 'info'
 });
 
 var server = new HeartbeatServer({
-  log: log,
-  port: 12222
+    log: log,
+    port: 12222
 });
 
 server.init();
 
-//test('start server', function(t) {
-  //var server = new HeartbeatServer({
-    //log: log,
-    //port: 8080
-  //});
-//});
+test('start server', function (t) {
+    var s = new HeartbeatServer({
+        log: log,
+        port: 8080
+    });
+
+    console.log('server started', s);
+});
