@@ -1,16 +1,24 @@
 {
-    "manta_url": "{{MANTA_URL}}",
-    "manta_tls_insecure": "{{MANTA_TLS_INSECURE}}",
-    "service_name": "{{SERVICE_NAME}}",
-    "zkCfg": {
-        "servers": [
-         {{#ZK_SERVERS}}
-            {
-              "host": "{{host}}",
-              "port": {{port}}
-            }{{^last}}, {{/last}}
-        {{/ZK_SERVERS}}
-        ],
-        "timeout": 60000
-    }
+  "manta_url": "{{MANTA_URL}}",
+  "manta_tls_insecure": "{{MANTA_TLS_INSECURE}}",
+  "service_name": "{{SERVICE_NAME}}",
+  "zkCfg": {
+    "servers": [
+    {{#ZK_HA_SERVERS}}
+      {
+        "host": "{{host}}",
+        "port": {{port}}
+      }{{^last}}, {{/last}}
+    {{/ZK_HA_SERVERS}}
+    {{^ZK_HA_SERVERS}}
+    {{#ZK_SERVERS}}
+      {
+        "host": "{{host}}",
+        "port": {{port}}
+      }{{^last}}, {{/last}}
+    {{/ZK_SERVERS}}
+    {{/ZK_HA_SERVERS}}
+    ],
+    "timeout": 60000
+  }
 }

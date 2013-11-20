@@ -71,7 +71,8 @@
             "port": {{port}}
           }{{^last}}, {{/last}}
         {{/ZK_SERVERS}}
-        {{/ZK_HA_SERVERS}}        ],
+        {{/ZK_HA_SERVERS}}
+        ],
         "timeout": 60000
     }
 }
