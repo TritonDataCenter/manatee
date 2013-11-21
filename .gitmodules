@@ -13,3 +13,6 @@
 [submodule "deps/sdc-scripts"]
 	path = deps/sdc-scripts
 	url = git@git.joyent.com:sdc-scripts.git
+[submodule "deps/closure-linter"]
+	path = deps/closure-linter
+	url = git@github.com:yunong/closure-linter.git

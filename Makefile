@@ -33,7 +33,7 @@ JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js') $(find ./bin/* 
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
-JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0
+JSSTYLE_FLAGS    = -C -f ./tools/jsstyle.conf
 SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 		smf/manifests/sitter.xml.in \
 		smf/manifests/snapshotter.xml.in
