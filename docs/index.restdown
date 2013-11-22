@@ -53,8 +53,9 @@ one synchronous standby and one asynchronous standby, the Shard can tolerate the
 loss of any 1 Peer without becoming unavailable. Unfortunately, adding more
 Peers past 3 to a Shard does not increase the availability of a Shard. If at
 anytime, the primary and synchronous standby become unavailable, regardless of
-the number of the Peers, the Shard becomes unavailable as all other peers are
-asynchronous standbys and thus cannot be guaranteed to be up to date.
+the number of the Peers, the Shard becomes unavailable for writes but still
+available for reads as all other peers are asynchronous standbys and thus
+cannot be guaranteed to be up to date.
 
 # Design Goals
 
@@ -72,7 +73,7 @@ and partition tolerant as long as each shard doesn't lose more than 1 out of its
 3 peers.
 
 All bets are off if we lose more than 1. In this case, the shard will remain in
-read-only mode until operator intervention.
+read-only mode until another peer comes back.
 
 # Overview
 
@@ -96,15 +97,15 @@ described in the Registrar Service section.
 
 # Shards and Peers
 
-A Postgres Shard in Manatee is uniquely identified by a configurable url, 
-generally something like: 
+A Postgres Shard in Manatee is uniquely identified by a configurable url,
+generally something like:
 
     1.moray.us-sw-1.joyent.com
 
 The Shard consists of 3 mirrored Postgres instances, henceforth known as Peers.
 Each Peer registers itself with an **emphemeral** node under this path in zookeeper:
 
-    /shard/1.moray.us-sw-1.joyent.com/
+    /manatee/1.moray.us-sw-1.joyent.com/
 
 This node is used for leader election to determine the primary peer of the shard.
 
@@ -128,8 +129,8 @@ Each shard entry contains the following JSON object:
       },
       "ttl": 10
     }
-    
-Only the database object is used by manatee, the other objects in the shard 
+
+Only the database object is used by manatee, the other objects in the shard
 entry are used by the binder for dns purposes.
 The shard entry is updated/created by the current primary in the shard. As group
 memberships change, the entry will be updated accordingly.
@@ -212,67 +213,124 @@ had the smaller sequence.
 membership to the Registrar service. This indicates to clients that this Shard
 is ready to take writes.
 
-Elaborating on the election process:
+## Peer Coordination
 
+### Leader Discovery
+
+Manatee uses the [ZKPlus Generic Election Algorithm](https://github.com/mcavage/node-zkplus/blob/master/lib/generic-election.js).
 Each peer creates an ephemeral and sequence znode under the path
 
-    /shard/1.moray.us-sw-1.joyent.com/
+    /manatee/1.moray.us-sw-1.joyent.com/election/
 
 with their Postgres url as the data. This results in the following state in
 Zookeeper:
 
-    /shard/1.moray.us-sw-1.joyent.com/shard-00000 -> {A.url}
-    /shard/1.moray.us-sw-1.joyent.com/shard-00001 -> {B.url}
-    /shard/1.moray.us-sw-1.joyent.com/shard-00002 -> {C.url}
+    /manatee/1.moray.us-sw-1.joyent.com/election/$ip-00000 -> {A.ip, A.zoneId}
+    /manatee/1.moray.us-sw-1.joyent.com/election/$ip-00001 -> {B.ip, B.zoneid}
+    /manatee/1.moray.us-sw-1.joyent.com/election/$ip-00002 -> {C.ip, C.zoneid}
 
-Each peer then gets the set of child nodes under the path:
+It's best to think of this election as a singly linked list, where the tail of
+the list is the overal leader of the shard and has the lowest sequence number.
+Each element is only aware of its immediate leader and not the entire
+electorate. The only difference is the overall leader is aware that it's the
+overall leader of the shard.
 
-    /shard/1.moray.us-sw-1.joyent.com/
+    +-------+     +-------+     +-------+
+    |       |     |       |     |       |
+    |   C   |     |   B   |     |  A    |
+    |       +---->|       +---->|leader |
+    |async  |     | sync  |     |primary|
+    +-------+     +-------+     +-------+
 
-The roles of the Shard is determined by the sequence number of each Peer's znode, in ascending order. With this example, A becomes the primary, B becomes the synchronous standby, and C becomes the asynchronous standby.Only the primary sets a watch on this path such that it can be notified of standby liveliness.
+When a node leaves the shard (say due to a network partition) its child node
+will notified that the next available node in the list is its master.
 
-## Failure of a Single Peer in a Shard.
+### Follower Discovery
+A leader discovers its follower via heartbeats sent from the follower. When a
+follower dies, the heartbeat will eventually expire, and the leader will be
+notified of the death.
 
-Each Shard can tolerate failures of any single Peer in the Shard. With the
-exception of a primary failure, the Sitter does not actively participate in the
-failover process. Postgres will automatically promote the asynchronous standby
-to synchronous should the synchronous standby fail as part of its replication
-process. The Sitter periodically checks the health status of Postgres along
-with its session to Zookeeper. If either returns error, the Sitter shuts down
-Postgres and disconnects its session from Zookeeper.
-
-### Primary Fails
-
-The Sitters on both the synchronous and asynchronous standby, due to their
-watches on the primary's Zookeeper znode, will be notified that the primary is
-offline. Both standbys are also aware of who the synchronous standby by checking
-with the registrar service. The synchronous standby assumes the role of primary,
-and the async becomse the synchronous standby. This is only case where there
-will be a small window of time where writes will return 500s.
+## Node Failure
+Each shard can tolerate failures of any single node in the shard and continue
+to take writes.
 
 ### Synchronous Standby Fails
+Given the previous figure, if B dies, its heartbeats to A will expire, and A
+will be notified of B's death. C will also be notified that it has a new
+leader, A via ZK, and will heartbeat to A, and the shard looks like this:
 
-The primary will automatically fail over to the asynchronous standby.
-The asynchronous standby now assumes the role of the synchronous standby. The
-Sitter on the primary will update the shard info in Zookeeper under
-/shards/shardid to reflect the new membership of the shard.
+    +-------+     +-------+     +-------+
+    |       |     |       |     |       |
+    |   B   |     |   C   |     |  A    |
+    | dead  +     |       +---->|leader |
+    |       |     | sync  |     |primary|
+    +-------+     +-------+     +-------+
+
+A will start synchronously streaming to C, in affect promoting C's replication
+from async to sync,  and postgres writes can continue.
 
 ### Asynchronous Standby Fails
+If C fails, it will stop healthchecking to B, and B will expire C as a follower.
+Interactions between A and B are unchanged.
 
-If the asynchronous standby is unavailable, no Postgres actions are taken. The
-Sitter on the primary will update the shard info in Zookeeper to reflect the
-loss of the asynchronous peer.
+    +-------+     +-------+     +-------+
+    |       |     |       |     |       |
+    |   C   |     |   B   |     |  A    |
+    | dead  +     |       +---->|leader |
+    |       |     | sync  |     |primary|
+    +-------+     +-------+     +-------+
 
-## Inserting a new Peer into a Shard
+### Primary Fails
+If A fails, B will receive a notification that it is now the overall leader of
+the shard, it will become the primary, and switch replication state from async
+to sync.
 
-Inserting works with the following algorithm:
+    +-------+     +-------+     +-------+
+    |       |     |       |     |       |
+    |   C   |     |   B   |     |  A    |
+    |       +---->|leader +     |       |
+    | sync  |     |primary|     | dead  |
+    +-------+     +-------+     +-------+
 
-- Perform leader election, i.e. set a watch and create an emphemeral-sequence
-znode under the shard path. If there were any other peers in the shard before
-you joined, you would not become leader because you would have a higher
-sequenced znode.
-- If you are the leader, then the process is the same as the bootstrap process
-described earlier.
-- If you are not the leader, then join the shard as a standby. Note you do not
-determine whether you are the async or sync standby, you merely replicate from
-the primary and the primary will determine your standby role.
+### >1 Node Fails
+
+If more than 1 node fails at the same time (perhaps due to a ZK outage), it's
+critical the async must not become the primary. Since the async will never be
+completely up to date, if it becomes the primary, and the other nodes later
+come back, they will not be able to replicate as their postgres transaction
+logs(xlogs) will have diverged.
+
+This is also true when any node goes away and later comes back as the
+primary. There could have been another primary in the shard that had been
+taking writes, which would result in the divergence of xlogs between nodes in
+the shard, which will cause data corruption.
+
+Manatee has two facilities which will prevent data corruption. xlog
+and transition checks.
+
+#### xlog Checks
+
+Whenever a new standby connects to the leader of the shard, the leader will
+always check its replication state and ensure that the standby's xlogs are in
+sync.  This ensures no divergence in xlog state between the leader and its
+standby. If the replication check fails, then it is not safe to accept writes
+to the shard, and the leader will put the entire shard in a degraded state. In
+this degraded state, all nodes will be read only and operator intervention is
+required to repair the shard.
+
+### Transition Checks
+
+A node must pass the following conditions before it can become the leader of
+the shard. These conditions are centered around the last known state of the
+node, which will either be primary, sync, or async.
+
+- The state must have not been async.
+- If the state was primary, then the last known leader of the shard must be
+  this node.
+- If the state was sync, then the last know leader of the shard must be the
+  last known leader of this node.
+
+These conditions will prevent a node from becoming the leader of the shard if
+there is a possibility of xlog divergence. Instead, the node will wait for
+others to join the shard before rejoining the election, and reevaulating its
+state.
