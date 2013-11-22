@@ -318,7 +318,7 @@ to the shard, and the leader will put the entire shard in a degraded state. In
 this degraded state, all nodes will be read only and operator intervention is
 required to repair the shard.
 
-### Transition Checks
+#### Transition Checks
 
 A node must pass the following conditions before it can become the leader of
 the shard. These conditions are centered around the last known state of the
@@ -334,3 +334,112 @@ These conditions will prevent a node from becoming the leader of the shard if
 there is a possibility of xlog divergence. Instead, the node will wait for
 others to join the shard before rejoining the election, and reevaulating its
 state.
+
+# Operator Tools
+
+## Manatee-stat
+
+Manatee-stat returns the current state of the manatee shard. It will print out
+all of the nodes of the shard, and decorate it with their perspective roles and
+state.
+
+    $ ./bin/manatee-stat -p $ZK_IP
+    {
+            "1.moray.coal.joyent.us": {
+                "primary": {
+                    "ip": "10.77.77.8",
+                    "pgUrl": "tcp://postgres@10.77.77.8:5432/postgres",
+                    "zoneId": "148ee288-951a-468c-9927-9e4d1010f2bd",
+                    "repl": {
+                        "pid": 68912,
+                        "usesysid": 10,
+                        "usename": "postgres",
+                        "application_name": "tcp://postgres@10.77.77.7:5432/postgres",
+                        "client_addr": "10.77.77.7",
+                        "client_hostname": "",
+                        "client_port": 65459,
+                        "backend_start": "2013-11-21T07:29:26.299Z",
+                        "state": "streaming",
+                        "sent_location": "0/A000000",
+                        "write_location": "0/A000000",
+                        "flush_location": "0/A000000",
+                        "replay_location": "0/A000000",
+                        "sync_priority": 1,
+                        "sync_state": "sync"
+                    }
+                },
+                "sync": {
+                    "ip": "10.77.77.7",
+                    "pgUrl": "tcp://postgres@10.77.77.7:5432/postgres",
+                    "zoneId": "dac030aa-3ae9-4b43-8a75-dcdcdf3613b9",
+                    "repl": {
+                        "pid": 68900,
+                        "usesysid": 10,
+                        "usename": "postgres",
+                        "application_name": "tcp://postgres@10.77.77.9:5432/postgres",
+                        "client_addr": "10.77.77.9",
+                        "client_hostname": "",
+                        "client_port": 37598,
+                        "backend_start": "2013-11-21T07:29:21.653Z",
+                        "state": "streaming",
+                        "sent_location": "0/A000000",
+                        "write_location": "0/A000000",
+                        "flush_location": "0/A000000",
+                        "replay_location": "0/A000000",
+                        "sync_priority": 0,
+                        "sync_state": "async"
+                    }
+                },
+                "async": {
+                    "ip": "10.77.77.9",
+                    "pgUrl": "tcp://postgres@10.77.77.9:5432/postgres",
+                    "zoneId": "79d29690-b414-4aef-8f28-cdac5860d353",
+                    "repl": {},
+                    "lag": {
+                        "time_lag": null
+                    }
+                },
+                "registrar": {
+                    "type": "database",
+                    "database": {
+                        "primary": "tcp://postgres@10.77.77.8:5432/postgres",
+                        "ttl": 60
+                    }
+                }
+            }
+        }
+
+The "repl" field shows the postgres replication state of that node. A lack of
+this field for the primary or sync almost always means that postgres
+replication is broken.
+
+## Manatee-history
+
+Manatee-history returns all of the state transitions for a shard.
+
+    $ ./bin/manatee-history 1.moray.coal.joyent.us $ZK_IPS
+    {"time":"1384997168105","ip":"10.77.77.7","action":"AssumeLeader","role":"Leader","master":"","slave":"","zkSeq":"0000000000"}
+    {"time":"1384997187193","ip":"10.77.77.8","action":"NewLeader","role":"Standby","master":"10.77.77.7","slave":"","zkSeq":"0000000001"}
+    {"time":"1384997189225","ip":"10.77.77.7","action":"NewStandby","role":"Leader","master":"","slave":"10.77.77.8","zkSeq":"0000000002"}
+    {"time":"1384997447741","ip":"10.77.77.9","action":"NewLeader","role":"Standby","master":"10.77.77.8","slave":"","zkSeq":"0000000003"}
+    {"time":"1384997448754","ip":"10.77.77.8","action":"NewStandby","role":"Standby","master":"10.77.77.7","slave":"10.77.77.9","zkSeq":"0000000004"}
+    {"time":"1384997820903","ip":"10.77.77.7","action":"NewLeader","role":"Standby","master":"10.77.77.9","slave":"","zkSeq":"0000000005"}
+    {"time":"1384997826406","ip":"10.77.77.8","action":"NewLeader","role":"Standby","master":"10.77.77.7","slave":"","zkSeq":"0000000006"}
+    {"time":"1384997827421","ip":"10.77.77.7","action":"NewStandby","role":"Standby","master":"10.77.77.9","slave":"10.77.77.8","zkSeq":"0000000007"}
+    {"time":"1384997845020","ip":"10.77.77.9","action":"NewLeader","role":"Standby","master":"10.77.77.8","slave":"","zkSeq":"0000000008"}
+    {"time":"1384997845028","ip":"10.77.77.9","action":"NewStandby","role":"Standby","master":"10.77.77.8","slave":"10.77.77.7","zkSeq":"0000000009"}
+    {"time":"1384997846034","ip":"10.77.77.8","action":"NewStandby","role":"Standby","master":"10.77.77.7","slave":"10.77.77.9","zkSeq":"0000000010"}
+    {"time":"1384997846365","ip":"10.77.77.7","action":"AssumeLeader","role":"Leader","master":"","slave":"10.77.77.8","zkSeq":"0000000011"}
+    {"time":"1384997910908","ip":"10.77.77.9","action":"ExpiredStandby","role":"Standby","master":"10.77.77.8","slave":"10.77.77.7","zkSeq":"0000000012"}
+    {"time":"1385001204609","ip":"10.77.77.8","action":"NewLeader","role":"Standby","master":"10.77.77.9","slave":"","zkSeq":"0000000013"}
+    {"time":"1385001204651","ip":"10.77.77.7","action":"NewLeader","role":"Standby","master":"10.77.77.8","slave":"","zkSeq":"0000000014"}
+    {"time":"1385001204710","ip":"10.77.77.9","action":"NewLeader","role":"Standby","master":"10.77.77.7","slave":"10.77.77.7","zkSeq":"0000000015"}
+    {"time":"1385001205612","ip":"10.77.77.9","action":"NewStandby","role":"Standby","master":"10.77.77.7","slave":"10.77.77.8","zkSeq":"0000000016"}
+    {"time":"1385001205630","ip":"10.77.77.8","action":"NewStandby","role":"Leader","master":"10.77.77.9","slave":"10.77.77.9","zkSeq":"0000000017"}
+    {"time":"1385018961860","ip":"10.77.77.7","action":"NewLeader","role":"Standby","master":"10.77.77.8","slave":"","zkSeq":"0000000018"}
+    {"time":"1385018962229","ip":"10.77.77.9","action":"NewLeader","role":"Standby","master":"10.77.77.7","slave":"","zkSeq":"0000000019"}
+    {"time":"1385018962271","ip":"10.77.77.8","action":"AssumeLeader","role":"Leader","master":"","slave":"","zkSeq":"0000000020"}
+    {"time":"1385018963243","ip":"10.77.77.7","action":"NewStandby","role":"Standby","master":"10.77.77.8","slave":"10.77.77.9","zkSeq":"0000000021"}
+    {"time":"1385018966904","ip":"10.77.77.8","action":"NewStandby","role":"Leader","master":"","slave":"10.77.77.7","zkSeq":"0000000022"}
+
+The output is sorted by time, and each line represents a state transition of a node in the shard.
