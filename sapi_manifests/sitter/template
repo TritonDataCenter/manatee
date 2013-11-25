@@ -3,7 +3,7 @@
     "postgresPort": 5432,
     "shardPath": "/manatee/{{manatee_shard}}",
     "ttl": 60,
-    "url": "{{PRIMARY_IP}}",
+    "ip": "{{PRIMARY_IP}}",
     "zoneId": "{{ZONE_UUID}}",
     "disableSitter": {{^DISABLE_SITTER}}false{{/DISABLE_SITTER}}{{{DISABLE_SITTER}}},
     "heartbeatClientCfg": {
