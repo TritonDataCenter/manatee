@@ -1,6 +1,5 @@
 {
     "backupPort": 12345,
-    "postgresPort": 5432,
     "shardPath": "/manatee/{{manatee_shard}}",
     "ttl": 60,
     "ip": "{{PRIMARY_IP}}",
