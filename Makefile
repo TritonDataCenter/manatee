@@ -55,7 +55,7 @@ include ./tools/mk/Makefile.smf.defs
 
 RELEASE_TARBALL         := manatee-pkg-$(STAMP).tar.bz2
 ROOT                    := $(shell pwd)
-TMPDIR                  := /tmp/$(STAMP)
+RELSTAGEDIR                  := /tmp/$(STAMP)
 
 #
 # Env variables
@@ -89,11 +89,11 @@ scripts: deps/manta-scripts/.git
 .PHONY: release
 release: all deps docs $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
-	@mkdir -p $(TMPDIR)/root/opt/smartdc/manatee
-	@mkdir -p $(TMPDIR)/root/opt/smartdc/boot
-	@mkdir -p $(TMPDIR)/site
-	@touch $(TMPDIR)/site/.do-not-delete-me
-	@mkdir -p $(TMPDIR)/root
+	@mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/manatee
+	@mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/boot
+	@mkdir -p $(RELSTAGEDIR)/site
+	@touch $(RELSTAGEDIR)/site/.do-not-delete-me
+	@mkdir -p $(RELSTAGEDIR)/root
 	cp -r   $(ROOT)/build \
 		$(ROOT)/lib \
 		$(ROOT)/bin \
@@ -106,16 +106,16 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(ROOT)/sapi_manifests \
 		$(ROOT)/smf \
 		$(ROOT)/etc \
-		$(TMPDIR)/root/opt/smartdc/manatee/
-	mkdir -p $(TMPDIR)/root/opt/smartdc/boot/scripts
-	cp -R $(TMPDIR)/root/opt/smartdc/manatee/build/scripts/* \
-	    $(TMPDIR)/root/opt/smartdc/boot/scripts/
+		$(RELSTAGEDIR)/root/opt/smartdc/manatee/
+	mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/boot/scripts
+	cp -R $(RELSTAGEDIR)/root/opt/smartdc/manatee/build/scripts/* \
+	    $(RELSTAGEDIR)/root/opt/smartdc/boot/scripts/
 	cp -R $(ROOT)/deps/sdc-scripts/* \
-	    $(TMPDIR)/root/opt/smartdc/boot/
+	    $(RELSTAGEDIR)/root/opt/smartdc/boot/
 	cp -R $(ROOT)/boot/* \
-	    $(TMPDIR)/root/opt/smartdc/boot/
-	(cd $(TMPDIR) && $(TAR) -jcf $(ROOT)/$(RELEASE_TARBALL) root site)
-	@rm -rf $(TMPDIR)
+	    $(RELSTAGEDIR)/root/opt/smartdc/boot/
+	(cd $(RELSTAGEDIR) && $(TAR) -jcf $(ROOT)/$(RELEASE_TARBALL) root site)
+	@rm -rf $(RELSTAGEDIR)
 
 .PHONY: publish
 publish: release
