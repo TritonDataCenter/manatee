@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2013, Joyent, Inc. All rights reserved.
+/**
+ * @copyright Copyright (c) 2013, Joyent, Inc. All rights reserved.
  *
  *                   _.---.._
  *      _        _.-' \  \    ''-.
@@ -19,9 +19,10 @@ var panic = require('panic');
 var SnapShotter = require('./lib/snapShotter');
 
 
-/**
+/*
  * globals
  */
+
 var NAME = 'manatee-snapshotter';
 
 var LOG = bunyan.createLogger({
@@ -36,9 +37,10 @@ var LOG = bunyan.createLogger({
 
 var LOG_LEVEL_OVERRIDE = false;
 
-/**
+/*
  * private functions
  */
+
 function parseOptions() {
     var option;
     var opts = {};
@@ -86,7 +88,7 @@ function readConfig(options) {
     return (extend({}, cfg, options));
 }
 
-/**
+/*
  * mainline
  */
 
