@@ -116,7 +116,7 @@ _config.backupSenderCfg.log = LOG;
 var server = new BackupServer(_config.backupServerCfg);
 
 // server and sender share the same queue
-_config.backupSenderCfg.queue = server.queue;
+_config.backupSenderCfg.queue = server.getQueue();
 var backupSender = new BackupSender(_config.backupSenderCfg);
 
 server.init();
