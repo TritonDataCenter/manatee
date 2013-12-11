@@ -1,0 +1,10 @@
+{
+  "backupServerCfg": {
+    "port": null
+  },
+  "backupSenderCfg": {
+    "zfsSendPath": "/usr/vm/sbin/zfs_send",
+    "dataset": null,
+    "snapshotDir": null
+  }
+}

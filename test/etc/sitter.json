@@ -1,0 +1,68 @@
+{
+    "backupPort": null,
+    "postgresPort": null,
+    "shardPath": null,
+    "ttl": 60,
+    "ip": "0.0.0.0",
+    "zoneId": "integ-test-zone",
+    "heartbeatClientCfg": {
+        "connectTimeout": 2000,
+        "heartbeatInterval": 1000,
+        "requestTimeout": 10000,
+        "url": "0.0.0.0",
+        "retry": {
+            "retry": 2
+        }
+    },
+    "heartbeatServerCfg": {
+        "expirationTime": 5000,
+        "pollInterval": 1000,
+        "port": null
+    },
+    "postgresMgrCfg": {
+        "dataDir": null,
+        "dbUser": "postgres",
+        "hbaConf": "./etc/pg_hba.conf",
+        "healthChkInterval": 10000,
+        "healthChkTimeout": 60000,
+        "oneNodeWriteMode": false,
+        "opsTimeout": 60000,
+        "pgCtlPath": "/opt/local/bin/pg_ctl",
+        "pgInitDbPath": "/opt/local/bin/initdb",
+        "postgresConf": "./etc/postgresql.integ.coal.conf",
+        "postgresPath": "/opt/local/bin/postgres",
+        "recoveryConf": "./etc/recovery.conf",
+        "replicationTimeout": 60000,
+        "snapShotterCfg": {
+            "dataset": null,
+            "snapshotDir": null,
+            "pollInterval": 1000,
+            "snapshotNumber": 5,
+            "pgUrl": null
+        },
+        "syncStateCheckerCfg": {
+            "interval": 1000,
+            "cookieLocation": null
+        },
+        "url": null,
+        "zfsClientCfg": {
+            "dataset": null,
+            "parentDataset": null,
+            "snapshotDir": null,
+            "zfsHost": "0.0.0.0",
+            "zfsPort": null,
+            "pollInterval": 1000,
+            "zfsRecvPath": "/usr/vm/sbin/zfs_recv",
+            "mountpoint": null
+        }
+    },
+    "zkCfg": {
+        "servers": [
+            {
+                "host": "0.0.0.0",
+                "port": 2181
+            }
+        ],
+        "timeout": 5000
+    }
+}
