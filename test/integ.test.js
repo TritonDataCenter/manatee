@@ -56,7 +56,7 @@ function prepareInstance(opts, cb) {
                 parentDataset = PARENT_ZFS_DS;
                 return _cb();
             }
-            exec('zfs list', function(err, stdout, stderr) {
+            exec('zfs list', function (err, stdout, stderr) {
                 if (err) {
                     return _cb(err);
                 }
@@ -88,7 +88,7 @@ function prepareInstance(opts, cb) {
             cfg.postgresMgrCfg.datadir = opts.mountPoint + '/data';
             cfg.postgresMgrCfg.snapshotterCfg.dataset = dataset;
             cfg.postgresMgrCfg.snapshotterCfg.snapshotDir = snapshotDir;
-            cfg.postgresMgrCfg.snapshotterCfg.pgUrl = pgurl;
+            cfg.postgresMgrCfg.snapshotterCfg.pgUrl = pgUrl;
             cfg.postgresMgrCfg.syncStateCheckerCfg.cookieLocation =
                 opts.cookieLocation;
             cfg.postgresMgrCfg.url = pgUrl;
