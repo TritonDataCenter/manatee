@@ -8,6 +8,7 @@
     "heartbeatClientCfg": {
         "connectTimeout": 2000,
         "heartbeatInterval": 1000,
+        "postgresUrl": "tcp://postgres@{{{PRIMARY_IP}}}:5432/postgres",
         "requestTimeout": 10000,
         "url": "{{PRIMARY_IP}}",
         "retry": {
