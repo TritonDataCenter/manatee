@@ -32,11 +32,14 @@ var LOG = bunyan.createLogger({
 var MANATEES = {};
 
 function spawnComponents(opts, cb) {
-    /* BEGIN JSSTYLED */
-    var SPAWN_SITTER_OPTS = ['-u', 'postgres', '../build/node/bin/node', '../sitter.js', '-v', '-f', opts.sitterCfg || './etc/sitter.json'];
-    var SPAWN_BS_OPTS = ['-u', 'postgres', '../build/node/bin/node', '../backupserver.js', '-v', '-f', opts.bsCfg || './etc/backupserver.json'];
-    var SPAWN_SS_OPTS = ['-u', 'postgres', '../build/node/bin/node', '../snapshotter.js', '-v', '-f', opts.ssCfg || './etc/snapshotter.json'];
-    /* END JSSTYLED */
+    var SPAWN_SITTER_OPTS = ['-u', 'postgres', '../build/node/bin/node',
+        '../sitter.js', '-v', '-f', opts.sitterCfg || './etc/sitter.json'];
+    var SPAWN_BS_OPTS = ['-u', 'postgres', '../build/node/bin/node',
+        '../backupserver.js', '-v', '-f',
+        opts.bsCfg || './etc/backupserver.json'];
+    var SPAWN_SS_OPTS = ['-u', 'postgres', '../build/node/bin/node',
+        '../snapshotter.js', '-v', '-f',
+        opts.ssCfg || './etc/snapshotter.json'];
 
     var manatee = {
         sitter: null,
@@ -76,6 +79,12 @@ function spawnComponents(opts, cb) {
 }
 
 /**
+ * @callback startInstance-cb
+ * @param {Error} err
+ * @param {object} manatee
+ */
+
+/**
  * prepare a manatee instance such that it can run.
  *
  * @param {object} opts
@@ -87,6 +96,8 @@ function spawnComponents(opts, cb) {
  * @param {number} opts.postgresPort
  * @param {string} opts.metadataDir
  * configs for this instance.
+ *
+ * @param {startinstance-cb} cb
  */
 function startInstance(opts, cb) {
     assert.object(opts, 'opts');
@@ -105,6 +116,7 @@ function startInstance(opts, cb) {
     var configLocation = opts.metadataDir + '/config';
     var postgresConf = configLocation+ '/postgres.conf';
     var cookieLocation = opts.metadataDir + '/sync_cookie';
+    var manatee = null;
 
     vasync.pipeline({funcs: [
         function _createParentZfsDataset(_, _cb) {
@@ -220,11 +232,13 @@ function startInstance(opts, cb) {
                 sitterCfg: configLocation + '/sitter.cfg',
                 ssCfg: configLocation + '/ss.cfg',
                 bsCfg: configLocation + '/bs.cfg'
-            }, _cb);
+            }, function (err, _manatee) {
+                manatee = _manatee;
+                return _cb(err);
+            });
         }
     ], arg: {}}, function (err, results) {
-        console.log(results);
-        return cb(err);
+        return cb(err, manatee);
     });
 }
 
@@ -232,13 +246,13 @@ function getPostgresUrl(ip, port, db) {
     return 'tcp://postgres@' + ip + ':' + port + '/' + db;
 }
 
-exports.before = function (test) {
+exports.before = function (t) {
     var n1 = uuid.v4();
     var n1Port = 10000;
     var n2 = uuid.v4();
     var n2Port = 20000;
-    var s3 = uuid.v4();
-    var s3Port = 30000;
+    var n3 = uuid.v4();
+    var n3Port = 30000;
     var n1Opts = {
         zfsDataset: PARENT_ZFS_DS + '/' + n1,
         zfsPort: n1Port,
@@ -276,12 +290,36 @@ exports.before = function (test) {
         metadataDir: FS_PATH_PREFIX + '/' + n3 + '_metadata'
     };
 
-    startInstance(n1Opts, function (err) {
+    startInstance(n1Opts, function (err, manatee) {
         LOG.info({err: err}, 'prepared instance');
-        test.done();
+        MANATEES.n1 = manatee;
+        setTimeout(t.done, 7000);
     });
 };
 
-exports.after = function (test) {
-
-}
+exports.after = function (t) {
+    vasync.pipeline({funcs: [
+        function _stopManatees(_, _cb) {
+            var barrier = vasync.barrier();
+            barrier.on('drain', function () {
+                return _cb();
+            });
+            Object.keys(MANATEES).forEach(function (m) {
+                Object.keys(MANATEES[m]).forEach(function (p) {
+                    barrier.start(m+p);
+                    MANATEES[m][p].kill('SIGKILL');
+                    barrier.done(m+p);
+                });
+            });
+        },
+        function _destroyZfsDataset(_, _cb) {
+            exec('zfs destroy -r ' + PARENT_ZFS_DS, _cb);
+        },
+        function _removeMetadata(_, _cb) {
+            exec('rm -rf ' + FS_PATH_PREFIX, _cb);
+        }
+    ], arg: {}}, function (err, results) {
+        LOG.info({err: err, results: results}, 'finished after()');
+        t.done();
+    });
+};
