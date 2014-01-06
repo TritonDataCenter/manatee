@@ -10,11 +10,17 @@ export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}
 set -o xtrace
 set -o pipefail
 
+if [[ -z "$1" ]]
+    then
+        echo "zfs dataset can not be empty"
+        exit 1
+fi
+
 PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/usr/sbin:/usr/bin:/opt/smartdc/registrar/build/node/bin:/opt/smartdc/registrar/node_modules/.bin:/opt/smartdc/manatee/lib/tools:/opt/smartdc/manatee/lib/pg_dump/
 
 CFG=/opt/smartdc/manatee/etc/backup.json
 DATASET=
-DATE=$2
+DATE=
 DUMP_DATASET=
 DUMP_DIR=/var/tmp/upload
 MANATEE_LOCK=/opt/smartdc/manatee/bin/manatee-lock
@@ -27,7 +33,7 @@ LOCK_PATH=/pg_dump_lock
 PG_DIR=
 PG_PID=
 SHARD_NAME=
-SLEEP_TIME=$3
+SLEEP_TIME=$2 || 300
 UPLOAD_SNAPSHOT=
 ZFS_CFG=/opt/smartdc/manatee/etc/snapshotter.json
 ZFS_SNAPSHOT=$1
@@ -71,7 +77,6 @@ function mount_data_set
 
 function backup
 {
-#    local date=$(date -u +%Y-%m-%d-%H)
     local date=$DATE
 
     mkdir $DUMP_DIR
@@ -167,6 +172,15 @@ function cleanup
 
 # mainline
 
+DATE=$(echo $ZFS_SNAPSHOT | cut -d '@' -f2)
+DATE=$(expr $DATE / 1000)
+DATE=$(date -d @$DATE -u +%Y-%m-%d-%H)
+if [[ -z "$2" ]]
+    then
+        SLEEP_TIME=300
+    else
+        SLEEP_TIME=$2
+fi
 DATASET=$(cat $ZFS_CFG | json dataset)
 [[ -n "$DATASET" ]] || fatal "unable to retrieve DATASET"
 DUMP_DATASET=zones/$(zonename)/data/pg_dump
