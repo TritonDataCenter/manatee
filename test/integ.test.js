@@ -289,11 +289,30 @@ exports.before = function (t) {
         metadataDir: FS_PATH_PREFIX + '/' + n3 + '_metadata'
     };
 
+    var barrier = vasync.barrier();
+    barrier.on('drain', function () {
+        t.done();
+    });
+
+    barrier.start(1);
     startInstance(n1Opts, function (err, manatee) {
         LOG.info({err: err}, 'prepared instance');
         MANATEES.n1 = manatee;
-        t.done();
-        //setTimeout(t.done, 3000);
+        barrier.done(1);
+    });
+
+    barrier.start(2);
+    startInstance(n1Opts, function (err, manatee) {
+        LOG.info({err: err}, 'prepared instance');
+        MANATEES.n2 = manatee;
+        barrier.done(2);
+    });
+
+    barrier.start(3);
+    startInstance(n1Opts, function (err, manatee) {
+        LOG.info({err: err}, 'prepared instance');
+        MANATEES.n3 = manatee;
+        barrier.done(3);
     });
 };
 
