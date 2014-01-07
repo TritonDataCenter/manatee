@@ -14,6 +14,7 @@ var FS_PATH_PREFIX = process.env.FS_PATH_PREFIX || '/var/tmp/manatee_tests';
 var ZK_INSTANCE = process.env.ZK_INSTANCE || 'localhost:2181';
 var PARENT_ZFS_DS = process.env.PARENT_ZFS_DS;
 var SHARD_PATH = '/' + uuid.v4();
+console.log('SHARD_PATH ' + SHARD_PATH);
 var SITTER_CFG = './etc/sitter.json';
 var BS_CFG = './etc/backupserver.json';
 var SS_CFG = './etc/snapshotter.json';
@@ -48,7 +49,7 @@ function spawnComponents(opts, cb) {
     manatee.backupServer = spawn('/usr/bin/ctrun', SPAWN_BS_OPTS);
     manatee.snapshotter = spawn('/usr/bin/ctrun', SPAWN_SS_OPTS);
 
-    if (opts.enableOutput) {
+    //if (opts.enableOutput) {
         manatee.sitter.stdout.on('data', function (data) {
             console.log(data.toString());
         });
@@ -57,22 +58,22 @@ function spawnComponents(opts, cb) {
             console.log(data.toString());
         });
 
-        manatee.snapshotter.stdout.on('data', function (data) {
-            console.log(data.toString());
-        });
+        //manatee.snapshotter.stdout.on('data', function (data) {
+            //console.log(data.toString());
+        //});
 
-        manatee.snapshotter.stderr.on('data', function (data) {
-            console.log(data.toString());
-        });
+        //manatee.snapshotter.stderr.on('data', function (data) {
+            //console.log(data.toString());
+        //});
 
-        manatee.backupServer.stdout.on('data', function (data) {
-            console.log(data.toString());
-        });
+        //manatee.backupServer.stdout.on('data', function (data) {
+            //console.log(data.toString());
+        //});
 
-        manatee.backupServer.stderr.on('data', function (data) {
-            console.log(data.toString());
-        });
-    }
+        //manatee.backupServer.stderr.on('data', function (data) {
+            //console.log(data.toString());
+        //});
+    //}
 
     return cb(null, manatee);
 }
@@ -127,7 +128,10 @@ function startInstance(opts, cb) {
         function _createZfsChildDataset(_, _cb) {
             exec('zfs create ' + opts.zfsDataset, function (err, stdout, stderr)
             {
-                LOG.info({err: err}, 'created zfs dataset');
+                LOG.info({
+                    err: err,
+                    ds: opts.zfsDataset
+                }, 'created zfs dataset');
                 return _cb();
             });
         },
@@ -289,31 +293,41 @@ exports.before = function (t) {
         metadataDir: FS_PATH_PREFIX + '/' + n3 + '_metadata'
     };
 
-    var barrier = vasync.barrier();
-    barrier.on('drain', function () {
+    vasync.pipeline({funcs: [
+        function _startN1(_, _cb) {
+            startInstance(n1Opts, function (err, manatee) {
+                LOG.info({err: err}, 'prepared instance');
+                MANATEES.n1 = manatee;
+                return _cb();
+            });
+        },
+        function _timeout(_, _cb) {
+            setTimeout(_cb, 30000);
+        },
+        function _startN2(_, _cb) {
+            startInstance(n2Opts, function (err, manatee) {
+                LOG.info({err: err}, 'prepared instance');
+                MANATEES.n2 = manatee;
+                return _cb();
+            });
+        },
+        //function _startN3(_, _cb) {
+            //startInstance(n3Opts, function (err, manatee) {
+                //LOG.info({err: err}, 'prepared instance');
+                //MANATEES.n3 = manatee;
+                //return _cb();
+            //});
+        //}
+    ], arg: {}}, function (err) {
+        if (err) {
+            t.fail(err);
+        }
         t.done();
     });
+};
 
-    barrier.start(1);
-    startInstance(n1Opts, function (err, manatee) {
-        LOG.info({err: err}, 'prepared instance');
-        MANATEES.n1 = manatee;
-        barrier.done(1);
-    });
-
-    barrier.start(2);
-    startInstance(n1Opts, function (err, manatee) {
-        LOG.info({err: err}, 'prepared instance');
-        MANATEES.n2 = manatee;
-        barrier.done(2);
-    });
-
-    barrier.start(3);
-    startInstance(n1Opts, function (err, manatee) {
-        LOG.info({err: err}, 'prepared instance');
-        MANATEES.n3 = manatee;
-        barrier.done(3);
-    });
+exports.checkReplication = function (t) {
+    setTimeout(t.done, 600000);
 };
 
 exports.after = function (t) {
