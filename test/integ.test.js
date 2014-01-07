@@ -32,48 +32,47 @@ var LOG = bunyan.createLogger({
 var MANATEES = {};
 
 function spawnComponents(opts, cb) {
-    var SPAWN_SITTER_OPTS = ['-u', 'postgres', '../build/node/bin/node',
-        '../sitter.js', '-v', '-f', opts.sitterCfg || './etc/sitter.json'];
-    var SPAWN_BS_OPTS = ['-u', 'postgres', '../build/node/bin/node',
-        '../backupserver.js', '-v', '-f',
+    var SPAWN_SITTER_OPTS = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
+        'postgres', '../build/node/bin/node', '../sitter.js', '-v', '-f',
+        opts.sitterCfg || './etc/sitter.json'];
+    var SPAWN_BS_OPTS = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
+        'postgres', '../build/node/bin/node', '../backupserver.js', '-v', '-f',
         opts.bsCfg || './etc/backupserver.json'];
-    var SPAWN_SS_OPTS = ['-u', 'postgres', '../build/node/bin/node',
-        '../snapshotter.js', '-v', '-f',
+    var SPAWN_SS_OPTS = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
+        'postgres', '../build/node/bin/node', '../snapshotter.js', '-v', '-f',
         opts.ssCfg || './etc/snapshotter.json'];
 
-    var manatee = {
-        sitter: null,
-        snapshotter: null,
-        backupServer: null
-    };
+    var manatee = {};
 
-    manatee.sitter = spawn('sudo', SPAWN_SITTER_OPTS);
-    manatee.backupServer = spawn('sudo', SPAWN_BS_OPTS);
-    manatee.snapshotter = spawn('sudo', SPAWN_SS_OPTS);
+    manatee.sitter = spawn('/usr/bin/ctrun', SPAWN_SITTER_OPTS);
+    manatee.backupServer = spawn('/usr/bin/ctrun', SPAWN_BS_OPTS);
+    manatee.snapshotter = spawn('/usr/bin/ctrun', SPAWN_SS_OPTS);
 
-    manatee.sitter.stdout.on('data', function (data) {
-        console.log(data.toString());
-    });
+    if (opts.enableOutput) {
+        manatee.sitter.stdout.on('data', function (data) {
+            console.log(data.toString());
+        });
 
-    manatee.sitter.stderr.on('data', function (data) {
-        console.log(data.toString());
-    });
+        manatee.sitter.stderr.on('data', function (data) {
+            console.log(data.toString());
+        });
 
-    manatee.snapshotter.stdout.on('data', function (data) {
-        console.log(data.toString());
-    });
+        manatee.snapshotter.stdout.on('data', function (data) {
+            console.log(data.toString());
+        });
 
-    manatee.snapshotter.stderr.on('data', function (data) {
-        console.log(data.toString());
-    });
+        manatee.snapshotter.stderr.on('data', function (data) {
+            console.log(data.toString());
+        });
 
-    manatee.backupServer.stdout.on('data', function (data) {
-        console.log(data.toString());
-    });
+        manatee.backupServer.stdout.on('data', function (data) {
+            console.log(data.toString());
+        });
 
-    manatee.backupServer.stderr.on('data', function (data) {
-        console.log(data.toString());
-    });
+        manatee.backupServer.stderr.on('data', function (data) {
+            console.log(data.toString());
+        });
+    }
 
     return cb(null, manatee);
 }
@@ -140,7 +139,6 @@ function startInstance(opts, cb) {
             var cmd = 'zfs set mountpoint=' + opts.mountPoint + ' ' +
                 opts.zfsDataset;
             exec(cmd, function (err) {
-                //return _cb(new verror.VError(err));
                 return _cb(err);
             });
         },
@@ -238,6 +236,7 @@ function startInstance(opts, cb) {
             });
         }
     ], arg: {}}, function (err, results) {
+        LOG.info({err: err, results: results}, 'finished starting manatee');
         return cb(err, manatee);
     });
 }
@@ -293,7 +292,8 @@ exports.before = function (t) {
     startInstance(n1Opts, function (err, manatee) {
         LOG.info({err: err}, 'prepared instance');
         MANATEES.n1 = manatee;
-        setTimeout(t.done, 7000);
+        t.done();
+        //setTimeout(t.done, 3000);
     });
 };
 
@@ -307,18 +307,25 @@ exports.after = function (t) {
             Object.keys(MANATEES).forEach(function (m) {
                 Object.keys(MANATEES[m]).forEach(function (p) {
                     barrier.start(m+p);
+                    console.log('setting close', m, p, MANATEES[m][p].pid);
+                    MANATEES[m][p].on('close', function () {
+                        console.log('killed', m, p);
+                        barrier.done(m+p);
+                    });
+                    console.log('killing', m, p, MANATEES[m][p].pid);
                     MANATEES[m][p].kill('SIGKILL');
-                    barrier.done(m+p);
                 });
             });
         },
         function _destroyZfsDataset(_, _cb) {
+            console.log('destroying ds');
             exec('zfs destroy -r ' + PARENT_ZFS_DS, _cb);
         },
         function _removeMetadata(_, _cb) {
             exec('rm -rf ' + FS_PATH_PREFIX, _cb);
         }
     ], arg: {}}, function (err, results) {
+        console.log(err, results);
         LOG.info({err: err, results: results}, 'finished after()');
         t.done();
     });
