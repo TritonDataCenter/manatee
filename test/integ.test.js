@@ -18,7 +18,7 @@ console.log('SHARD_PATH ' + SHARD_PATH);
 var SITTER_CFG = './etc/sitter.json';
 var BS_CFG = './etc/backupserver.json';
 var SS_CFG = './etc/snapshotter.json';
-var MY_IP = '0.0.0.0';
+var MY_IP = '127.0.0.1';
 
 var LOG = bunyan.createLogger({
     level: (process.env.LOG_LEVEL || 'info'),
@@ -311,13 +311,16 @@ exports.before = function (t) {
                 return _cb();
             });
         },
-        //function _startN3(_, _cb) {
-            //startInstance(n3Opts, function (err, manatee) {
-                //LOG.info({err: err}, 'prepared instance');
-                //MANATEES.n3 = manatee;
-                //return _cb();
-            //});
-        //}
+        function _timeout2(_, _cb) {
+            setTimeout(_cb, 30000);
+        },
+        function _startN3(_, _cb) {
+            startInstance(n3Opts, function (err, manatee) {
+                LOG.info({err: err}, 'prepared instance');
+                MANATEES.n3 = manatee;
+                return _cb();
+            });
+        }
     ], arg: {}}, function (err) {
         if (err) {
             t.fail(err);
@@ -327,7 +330,7 @@ exports.before = function (t) {
 };
 
 exports.checkReplication = function (t) {
-    setTimeout(t.done, 600000);
+    setTimeout(t.done, 30000);
 };
 
 exports.after = function (t) {
