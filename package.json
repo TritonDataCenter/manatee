@@ -35,7 +35,7 @@
         "sprintf": "0.1.0",
         "uuid": "0.0.2",
         "vargs": "0.1.0",
-        "vasync": "1.4.1",
+        "vasync": "1.4.2",
         "verror": "1.3.3",
         "xtend": "1.0.3",
         "zkplus": "git://github.com/mcavage/node-zkplus.git#f682f3d8e4cc0ede0608a5b89989db53348ef13e",

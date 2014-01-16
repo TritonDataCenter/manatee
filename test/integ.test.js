@@ -4,21 +4,25 @@ var ConfParser = require('../lib/confParser');
 var fs = require('fs');
 var exec = require('child_process').exec;
 var path = require('path');
+var manatee = require('../bin/manatee_common');
+var once = require('once');
 var spawn = require('child_process').spawn;
 var shelljs = require('shelljs');
+var util = require('util');
 var uuid = require('node-uuid');
 var vasync = require('vasync');
 var verror = require('verror');
 
 var FS_PATH_PREFIX = process.env.FS_PATH_PREFIX || '/var/tmp/manatee_tests';
-var ZK_INSTANCE = process.env.ZK_INSTANCE || 'localhost:2181';
+var ZK_URL = process.env.ZK_URL || 'localhost:2181';
 var PARENT_ZFS_DS = process.env.PARENT_ZFS_DS;
-var SHARD_PATH = '/' + uuid.v4();
-console.log('SHARD_PATH ' + SHARD_PATH);
+var SHARD_ID = uuid.v4();
+var SHARD_PATH = '/manatee/' + SHARD_ID;
 var SITTER_CFG = './etc/sitter.json';
 var BS_CFG = './etc/backupserver.json';
 var SS_CFG = './etc/snapshotter.json';
 var MY_IP = '127.0.0.1';
+var ZK_CLIENT = null;
 
 var LOG = bunyan.createLogger({
     level: (process.env.LOG_LEVEL || 'info'),
@@ -26,7 +30,6 @@ var LOG = bunyan.createLogger({
     serializers: {
         err: bunyan.stdSerializers.err
     },
-    // always turn source to true, manatee isn't in the data path
     src: true
 });
 
@@ -48,31 +51,35 @@ function spawnComponents(opts, cb) {
     manatee.sitter = spawn('/usr/bin/ctrun', SPAWN_SITTER_OPTS);
     manatee.backupServer = spawn('/usr/bin/ctrun', SPAWN_BS_OPTS);
     manatee.snapshotter = spawn('/usr/bin/ctrun', SPAWN_SS_OPTS);
+    manatee.metadata = {
+        opts: opts,
+        pgUrl: opts.cfgObj.sitter.postgresMgrCfg.url
+    };
 
     //if (opts.enableOutput) {
         manatee.sitter.stdout.on('data', function (data) {
-            console.log(data.toString());
+            //console.log(data.toString());
         });
 
         manatee.sitter.stderr.on('data', function (data) {
-            console.log(data.toString());
+            //console.log(data.toString());
         });
 
-        //manatee.snapshotter.stdout.on('data', function (data) {
+        manatee.snapshotter.stdout.on('data', function (data) {
             //console.log(data.toString());
-        //});
+        });
 
-        //manatee.snapshotter.stderr.on('data', function (data) {
+        manatee.snapshotter.stderr.on('data', function (data) {
             //console.log(data.toString());
-        //});
+        });
 
-        //manatee.backupServer.stdout.on('data', function (data) {
+        manatee.backupServer.stdout.on('data', function (data) {
             //console.log(data.toString());
-        //});
+        });
 
-        //manatee.backupServer.stderr.on('data', function (data) {
+        manatee.backupServer.stderr.on('data', function (data) {
             //console.log(data.toString());
-        //});
+        });
     //}
 
     return cb(null, manatee);
@@ -121,7 +128,6 @@ function startInstance(opts, cb) {
     vasync.pipeline({funcs: [
         function _createParentZfsDataset(_, _cb) {
             exec('zfs create ' + PARENT_ZFS_DS, function (err, stdout, stderr) {
-                LOG.info({err: err}, 'created parent zfs dataset');
                 return _cb();
             });
         },
@@ -233,14 +239,20 @@ function startInstance(opts, cb) {
             spawnComponents({
                 sitterCfg: configLocation + '/sitter.cfg',
                 ssCfg: configLocation + '/ss.cfg',
-                bsCfg: configLocation + '/bs.cfg'
+                bsCfg: configLocation + '/bs.cfg',
+                cfgObj: {
+                    ss: _.ssCfg,
+                    bs: _.bsCfg,
+                    sitter: _.sitterCfg
+                }
             }, function (err, _manatee) {
                 manatee = _manatee;
                 return _cb(err);
             });
         }
     ], arg: {}}, function (err, results) {
-        LOG.info({err: err, results: results}, 'finished starting manatee');
+        LOG.info({err: err, results: err ? results : null},
+                 'finished starting manatee');
         return cb(err, manatee);
     });
 }
@@ -294,6 +306,16 @@ exports.before = function (t) {
     };
 
     vasync.pipeline({funcs: [
+        function _createZkClient(_, _cb) {
+            manatee.createZkClient({
+                zk: ZK_URL,
+                shard: SHARD_PATH
+            }, function (err, zk) {
+                ZK_CLIENT = zk;
+
+                return _cb(err);
+            });
+        },
         function _startN1(_, _cb) {
             startInstance(n1Opts, function (err, manatee) {
                 LOG.info({err: err}, 'prepared instance');
@@ -302,7 +324,7 @@ exports.before = function (t) {
             });
         },
         function _timeout(_, _cb) {
-            setTimeout(_cb, 30000);
+            setTimeout(_cb, 10000);
         },
         function _startN2(_, _cb) {
             startInstance(n2Opts, function (err, manatee) {
@@ -312,7 +334,7 @@ exports.before = function (t) {
             });
         },
         function _timeout2(_, _cb) {
-            setTimeout(_cb, 30000);
+            setTimeout(_cb, 10000);
         },
         function _startN3(_, _cb) {
             startInstance(n3Opts, function (err, manatee) {
@@ -320,8 +342,11 @@ exports.before = function (t) {
                 MANATEES.n3 = manatee;
                 return _cb();
             });
-        }
-    ], arg: {}}, function (err) {
+        },
+        function _timeout3(_, _cb) {
+            setTimeout(_cb, 10000);
+        },
+    ], arg: {}}, function (err, results) {
         if (err) {
             t.fail(err);
         }
@@ -329,8 +354,121 @@ exports.before = function (t) {
     });
 };
 
-exports.checkReplication = function (t) {
-    setTimeout(t.done, 30000);
+exports.verifyShard = function (t) {
+    vasync.pipeline({funcs: [
+        function loadTopology(_, _cb) {
+            manatee.loadTopology(ZK_CLIENT, function (err, topology) {
+                _.topology = topology;
+                if (err) {
+                    return _cb(err);
+                }
+
+                return _cb();
+            });
+        },
+        function getPgStatus(_, _cb) {
+            manatee.pgStatus(_.topology, _cb);
+        },
+        function verifyTopology(_, _cb) {
+            /*
+             * here we only have to check the sync states of each of the nodes.
+             * if the sync states are correct, then we know replication is
+             * working.
+             */
+            t.ok(_.topology[SHARD_ID], 'shard topology DNE');
+            t.ok(_.topology[SHARD_ID].primary, 'primary DNE');
+            t.ok(_.topology[SHARD_ID].primary.repl, 'no sync repl state');
+            t.equal(_.topology[SHARD_ID].primary.repl.sync_state,
+                    'sync',
+                    'no sync replication state.');
+            t.ok(_.topology[SHARD_ID].sync, 'sync DNE');
+            t.equal(_.topology[SHARD_ID].sync.repl.sync_state,
+                    'async',
+                    'no async replication state');
+            t.ok(_.topology[SHARD_ID].async, 'async DNE');
+            return _cb();
+        }
+    ], arg: {}}, function (err, results) {
+        if (err) {
+            LOG.error({err: err, results: results},
+                      'check shard status failed');
+                      t.fail(err);
+        }
+        t.done();
+    });
+};
+
+exports.primaryDeath = function (t) {
+    vasync.pipeline({funcs: [
+        function loadTopology(_, _cb) {
+            manatee.loadTopology(ZK_CLIENT, function (err, topology) {
+                _.topology = topology[SHARD_ID];
+                assert.ok(_.topology);
+                if (err) {
+                    return _cb(err);
+                }
+                LOG.info({topology: topology}, 'got topology');
+                return _cb();
+            });
+        },
+        function findPrimary(_, _cb) {
+            _cb = once(_cb);
+            var primaryPgUrl = _.topology.primary.pgUrl;
+
+            var barrier = vasync.barrier();
+            barrier.on('drain', function () {
+                return _cb(new verror.VError('could not find primary: ' +
+                                             primaryPgUrl));
+            });
+
+            Object.keys(MANATEES).forEach(function (m) {
+                barrier.start(m);
+                if (MANATEES[m].metadata.pgUrl === primaryPgUrl) {
+                    _.primary = MANATEES[m];
+
+                    return _cb();
+                } else {
+                    barrier.done(m);
+                }
+            });
+        },
+        function killPrimary(_, _cb) {
+            var barrier = vasync.barrier();
+            barrier.start('sitter');
+            barrier.start('snapshotter');
+            barrier.start('backupServer');
+            barrier.on('drain', function () {
+                return _cb();
+            });
+
+            _.primary.sitter.once('close', function () {
+                LOG.info('killed sitter');
+                barrier.done('sitter');
+            });
+
+            _.primary.snapshotter.once('close', function () {
+                LOG.info('killed snapshotter');
+                barrier.done('snapshotter');
+            });
+
+            _.primary.backupServer.once('close', function () {
+                LOG.info('killed backupServer');
+                barrier.done('backupServer');
+            });
+
+            LOG.info('killing sitter');
+            _.primary.sitter.kill('SIGKILL');
+            LOG.info('killing snapshotter');
+            _.primary.snapshotter.kill('SIGKILL');
+            LOG.info('killing backupserver');
+            _.primary.backupServer.kill('SIGKILL');
+        }
+    ], arg: {}}, function (err, results) {
+        if (err) {
+            t.fail(err);
+        }
+        t.done();
+    });
 };
 
 exports.after = function (t) {
@@ -342,6 +480,10 @@ exports.after = function (t) {
             });
             Object.keys(MANATEES).forEach(function (m) {
                 Object.keys(MANATEES[m]).forEach(function (p) {
+                    // ignore metadata, since it's not a child process.
+                    if (p === 'metadata') {
+                        return;
+                    }
                     barrier.start(m+p);
                     console.log('setting close', m, p, MANATEES[m][p].pid);
                     MANATEES[m][p].on('close', function () {
@@ -361,6 +503,7 @@ exports.after = function (t) {
             exec('rm -rf ' + FS_PATH_PREFIX, _cb);
         }
     ], arg: {}}, function (err, results) {
+        console.log('finished killing', err);
         console.log(err, results);
         LOG.info({err: err, results: results}, 'finished after()');
         t.done();

@@ -8,7 +8,7 @@
     "heartbeatClientCfg": {
         "connectTimeout": 2000,
         "heartbeatInterval": 1000,
-        "requestTimeout": 10000,
+        "requestTimeout": 5000,
         "url": "0.0.0.0",
         "retry": {
             "retry": 2
@@ -23,16 +23,16 @@
         "dataDir": null,
         "dbUser": "postgres",
         "hbaConf": "./etc/pg_hba.conf",
-        "healthChkInterval": 10000,
-        "healthChkTimeout": 60000,
+        "healthChkInterval": 1000,
+        "healthChkTimeout": 5000,
         "oneNodeWriteMode": false,
-        "opsTimeout": 60000,
+        "opsTimeout": 5000,
         "pgCtlPath": "/opt/local/bin/pg_ctl",
         "pgInitDbPath": "/opt/local/bin/initdb",
         "postgresConf": "./etc/postgresql.integ.coal.conf",
         "postgresPath": "/opt/local/bin/postgres",
         "recoveryConf": "./etc/recovery.conf",
-        "replicationTimeout": 60000,
+        "replicationTimeout": 5000,
         "snapShotterCfg": {
             "dataset": null,
             "snapshotDir": null,
