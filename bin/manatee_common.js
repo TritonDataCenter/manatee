@@ -58,7 +58,7 @@ function createZkClient(opts, cb) {
     zk.connect();
     timeoutId = setTimeout(function() {
         console.error('zookeeper connect timed out');
-        process.exit(0);
+        process.exit(1);
     }, 10000);
 }
 
