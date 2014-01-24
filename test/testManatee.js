@@ -39,9 +39,11 @@ function Manatee(opts, cb) {
     assert.string(opts.metadataDir, 'opts.metadataDir');
     assert.string(opts.shardPath, 'opts.shardPath');
 
-    opts.log.info('instance opts', opts);
+    var log = opts.log
+    log.info('instance opts', opts);
     var self = this;
 
+    this.postgresPort = opts.postgresPort;
     this.snapshotDir = opts.mountPoint + '/.zfs/snapshot';
     this.pgUrl = getPostgresUrl(MY_IP, opts.postgresPort, 'postgres');
     this.configLocation = opts.metadataDir + '/config';
@@ -96,12 +98,6 @@ function Manatee(opts, cb) {
         },
         function _createLogDir(_, _cb) {
             shelljs.mkdir('-p', self.logLocation);
-            return _cb();
-        },
-        function _createLogFiles(_, _cb) {
-            self.sitterLog = fs.createWriteStream(self.logLocation + opts.postgresPort + 'sitter.log');
-            self.ssLog = fs.createWriteStream(self.logLocation + opts.postgresPort+ 'ss.log');
-            self.bsLog = fs.createWriteStream(self.logLocation + opts.backupPort + 'bs.log');
             return _cb();
         },
         function _enableSnapshotDir(_, _cb) {
@@ -200,59 +196,80 @@ Manatee.prototype.kill = function kill(cb) {
         return cb();
     });
 
-    self.manatee.sitter.once('error', function (err) {
-        log.error({
-            err: err, url: self.pgUrl
-        }, 'could not send SIGKILL');
-    });
+    if (self.manatee.sitter) {
+        self.manatee.sitter.once('error', function (err) {
+            log.error({
+                err: err, url: self.pgUrl
+            }, 'could not send SIGKILL');
+        });
 
-    self.manatee.snapshotter.once('error', function (err) {
-        log.error({
-            err: err, url: self.pgUrl
-        }, 'could not send SIGKILL');
-    });
+        self.manatee.sitter.once('exit', function (code) {
+            log.info({
+                url: self.pgUrl, code: code
+            }, 'killed sitter');
+            self.manatee.sitter = null;
+            barrier.done('sitter');
+        });
+    }
 
-    self.manatee.backupServer.once('error', function (err) {
-        log.error({
-            err: err, url: self.pgUrl
-        }, 'could not send SIGKILL');
-    });
+    if (self.manatee.snapshotter) {
+        self.manatee.snapshotter.once('error', function (err) {
+            log.error({
+                err: err, url: self.pgUrl
+            }, 'could not send SIGKILL');
+        });
 
-    self.manatee.sitter.once('exit', function (code) {
+        self.manatee.snapshotter.once('exit', function (code) {
+            log.info({
+                url: self.pgUrl, code: code
+            }, 'killed snapshotter');
+            self.manatee.snapshotter = null;
+            barrier.done('snapshotter');
+        });
+    }
+
+    if (self.manatee.backupServer) {
+        self.manatee.backupServer.once('error', function (err) {
+            log.error({
+                err: err, url: self.pgUrl
+            }, 'could not send SIGKILL');
+        });
+
+        self.manatee.backupServer.once('exit', function (code) {
+            log.info({
+                url: self.pgUrl, code: code
+            }, 'killed backupServer');
+            self.manatee.backupServer = null;
+            barrier.done('backupServer');
+        });
+    }
+
+    if (self.manatee.sitter) {
         log.info({
-            url: self.pgUrl, code: code
-        }, 'killed sitter');
+            url: self.pgUrl, procId: self.manatee.sitter.pid
+        }, 'killing sitter');
+        self.manatee.sitter.kill('SIGKILL');
+    } else {
         barrier.done('sitter');
-    });
+    }
 
-    self.manatee.snapshotter.once('exit', function (code) {
+    if (self.manatee.snapshotter) {
         log.info({
-            url: self.pgUrl, code: code
-        }, 'killed snapshotter');
+            url: self.pgUrl, procId: self.manatee.snapshotter.pid
+        }, 'killing snapshotter');
+        self.manatee.snapshotter.kill('SIGKILL');
+    } else {
         barrier.done('snapshotter');
-    });
+    }
 
-    self.manatee.backupServer.once('exit', function (code) {
+    if (self.manatee.backupServer) {
         log.info({
-            url: self.pgUrl, code: code
-        }, 'killed backupServer');
+            url: self.pgUrl, procId: self.manatee.backupServer.pid
+        }, 'killing backupServer');
+        self.manatee.backupServer.kill('SIGKILL');
+    } else {
         barrier.done('backupServer');
-    });
-
-    log.info({
-        url: self.pgUrl, procId: self.manatee.sitter.pid
-    }, 'killing sitter');
-    self.manatee.sitter.kill('SIGKILL');
-
-    log.info({
-        url: self.pgUrl, procId: self.manatee.snapshotter.pid
-    }, 'killing snapshotter');
-    self.manatee.snapshotter.kill('SIGKILL');
-
-    log.info({
-        url: self.pgUrl, procId: self.manatee.backupServer.pid
-    }, 'killing backupServer');
-    self.manatee.backupServer.kill('SIGKILL');
+    }
 };
 
 Manatee.prototype.start = function start(cb) {
@@ -269,16 +286,27 @@ Manatee.prototype.start = function start(cb) {
         self.ssCfgLocation || './etc/snapshotter.json'];
 
     vasync.pipeline({funcs: [
+        function _createLogFiles(_, _cb) {
+            self.sitterLog = fs.createWriteStream(self.logLocation + self.postgresPort + 'sitter.log');
+            self.sitterLog.on('error', function(err) {
+                log.error({err: err}, 'sitter logging stream got error');
+            });
+            self.ssLog = fs.createWriteStream(self.logLocation + self.postgresPort+ 'ss.log');
+            self.ssLog.on('error', function(err) {
+                log.error({err: err}, 'snapshotter logging stream got error');
+            });
+            self.bsLog = fs.createWriteStream(self.logLocation + self.backupPort + 'bs.log');
+            self.bsLog.on('error', function(err) {
+                log.error({err: err}, 'backupserver logging stream got error');
+            });
+            return _cb();
+        },
         function _startSitter(_, _cb) {
+            log.info({log: self.logLocation + self.postgresPort + 'sitter.log'},
+                     'XXX: starting sitter');
             self.manatee.sitter = spawn('/usr/bin/ctrun', spawnSitterOpts);
             self.manatee.sitter.stdout.pipe(self.sitterLog);
             self.manatee.sitter.stderr.pipe(self.sitterLog);
-
-            self.manatee.sitter.on('exit', function (code) {
-                log.info({
-                    url: self.pgUrl, code: code
-                }, 'XXX sitter exit');
-            });
 
             return _cb();
         },
@@ -304,22 +332,12 @@ Manatee.prototype.start = function start(cb) {
             self.manatee.snapshotter = spawn('/usr/bin/ctrun', spawnSsOpts);
             self.manatee.snapshotter.stdout.pipe(self.ssLog);
             self.manatee.snapshotter.stderr.pipe(self.ssLog);
-            self.manatee.snapshotter.on('exit', function (code) {
-                log.info({
-                    url: self.pgUrl, code: code
-                }, 'XXX snapshotter exit');
-            });
             return _cb();
         },
         function _startBackupServer(_, _cb) {
             self.manatee.backupServer = spawn('/usr/bin/ctrun', spawnBsOpts);
             self.manatee.backupServer.stdout.pipe(self.bsLog);
             self.manatee.backupServer.stderr.pipe(self.bsLog);
-            self.manatee.backupServer.on('exit', function (code) {
-                log.info({
-                    url: self.pgUrl, code: code
-                }, 'XXX backupserver exit');
-            });
             return _cb();
         }
     ], arg: {}}, function (err, results) {
@@ -334,12 +352,14 @@ Manatee.prototype.healthCheck = function (callback) {
     var self = this;
     var log = self.log;
     log.trace('Postgresman.health: entering');
-    self._queryDb('select current_time;', function (err) {
-        if (err) {
-            log.trace({err: err}, 'Postgresman.health: failed');
-        }
-        return callback(err);
-    });
+    try {
+        self._queryDb('select current_time;', function (err) {
+            if (err) {
+                log.trace({err: err}, 'Postgresman.health: failed');
+            }
+            return callback(err);
+        });
+    } catch (e) {}
 
     return (undefined);
 };
@@ -347,6 +367,7 @@ Manatee.prototype.healthCheck = function (callback) {
 Manatee.prototype._queryDb = function (queryStr, callback) {
     var self = this;
     var log = self.log;
+    callback = once(callback);
     var calledBack = false;
     log.trace({
         query: queryStr
@@ -359,16 +380,11 @@ Manatee.prototype._queryDb = function (queryStr, callback) {
             log.trace({err: err}, 'got pg client error');
             // set the client to null on error so we can create a new client
             self._pgClient = null;
-            if (!calledBack) {
-                return callback(new verror.VError(err,
+            return callback(new verror.VError(err,
                 'error whilst querying postgres'));
-            }
-
-            return (undefined);
         });
         self._pgClient.connect();
     }
-
 
     var query = self._pgClient.query(queryStr);
     var result = null;
@@ -380,12 +396,11 @@ Manatee.prototype._queryDb = function (queryStr, callback) {
         result = row;
     });
 
-    query.once('error', function (err) {
+    query.on('error', function (err) {
         log.trace({
             err: err
         }, 'got err');
         var err2 = new verror.VError('error whilst querying postgres');
-        calledBack = true;
         // set the client to null on error so we can create a new client
         self._pgClient = null;
         return callback(err2);
@@ -393,7 +408,6 @@ Manatee.prototype._queryDb = function (queryStr, callback) {
 
     query.once('end', function () {
         log.trace('query ended!');
-        calledBack = true;
         return callback(null, result);
     });
 };

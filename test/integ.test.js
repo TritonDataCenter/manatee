@@ -36,6 +36,9 @@ var LOG = bunyan.createLogger({
 
 var MANATEES = {};
 
+// ignore uncaught exceptions since the pg client keeps on throwing them
+process.on('uncaughtException', function () { });
+
 /*
  * Tests
  */
@@ -188,116 +191,111 @@ exports.verifyShard = function (t) {
     });
 };
 
-//exports.primaryDeath = function (t) {
-    //vasync.pipeline({funcs: [
-        //function loadTopology(_, _cb) {
-            //mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                //if (err) {
-                    //return _cb(err);
-                //}
-                //_.topology = topology[SHARD_ID];
-                //assert.ok(_.topology);
-                //assert.ok(_.topology.primary.pgUrl);
-                //_.primaryPgUrl = _.topology.primary.pgUrl;
-                //LOG.info({topology: topology}, 'got topology');
-                //return _cb();
-            //});
-        //},
-        //function killPrimary(_, _cb) {
-            //MANATEES[_.primaryPgUrl].kill(_cb);
-        //},
-        //function waitForFlip(_, _cb) {
-            //setTimeout(_cb, 10000);
-        //},
-        //function getNewTopology(_, _cb) {
-            //mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                //if (err) {
-                    //return _cb(err);
-                //}
-                //_.topology = topology[SHARD_ID];
-                //assert.ok(_.topology, 'topology DNE');
-                //assert.ok(_.topology.primary, 'primary DNE');
-                //assert.ok(_.topology.sync, 'sync DNE');
-                //assert.equal(_.topology.async, null,
-                            //'async should not exist after primary death');
-                //LOG.info({topology: topology}, 'got topology');
-                //return _cb();
-            //});
-        //},
-        //function getPgStatus(_, _cb) {
-            //mantee_common.pgStatus([_.topology], _cb);
-        //},
-        //function verifyTopology(_, _cb) {
+exports.primaryDeath = function (t) {
+    vasync.pipeline({funcs: [
+        function loadTopology(_, _cb) {
+            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                if (err) {
+                    return _cb(err);
+                }
+                _.topology = topology[SHARD_ID];
+                assert.ok(_.topology);
+                assert.ok(_.topology.primary.pgUrl);
+                _.primaryPgUrl = _.topology.primary.pgUrl;
+                LOG.info({topology: topology}, 'got topology');
+                return _cb();
+            });
+        },
+        function killPrimary(_, _cb) {
+            MANATEES[_.primaryPgUrl].kill(_cb);
+        },
+        function waitForFlip(_, _cb) {
+            setTimeout(_cb, 10000);
+        },
+        function getNewTopology(_, _cb) {
+            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                if (err) {
+                    return _cb(err);
+                }
+                _.topology = topology[SHARD_ID];
+                assert.ok(_.topology, 'topology DNE');
+                assert.ok(_.topology.primary, 'primary DNE');
+                assert.ok(_.topology.sync, 'sync DNE');
+                assert.equal(_.topology.async, null,
+                            'async should not exist after primary death');
+                LOG.info({topology: topology}, 'got topology');
+                return _cb();
+            });
+        },
+        function getPgStatus(_, _cb) {
+            mantee_common.pgStatus([_.topology], _cb);
+        },
+        function verifyTopology(_, _cb) {
             /*
              * here we only have to check the sync states of each of the nodes.
              * if the sync states are correct, then we know replication is
              * working.
              */
-            //t.ok(_.topology, 'shard topology DNE');
-            //t.ok(_.topology.primary, 'primary DNE');
-            //t.ok(_.topology.primary.repl, 'no sync repl state');
+            t.ok(_.topology, 'shard topology DNE');
+            t.ok(_.topology.primary, 'primary DNE');
+            t.ok(_.topology.primary.repl, 'no sync repl state');
             /*
              * empty repl fields look like this: repl: {}. So we have to check
              * the key length in order to figure out that it is an empty/
              * object.
              */
-            //t.equal(Object.keys(_.topology.sync.repl).length, 0,
-                    //'sync should not have replication state.');
-            //return _cb();
-        //},
-        //function addNewManatee(_, _cb) {
-            //MANATEES[_.primaryPgUrl].start(_cb);
-        //},
-        //function waitForManateeStart(_, _cb) {
-            //setTimeout(_cb, 10000);
-        //},
-        //function loadTopology2(_, _cb) {
-            //mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                //_.topology = topology[SHARD_ID];
-                //if (err) {
-                    //return _cb(err);
-                //}
-                //LOG.info({topology: topology});
-                //return _cb();
-            //});
-        //},
-        //function getPgStatus2(_, _cb) {
-            //mantee_common.pgStatus([_.topology], _cb);
-        //},
-        //function verifyTopology2(_, _cb) {
+            t.equal(Object.keys(_.topology.sync.repl).length, 0,
+                    'sync should not have replication state.');
+            return _cb();
+        },
+        function addNewManatee(_, _cb) {
+            LOG.info({url: _.primaryPgUrl}, 'adding back old primary');
+            MANATEES[_.primaryPgUrl].start(_cb);
+        },
+        function loadTopology2(_, _cb) {
+            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                _.topology = topology[SHARD_ID];
+                if (err) {
+                    return _cb(err);
+                }
+                LOG.info({topology: topology});
+                return _cb();
+            });
+        },
+        function getPgStatus2(_, _cb) {
+            mantee_common.pgStatus([_.topology], _cb);
+        },
+        function verifyTopology2(_, _cb) {
             /*
              * here we only have to check the sync states of each of the nodes.
              * if the sync states are correct, then we know replication is
              * working.
              */
-            //t.ok(_.topology, 'shard topology DNE');
-            //t.ok(_.topology.primary, 'primary DNE');
-            //t.ok(_.topology.primary.repl, 'no sync repl state');
-            //t.equal(_.topology.primary.repl.sync_state,
-                    //'sync',
-                    //'no sync replication state.');
-            //t.ok(_.topology.sync, 'sync DNE');
-            //t.equal(_.topology.sync.repl.sync_state,
-                    //'async',
-                    //'no async replication state');
-            //t.ok(_.topology.async, 'async DNE');
-            //t.notEqual(_.topology.primary.pgUrl, _.primaryPgUrl,
-                           //'primary should not be killed primary');
-            //return _cb();
-        //}
-    //], arg: {}}, function (err, results) {
-        //if (err) {
-            //t.fail(err);
-        //}
-        //t.done();
-    //});
-//};
+            t.ok(_.topology, 'shard topology DNE');
+            t.ok(_.topology.primary, 'primary DNE');
+            t.ok(_.topology.primary.repl, 'no sync repl state');
+            t.equal(_.topology.primary.repl.sync_state,
+                    'sync',
+                    'no sync replication state.');
+            t.ok(_.topology.sync, 'sync DNE');
+            t.equal(_.topology.sync.repl.sync_state,
+                    'async',
+                    'no async replication state');
+            t.ok(_.topology.async, 'async DNE');
+            t.notEqual(_.topology.primary.pgUrl, _.primaryPgUrl,
+                           'primary should not be killed primary');
+            return _cb();
+        }
+    ], arg: {}}, function (err, results) {
+        if (err) {
+            t.fail(err);
+        }
+        t.done();
+    });
+};
 
 exports.after = function (t) {
     vasync.pipeline({funcs: [
-        //function _cleanupZK(_, _cb) {
-            //ZK_CLIENT.rmr('/manatee', _cb);
-        //},
         function _stopManatees(_, _cb) {
             var barrier = vasync.barrier();
             barrier.on('drain', function () {
@@ -316,9 +314,12 @@ exports.after = function (t) {
             console.log('destroying ds');
             exec('zfs destroy -r ' + PARENT_ZFS_DS, _cb);
         },
-        function _removeMetadata(_, _cb) {
-            exec('rm -rf ' + FS_PATH_PREFIX, _cb);
+        function _cleanupZK(_, _cb) {
+            ZK_CLIENT.rmr('/manatee', _cb);
         },
+        //function _removeMetadata(_, _cb) {
+            //exec('rm -rf ' + FS_PATH_PREFIX, _cb);
+        //},
     ], arg: {}}, function (err, results) {
         LOG.info({err: err, results: err ? results : null}, 'finished after()');
         t.done();
