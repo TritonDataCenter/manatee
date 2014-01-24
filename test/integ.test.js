@@ -36,8 +36,7 @@ var LOG = bunyan.createLogger({
 
 var MANATEES = {};
 
-// ignore uncaught exceptions since the pg client keeps on throwing them
-process.on('uncaughtException', function () { });
+//setTimeout(function() { console.error(process._getActiveHandles(), process._getActiveRequests()); }, 30000).unref();
 
 /*
  * Tests

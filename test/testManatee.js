@@ -312,21 +312,24 @@ Manatee.prototype.start = function start(cb) {
         },
         function _waitForPgToStart(_, _cb) {
             _cb = once(_cb);
-            // timeout if pg is still not up.
-            setTimeout(function () {
-                return _cb(new verror.VError('postgres start timed out'));
-            }, 30000);
-
             // check whether pg is up
-            setInterval(function () {
+            var intervalId = setInterval(function () {
                 self.healthCheck(function (err) {
                     if (err) {
                         return;
                     }
 
+                    clearInterval(intervalId);
                     return _cb();
                 });
             }, 2000);
+
+            // timeout if pg is still not up.
+            setTimeout(function () {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('postgres start timed out'));
+            }, 30000);
+
         },
         function _startSnapshotter(_, _cb) {
             self.manatee.snapshotter = spawn('/usr/bin/ctrun', spawnSsOpts);
@@ -351,66 +354,29 @@ Manatee.prototype.start = function start(cb) {
 Manatee.prototype.healthCheck = function (callback) {
     var self = this;
     var log = self.log;
-    log.trace('Postgresman.health: entering');
-    try {
-        self._queryDb('select current_time;', function (err) {
-            if (err) {
-                log.trace({err: err}, 'Postgresman.health: failed');
-            }
-            return callback(err);
-        });
-    } catch (e) {}
-
-    return (undefined);
-};
-
-Manatee.prototype._queryDb = function (queryStr, callback) {
-    var self = this;
-    var log = self.log;
+    log.info('Manatee.health: entering');
     callback = once(callback);
-    var calledBack = false;
-    log.trace({
-        query: queryStr
-    }, 'Postgresman.query: entering.');
+    var client = new Client(self.pgUrl);
 
-    if (!self._pgClient) {
-        self._pgClient = new Client(self.pgUrl);
-        self._pgClient.once('error', function (err) {
-            self._pgClient.removeAllListeners();
-            log.trace({err: err}, 'got pg client error');
-            // set the client to null on error so we can create a new client
-            self._pgClient = null;
-            return callback(new verror.VError(err,
-                'error whilst querying postgres'));
+    try {
+        client.connect(function(err) {
+            if (err) {
+                client.end();
+                return callback(err);
+            }
+            client.query('select current_time;', function(err) {
+                if (err) {
+                    log.trace({err: err}, 'Manatee.health: failed');
+                }
+                client.end();
+                return callback(err);
+            });
         });
-        self._pgClient.connect();
+    } catch (e) {
+        return callback(e);
     }
-
-    var query = self._pgClient.query(queryStr);
-    var result = null;
-    log.trace('querying', query);
-    query.once('row', function (row) {
-        log.trace({
-            row: row
-        }, 'got row');
-        result = row;
-    });
-
-    query.on('error', function (err) {
-        log.trace({
-            err: err
-        }, 'got err');
-        var err2 = new verror.VError('error whilst querying postgres');
-        // set the client to null on error so we can create a new client
-        self._pgClient = null;
-        return callback(err2);
-    });
-
-    query.once('end', function () {
-        log.trace('query ended!');
-        return callback(null, result);
-    });
 };
+
 function getPostgresUrl(ip, port, db) {
     return 'tcp://postgres@' + ip + ':' + port + '/' + db;
 }
