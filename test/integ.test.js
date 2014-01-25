@@ -208,23 +208,37 @@ exports.primaryDeath = function (t) {
         function killPrimary(_, _cb) {
             MANATEES[_.primaryPgUrl].kill(_cb);
         },
-        function waitForFlip(_, _cb) {
-            setTimeout(_cb, 10000);
-        },
         function getNewTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology, 'topology DNE');
-                assert.ok(_.topology.primary, 'primary DNE');
-                assert.ok(_.topology.sync, 'sync DNE');
-                assert.equal(_.topology.async, null,
-                            'async should not exist after primary death');
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
-            });
+            _cb = once(_cb);
+            var intervalId = setInterval(function() {
+                mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    if (err) {
+                        return;
+                    }
+                    _.topology = topology[SHARD_ID];
+                    try {
+                        assert.ok(_.topology, 'topology DNE');
+                        assert.ok(_.topology.primary, 'primary DNE');
+                        assert.ok(_.topology.sync, 'sync DNE');
+                        assert.equal(_.topology.async, null,
+                                     'async should not exist after primary ' +
+                                         'death');
+
+                        LOG.info({topology: topology}, 'got topology');
+                        clearInterval(intervalId);
+                        return _cb();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: topology},
+                                 'got unexpected topology');
+                        return;
+                    }
+                });
+            }, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('shard did not flip in time'));
+            }, 30000);
         },
         function getPgStatus(_, _cb) {
             mantee_common.pgStatus([_.topology], _cb);
@@ -250,6 +264,148 @@ exports.primaryDeath = function (t) {
         function addNewManatee(_, _cb) {
             LOG.info({url: _.primaryPgUrl}, 'adding back old primary');
             MANATEES[_.primaryPgUrl].start(_cb);
+        },
+        function checkTopology2(_, _cb) {
+            var intervalId = setInterval(vasync.pipeline({funcs: [
+                function _getTopology(_2, _cb2) {
+                console.log('XXX getopo');
+                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                        _2.topology = topology[SHARD_ID];
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        LOG.info({topology: topology});
+                        return _cb2();
+                    });
+                },
+                function _getPgStatus(_2, _cb2) {
+                    mantee_common.pgStatus([_2.topology], _cb2);
+                },
+                function _verifyTopology(_2, _cb2) {
+                    _cb2 = once(_cb2);
+                    /*
+                     * here we only have to check the sync states of each of
+                     * the nodes.  if the sync states are correct, then we know
+                     * replication is working.
+                     */
+                    try {
+                        assert.ok(_2.topology, 'shard topology DNE');
+                        assert.ok(_2.topology.primary, 'primary DNE');
+                        assert.ok(_2.topology.primary.repl, 'no sync repl state');
+                        assert.equal(_2.topology.primary.repl.sync_state,
+                                'sync',
+                                'no sync replication state.');
+                        assert.ok(_2.topology.sync, 'sync DNE');
+                        assert.equal(_2.topology.sync.repl.sync_state,
+                                'async',
+                                'no async replication state');
+                        assert.ok(_2.topology.async, 'async DNE');
+                        assert.notEqual(_2.topology.primary.pgUrl, _2.primaryPgUrl,
+                                   'primary should not be killed primary');
+                        return _cb2();
+                    } catch (e) {
+                        return _cb2(e);
+                    }
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    log.warn({err: err, results: results},
+                             'topology not correct');
+                    return;
+                }
+                clearInterval(intervalId);
+                return _cb();
+            }), 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError(
+                    'new peer did not join shard in time'));
+            }, 30000);
+        },
+    ], arg: {}}, function (err, results) {
+        if (err) {
+            log.error({err: err, results: results});
+            t.fail(err);
+        }
+        t.done();
+    });
+};
+
+exports.syncDeath = function (t) {
+    vasync.pipeline({funcs: [
+        function loadTopology(_, _cb) {
+            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                if (err) {
+                    return _cb(err);
+                }
+                _.topology = topology[SHARD_ID];
+                assert.ok(_.topology);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.sync.pgUrl);
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                LOG.info({topology: topology}, 'got topology');
+                return _cb();
+            });
+        },
+        function killSync(_, _cb) {
+            MANATEES[_.syncPgUrl].kill(_cb);
+        },
+        function getNewTopology(_, _cb) {
+            _cb = once(_cb);
+            var intervalId = setInterval(function() {
+                mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    if (err) {
+                        return;
+                    }
+                    _.topology = topology[SHARD_ID];
+                    try {
+                        assert.ok(_.topology, 'topology DNE');
+                        assert.ok(_.topology.primary, 'primary DNE');
+                        assert.ok(_.topology.sync, 'sync DNE');
+                        assert.equal(_.topology.async, null,
+                                     'async should not exist after sync death');
+
+                        LOG.info({topology: topology}, 'got topology');
+                        clearInterval(intervalId);
+                        return _cb();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: topology},
+                                 'got unexpected topology');
+                        return;
+                    }
+                });
+            }, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('shard did not flip in time'));
+            }, 30000);
+        },
+        function getPgStatus(_, _cb) {
+            mantee_common.pgStatus([_.topology], _cb);
+        },
+        function verifyTopology(_, _cb) {
+            /*
+             * here we only have to check the sync states of each of the nodes.
+             * if the sync states are correct, then we know replication is
+             * working.
+             */
+            t.ok(_.topology, 'shard topology DNE');
+            t.ok(_.topology.primary, 'primary DNE');
+            t.ok(_.topology.primary.repl, 'no sync repl state');
+            /*
+             * empty repl fields look like this: repl: {}. So we have to check
+             * the key length in order to figure out that it is an empty/
+             * object.
+             */
+            t.equal(Object.keys(_.topology.sync.repl).length, 0,
+                    'sync should not have replication state.');
+            return _cb();
+        },
+        function addNewManatee(_, _cb) {
+            LOG.info({url: _.syncPgUrl}, 'adding back old sync');
+            MANATEES[_.syncPgUrl].start(_cb);
         },
         function loadTopology2(_, _cb) {
             mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
@@ -281,8 +437,8 @@ exports.primaryDeath = function (t) {
                     'async',
                     'no async replication state');
             t.ok(_.topology.async, 'async DNE');
-            t.notEqual(_.topology.primary.pgUrl, _.primaryPgUrl,
-                           'primary should not be killed primary');
+            t.equal(_.topology.async.pgUrl, _.syncPgUrl,
+                           'async ' + _.topology.async.pgUrl + 'should be old sync peer ' + _.syncPgUrl);
             return _cb();
         }
     ], arg: {}}, function (err, results) {
@@ -310,8 +466,21 @@ exports.after = function (t) {
             });
         },
         function _destroyZfsDataset(_, _cb) {
-            console.log('destroying ds');
-            exec('zfs destroy -r ' + PARENT_ZFS_DS, _cb);
+            _cb = once(_cb);
+            var intervalId = setInterval(function () {
+                exec('zfs destroy -r ' + PARENT_ZFS_DS, function (err) {
+                    if (!err) {
+                        clearInterval(intervalId);
+                        return _cb();
+                    }
+                    log.warn({err: err}, 'unable to destroy zfs dataset');
+                });
+            }, 2000);
+
+            setTimeout(function () {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('timedout trying to destroy dataset'));
+            }, 30000);
         },
         function _cleanupZK(_, _cb) {
             ZK_CLIENT.rmr('/manatee', _cb);
