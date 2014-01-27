@@ -262,7 +262,7 @@ exports.primaryDeath = function (t) {
                          */
                         assert.equal(Object.keys(topology.sync.repl).length, 0,
                                 'sync should not have replication state.');
-                        return _cb();
+                        return _cb2();
                     } catch (e) {
                         LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
@@ -307,6 +307,7 @@ exports.primaryDeath = function (t) {
                     try {
                         mantee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -333,6 +334,7 @@ exports.primaryDeath = function (t) {
                                    'primary should not be killed primary');
                         return _cb2();
                     } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 }
@@ -395,11 +397,10 @@ exports.syncDeath = function (t) {
                             assert.ok(topology.primary, 'primary DNE');
                             assert.ok(topology.sync, 'sync DNE');
                             assert.equal(topology.async, null,
-                                         'async should not exist after primary ' +
+                                         'async should not exist after sync ' +
                                              'death');
 
                             LOG.info({topology: topology}, 'got topology');
-                            clearInterval(intervalId);
                             return _cb2();
                         } catch (e) {
                             LOG.warn({err: e, topology: topology},
@@ -436,7 +437,7 @@ exports.syncDeath = function (t) {
                                 'sync should not have replication state.');
                         assert.notEqual(topology.primary.url, _.syncPgUrl,
                                         'old sync is still in shard');
-                        return _cb();
+                        return _cb2();
                     } catch (e) {
                         LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
@@ -481,37 +482,37 @@ exports.syncDeath = function (t) {
                     try {
                         mantee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
                 function _verifyTopology(_2, _cb2) {
                     _cb2 = once(_cb2);
-                    /*
-                     * here we only have to check the sync states of each of
-                     * the nodes.  if the sync states are correct, then we know
-                     * replication is working.
-                     */
                     try {
                          /*
-                          * here we only have to check the sync states of each of the nodes.
-                          * if the sync states are correct, then we know replication is
-                          * working.
+                          * here we only have to check the sync states of each
+                          * of the nodes.  if the sync states are correct, then
+                          * we know replication is working.
                           */
                          assert.ok(_2.topology, 'shard topology DNE');
                          assert.ok(_2.topology.primary, 'primary DNE');
-                         assert.ok(_2.topology.primary.repl, 'no sync repl state');
+                         assert.ok(_2.topology.primary.repl,
+                                   'no sync repl state');
                          assert.equal(_2.topology.primary.repl.sync_state,
-                                 'sync',
-                                 'no sync replication state.');
+                                      'sync',
+                                      'no sync replication state.');
                          assert.ok(_2.topology.sync, 'sync DNE');
                          assert.equal(_2.topology.sync.repl.sync_state,
-                                 'async',
-                                 'no async replication state');
+                                      'async',
+                                      'no async replication state');
                          assert.ok(_2.topology.async, 'async DNE');
                          assert.equal(_2.topology.async.pgUrl, _.syncPgUrl,
-                                        'async ' + _2.topology.async.pgUrl + 'should be old sync peer ' + _.syncPgUrl);
+                                      'async ' + _2.topology.async.pgUrl +
+                                          'should be old sync peer ' +
+                                          _.syncPgUrl);
                         return _cb2();
                     } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 }
@@ -535,6 +536,186 @@ exports.syncDeath = function (t) {
         if (err) {
             LOG.info({err: err, results: err ? results : null},
                      'finished syncDeath()');
+            t.fail(err);
+        }
+        t.done();
+    });
+};
+
+exports.asyncDeath = function (t) {
+    vasync.pipeline({funcs: [
+        function loadTopology(_, _cb) {
+            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                if (err) {
+                    return _cb(err);
+                }
+                _.topology = topology[SHARD_ID];
+                assert.ok(_.topology);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.sync.pgUrl);
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                LOG.info({topology: topology}, 'got topology');
+                return _cb();
+            });
+        },
+        function killAsync(_, _cb) {
+            MANATEES[_.asyncPgUrl].kill(_cb);
+        },
+        function getNewTopology(_, _cb) {
+            _cb = once(_cb);
+            var topology;
+            var intervalId = setInterval(function() {vasync.pipeline({funcs: [
+                function _loadTopology(_2, _cb2) {
+                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        topology = top[SHARD_ID];
+                        try {
+                            assert.ok(topology, 'topology DNE');
+                            assert.ok(topology.primary, 'primary DNE');
+                            assert.ok(topology.sync, 'sync DNE');
+                            assert.equal(topology.async, null,
+                                         'async should not exist after ' +
+                                             'async death');
+
+                            LOG.info({topology: topology}, 'got topology');
+                            return _cb2();
+                        } catch (e) {
+                            LOG.warn({err: e, topology: topology},
+                                     'got unexpected topology');
+                            return _cb2(e);
+                        }
+                   });
+                },
+                function _getPgStatus(_2, _cb2) {
+                    try {
+                        mantee_common.pgStatus([topology], _cb2);
+                    } catch (e) {
+                        LOG.warn({err: e, topology: topology},
+                                 'could not get pg status');
+                        return _cb2(e);
+                    }
+                },
+                function _verifyTopology(_2, _cb2) {
+                    try {
+                        /*
+                         * here we only have to check the sync states of each
+                         * of the nodes.  if the sync states are correct, then
+                         * we know replication is working.
+                         */
+                        assert.ok(topology, 'shard topology DNE');
+                        assert.ok(topology.primary, 'primary DNE');
+                        assert.ok(topology.primary.repl, 'no sync repl state');
+                        /*
+                         * empty repl fields look like this: repl: {}. So we
+                         * have to check the key length in order to figure out
+                         * that it is an empty object.
+                         */
+                        assert.equal(Object.keys(topology.sync.repl).length, 0,
+                                'sync should not have replication state.');
+                        assert.notEqual(topology.primary.url, _.asyncPgUrl,
+                                        'old async is still in shard');
+                        return _cb2();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: topology},
+                                 'unable to verify topology');
+                        return _cb2(e);
+                    }
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    LOG.warn({err: err, results: results, topology: topology},
+                             'still waiting on correct shard state');
+                    return;
+                } else {
+                    clearInterval(intervalId);
+                    return _cb();
+                }
+
+            });}, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('shard did not flip in time'));
+            }, 30000);
+        },
+        function addNewManatee(_, _cb) {
+            LOG.info({url: _.asyncPgUrl}, 'adding back old async');
+            MANATEES[_.asyncPgUrl].start(_cb);
+        },
+        function checkTopology2(_, _cb) {
+            _cb = once(_cb);
+            var intervalId = setInterval(function() {vasync.pipeline({funcs: [
+                function _getTopology(_2, _cb2) {
+                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                        _2.topology = topology[SHARD_ID];
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        LOG.info({topology: topology});
+                        return _cb2();
+                    });
+                },
+                function _getPgStatus(_2, _cb2) {
+                    try {
+                        mantee_common.pgStatus([_2.topology], _cb2);
+                    } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology});
+                        return _cb2(e);
+                    }
+                },
+                function _verifyTopology(_2, _cb2) {
+                    _cb2 = once(_cb2);
+                    try {
+                         /*
+                          * here we only have to check the sync states of each
+                          * of the nodes.  if the sync states are correct, then
+                          * we know replication is working.
+                          */
+                         assert.ok(_2.topology, 'shard topology DNE');
+                         assert.ok(_2.topology.primary, 'primary DNE');
+                         assert.ok(_2.topology.primary.repl,
+                                   'no sync repl state');
+                         assert.equal(_2.topology.primary.repl.sync_state,
+                                      'sync',
+                                      'no sync replication state.');
+                         assert.ok(_2.topology.sync, 'sync DNE');
+                         assert.equal(_2.topology.sync.repl.sync_state,
+                                      'async',
+                                      'no async replication state');
+                         assert.ok(_2.topology.async, 'async DNE');
+                         assert.equal(_2.topology.async.pgUrl, _.asyncPgUrl,
+                                      'async ' + _2.topology.async.pgUrl +
+                                          'should be old async peer ' +
+                                          _.asyncPgUrl);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology},
+                                 'unable to verify topology');
+                        return _cb2(e);
+                    }
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    LOG.warn({err: err, results: results},
+                             'topology not correct');
+                    return;
+                }
+                clearInterval(intervalId);
+                return _cb();
+            });}, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError(
+                    'new peer did not join shard in time'));
+            }, 30000);
+        },
+    ], arg: {}}, function (err, results) {
+        if (err) {
+            LOG.info({err: err, results: err ? results : null},
+                     'finished asyncDeath()');
             t.fail(err);
         }
         t.done();
@@ -565,13 +746,14 @@ exports.after = function (t) {
                         clearInterval(intervalId);
                         return _cb();
                     }
-                    log.warn({err: err}, 'unable to destroy zfs dataset');
+                    LOG.warn({err: err}, 'unable to destroy zfs dataset');
                 });
             }, 2000);
 
             setTimeout(function () {
                 clearInterval(intervalId);
-                return _cb(new verror.VError('timedout trying to destroy dataset'));
+                return _cb(new verror.VError(
+                    'timed out trying to destroy dataset'));
             }, 30000);
         },
         function _cleanupZK(_, _cb) {
