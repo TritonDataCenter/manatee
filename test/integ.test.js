@@ -108,6 +108,9 @@ exports.before = function (t) {
                 return _cb();
             });
         },
+        function _removeMetadata(_, _cb) {
+            exec('rm -rf ' + FS_PATH_PREFIX, _cb);
+        },
         function _cleanupZK(_, _cb) {
             ZK_CLIENT.rmr('/manatee', function() { return _cb(); });
         },
@@ -752,19 +755,29 @@ exports.everyoneDies = function (t) {
             var barrier = vasync.barrier();
             barrier.on('drain', _cb);
 
-            barrier.start(_.asyncPgUrl);
-            MANATEES[_.asyncPgUrl].kill(function () {
-                barrier.done(_.asyncPgUrl);
+            // hacky way to kill everyone in random order.
+            var seed = Math.round(Math.random() * 2);
+            var m = Object.keys(MANATEES);
+            var first = m[seed];
+            m.splice(seed, 1);
+            seed = Math.round(Math.random());
+            var second = m[seed];
+            m.splice(seed, 1);
+            var third = m[0];
+
+            barrier.start(0);
+            MANATEES[first].kill(function () {
+                barrier.done(0);
             });
 
-            barrier.start(_.primaryPgUrl);
-            MANATEES[_.primaryPgUrl].kill(function () {
-                barrier.done(_.primaryPgUrl);
+            barrier.start(1);
+            MANATEES[second].kill(function () {
+                barrier.done(1);
             });
 
-            barrier.start(_.syncPgUrl);
-            MANATEES[_.syncPgUrl].kill(function () {
-                barrier.done(_.syncPgUrl);
+            barrier.start(2);
+            MANATEES[third].kill(function () {
+                barrier.done(2);
             });
         },
         function waitForEveryoneToDie(_, _cb) {
@@ -814,28 +827,38 @@ exports.everyoneDies = function (t) {
             var barrier = vasync.barrier();
             barrier.on('drain', _cb);
 
-            barrier.start(_.asyncPgUrl);
-            MANATEES[_.asyncPgUrl].start(function (err) {
+            // hacky way to startin everyone in random order.
+            var seed = Math.round(Math.random() * 2);
+            var m = Object.keys(MANATEES);
+            var first = m[seed];
+            m.splice(seed, 1);
+            seed = Math.round(Math.random());
+            var second = m[seed];
+            m.splice(seed, 1);
+            var third = m[0];
+
+            barrier.start(0);
+            MANATEES[first].start(function (err) {
                 if (err) {
                     return _cb(err);
                 }
-                barrier.done(_.asyncPgUrl);
+                barrier.done(0);
             });
 
-            barrier.start(_.primaryPgUrl);
-            MANATEES[_.primaryPgUrl].start(function (err) {
+            barrier.start(1);
+            MANATEES[second].start(function (err) {
                 if (err) {
                     return _cb(err);
                 }
-                barrier.done(_.primaryPgUrl);
+                barrier.done(1);
             });
 
-            barrier.start(_.syncPgUrl);
-            MANATEES[_.syncPgUrl].start(function (err) {
+            barrier.start(2);
+            MANATEES[third].start(function (err) {
                 if (err) {
                     return _cb(err);
                 }
-                barrier.done(_.syncPgUrl);
+                barrier.done(2);
             });
         },
         function checkTopology2(_, _cb) {
@@ -949,9 +972,6 @@ exports.after = function (t) {
         function _cleanupZK(_, _cb) {
             ZK_CLIENT.rmr('/manatee', _cb);
         },
-        //function _removeMetadata(_, _cb) {
-            //exec('rm -rf ' + FS_PATH_PREFIX, _cb);
-        //},
     ], arg: {}}, function (err, results) {
         LOG.info({err: err, results: err ? results : null}, 'finished after()');
         t.done();
