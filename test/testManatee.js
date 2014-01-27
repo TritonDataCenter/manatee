@@ -39,7 +39,7 @@ function Manatee(opts, cb) {
     assert.string(opts.metadataDir, 'opts.metadataDir');
     assert.string(opts.shardPath, 'opts.shardPath');
 
-    var log = opts.log
+    var log = opts.log;
     log.info('instance opts', opts);
     var self = this;
 

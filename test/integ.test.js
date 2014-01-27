@@ -103,6 +103,14 @@ exports.before = function (t) {
                 return _cb(err);
             });
         },
+        function _destroyZfsDataset(_, _cb) {
+            exec('zfs destroy -r ' + PARENT_ZFS_DS, function (err) {
+                return _cb();
+            });
+        },
+        function _cleanupZK(_, _cb) {
+            ZK_CLIENT.rmr('/manatee', function() { return _cb(); });
+        },
         function _startN1(_, _cb) {
             var manatee = new Manatee(n1Opts, function (err) {
                 if (err) {
@@ -272,7 +280,7 @@ exports.primaryDeath = function (t) {
             ], arg:{}}, function (err, results) {
                 if (err) {
                     LOG.warn({err: err, results: results, topology: topology},
-                             'still waiting on correct shard state');
+                             'still waiting for correct shard state');
                     return;
                 } else {
                     clearInterval(intervalId);
@@ -447,7 +455,7 @@ exports.syncDeath = function (t) {
             ], arg:{}}, function (err, results) {
                 if (err) {
                     LOG.warn({err: err, results: results, topology: topology},
-                             'still waiting on correct shard state');
+                             'still waiting for correct shard state');
                     return;
                 } else {
                     clearInterval(intervalId);
@@ -626,7 +634,7 @@ exports.asyncDeath = function (t) {
             ], arg:{}}, function (err, results) {
                 if (err) {
                     LOG.warn({err: err, results: results, topology: topology},
-                             'still waiting on correct shard state');
+                             'still waiting for correct shard state');
                     return;
                 } else {
                     clearInterval(intervalId);
@@ -689,6 +697,188 @@ exports.asyncDeath = function (t) {
                                       'async ' + _2.topology.async.pgUrl +
                                           'should be old async peer ' +
                                           _.asyncPgUrl);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology},
+                                 'unable to verify topology');
+                        return _cb2(e);
+                    }
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    LOG.warn({err: err, results: results},
+                             'topology not correct');
+                    return;
+                }
+                clearInterval(intervalId);
+                return _cb();
+            });}, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError(
+                    'new peer did not join shard in time'));
+            }, 30000);
+        },
+    ], arg: {}}, function (err, results) {
+        if (err) {
+            LOG.info({err: err, results: err ? results : null},
+                     'finished asyncDeath()');
+            t.fail(err);
+        }
+        t.done();
+    });
+};
+
+exports.everyoneDies = function (t) {
+    vasync.pipeline({funcs: [
+        function loadTopology(_, _cb) {
+            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                if (err) {
+                    return _cb(err);
+                }
+                _.topology = topology[SHARD_ID];
+                assert.ok(_.topology);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.sync.pgUrl);
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.primaryPgUrl = _.topology.primary.pgUrl;
+                LOG.info({topology: topology}, 'got topology');
+                return _cb();
+            });
+        },
+        function killEveryone(_, _cb) {
+            var barrier = vasync.barrier();
+            barrier.on('drain', _cb);
+
+            barrier.start(_.asyncPgUrl);
+            MANATEES[_.asyncPgUrl].kill(function () {
+                barrier.done(_.asyncPgUrl);
+            });
+
+            barrier.start(_.primaryPgUrl);
+            MANATEES[_.primaryPgUrl].kill(function () {
+                barrier.done(_.primaryPgUrl);
+            });
+
+            barrier.start(_.syncPgUrl);
+            MANATEES[_.syncPgUrl].kill(function () {
+                barrier.done(_.syncPgUrl);
+            });
+        },
+        function waitForEveryoneToDie(_, _cb) {
+            _cb = once(_cb);
+            var topology;
+            var intervalId = setInterval(function() {vasync.pipeline({funcs: [
+                function _loadTopology(_2, _cb2) {
+                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        topology = top[SHARD_ID];
+                        try {
+                            assert.equal(topology.primary, null,
+                                         'did not find empty topology');
+                            assert.equal(topology.sync, null,
+                                         'did not find empty topology');
+                            assert.equal(topology.async, null,
+                                         'did not find empty topology');
+                            return _cb2();
+                        } catch (e) {
+                            LOG.warn({err: e, topology: topology},
+                                     'got unexpected topology');
+                            return _cb2(e);
+                        }
+                   });
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    LOG.warn({err: err, results: results, topology: topology},
+                             'still waiting for correct shard state');
+                    return;
+                } else {
+                    clearInterval(intervalId);
+                    return _cb();
+                }
+
+            });}, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('shard did not flip in time'));
+            }, 30000);
+        },
+        function restartmanatees(_, _cb) {
+            _cb = once(_cb);
+            var barrier = vasync.barrier();
+            barrier.on('drain', _cb);
+
+            barrier.start(_.asyncPgUrl);
+            MANATEES[_.asyncPgUrl].start(function (err) {
+                if (err) {
+                    return _cb(err);
+                }
+                barrier.done(_.asyncPgUrl);
+            });
+
+            barrier.start(_.primaryPgUrl);
+            MANATEES[_.primaryPgUrl].start(function (err) {
+                if (err) {
+                    return _cb(err);
+                }
+                barrier.done(_.primaryPgUrl);
+            });
+
+            barrier.start(_.syncPgUrl);
+            MANATEES[_.syncPgUrl].start(function (err) {
+                if (err) {
+                    return _cb(err);
+                }
+                barrier.done(_.syncPgUrl);
+            });
+        },
+        function checkTopology2(_, _cb) {
+            _cb = once(_cb);
+            var intervalId = setInterval(function() {vasync.pipeline({funcs: [
+                function _getTopology(_2, _cb2) {
+                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                        _2.topology = topology[SHARD_ID];
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        LOG.info({topology: topology});
+                        return _cb2();
+                    });
+                },
+                function _getPgStatus(_2, _cb2) {
+                    try {
+                        mantee_common.pgStatus([_2.topology], _cb2);
+                    } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology});
+                        return _cb2(e);
+                    }
+                },
+                function _verifyTopology(_2, _cb2) {
+                    _cb2 = once(_cb2);
+                    try {
+                         /*
+                          * here we only have to check the sync states of each
+                          * of the nodes.  if the sync states are correct, then
+                          * we know replication is working.
+                          */
+                         assert.ok(_2.topology, 'shard topology DNE');
+                         assert.ok(_2.topology.primary, 'primary DNE');
+                         assert.ok(_2.topology.primary.repl,
+                                   'no sync repl state');
+                         assert.equal(_2.topology.primary.repl.sync_state,
+                                      'sync',
+                                      'no sync replication state.');
+                         assert.ok(_2.topology.sync, 'sync DNE');
+                         assert.equal(_2.topology.sync.repl.sync_state,
+                                      'async',
+                                      'no async replication state');
+                         assert.ok(_2.topology.async, 'async DNE');
                         return _cb2();
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology},
