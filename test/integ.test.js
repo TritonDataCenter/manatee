@@ -108,9 +108,9 @@ exports.before = function (t) {
                 return _cb();
             });
         },
-        //function _removeMetadata(_, _cb) {
-            //exec('rm -rf ' + FS_PATH_PREFIX, _cb);
-        //},
+        function _removeMetadata(_, _cb) {
+            exec('rm -rf ' + FS_PATH_PREFIX, _cb);
+        },
         function _cleanupZK(_, _cb) {
             ZK_CLIENT.rmr('/manatee', function() { return _cb(); });
         },
@@ -1241,6 +1241,196 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                     barrier.done(1);
                 });
                 MANATEES[_.primaryPgUrl].start(function (err) {
+                    if (err) {
+                        return _cb(err);
+                    }
+                    barrier.done(0);
+                });
+            }
+        },
+        function checkTopology2(_, _cb) {
+            _cb = once(_cb);
+            var intervalId = setInterval(function() {vasync.pipeline({funcs: [
+                function _getTopology(_2, _cb2) {
+                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                        _2.topology = topology[SHARD_ID];
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        LOG.info({topology: topology});
+                        return _cb2();
+                    });
+                },
+                function _getPgStatus(_2, _cb2) {
+                    try {
+                        mantee_common.pgStatus([_2.topology], _cb2);
+                    } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology});
+                        return _cb2(e);
+                    }
+                },
+                function _verifyTopology(_2, _cb2) {
+                    _cb2 = once(_cb2);
+                    try {
+                         /*
+                          * here we only have to check the sync states of each
+                          * of the nodes.  if the sync states are correct, then
+                          * we know replication is working.
+                          */
+                         assert.ok(_2.topology, 'shard topology DNE');
+                         assert.ok(_2.topology.primary, 'primary DNE');
+                         assert.ok(_2.topology.primary.repl,
+                                   'no sync repl state');
+                         assert.equal(_2.topology.primary.repl.sync_state,
+                                      'sync',
+                                      'no sync replication state.');
+                         assert.ok(_2.topology.sync, 'sync DNE');
+                         assert.equal(_2.topology.sync.repl.sync_state,
+                                      'async',
+                                      'no async replication state');
+                         assert.ok(_2.topology.async, 'async DNE');
+                        return _cb2();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology},
+                                 'unable to verify topology');
+                        return _cb2(e);
+                    }
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    LOG.warn({err: err, results: results},
+                             'topology not correct');
+                    return;
+                }
+                clearInterval(intervalId);
+                return _cb();
+            });}, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError(
+                    'new peer did not join shard in time'));
+            }, 30000);
+        },
+    ], arg: {}}, function (err, results) {
+        if (err) {
+            LOG.error({err: err, results: results});
+            t.fail(err);
+        }
+        t.done();
+    });
+};
+
+exports.syncAsyncInstantaneousDeath = function (t) {
+    vasync.pipeline({funcs: [
+        function loadTopology(_, _cb) {
+            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                if (err) {
+                    return _cb(err);
+                }
+                _.topology = topology[SHARD_ID];
+                assert.ok(_.topology);
+                assert.ok(_.topology.primary.pgUrl);
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.primaryPgUrl = _.topology.primary.pgUrl;
+                LOG.info({topology: topology}, 'got topology');
+                return _cb();
+            });
+        },
+        function killSyncAndSync(_, _cb) {
+            // hacky way to pick either sync or primary first
+            var seed = Math.round(Math.random());
+            var barrier = vasync.barrier();
+            barrier.on('drain', _cb);
+            barrier.start(0);
+            barrier.start(1);
+            if (seed < 1) {
+                MANATEES[_.syncPgUrl].kill(function () {
+                    barrier.done(0);
+                });
+                MANATEES[_.asyncPgUrl].kill(function () {
+                    barrier.done(1);
+                });
+            } else {
+                MANATEES[_.asyncPgUrl].kill(function () {
+                    barrier.done(1);
+                });
+                MANATEES[_.syncPgUrl].kill(function () {
+                    barrier.done(0);
+                });
+            }
+        },
+        function getNewTopology(_, _cb) {
+            _cb = once(_cb);
+            var topology;
+            var intervalId = setInterval(function() {vasync.pipeline({funcs: [
+                function _loadTopology(_2, _cb2) {
+                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        topology = top[SHARD_ID];
+                        try {
+                            assert.ok(topology, 'topology DNE');
+                            assert.ok(topology.primary, 'primary DNE');
+                            assert.equal(topology.sync, null, 'sync exists');
+                            assert.equal(topology.async, null, 'async exists');
+
+                            return _cb2();
+                        } catch (e) {
+                            LOG.warn({err: e, topology: topology},
+                                     'got unexpected topology');
+                            return _cb2(e);
+                        }
+                   });
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    LOG.warn({err: err, results: results, topology: topology},
+                             'still waiting for correct shard state');
+                    return;
+                } else {
+                    clearInterval(intervalId);
+                    return _cb();
+                }
+
+            });}, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('shard did not flip in time'));
+            }, 30000);
+        },
+        function restartmanatees(_, _cb) {
+            _cb = once(_cb);
+            // hacky way to pick either sync or primary first
+            var seed = Math.round(Math.random());
+            var barrier = vasync.barrier();
+            barrier.on('drain', _cb);
+            barrier.start(0);
+            barrier.start(1);
+            if (seed < 1) {
+                MANATEES[_.syncPgUrl].start(function (err) {
+                    if (err) {
+                        return _cb(err);
+                    }
+                    barrier.done(0);
+                });
+                MANATEES[_.asyncPgUrl].start(function (err) {
+                    if (err) {
+                        return _cb(err);
+                    }
+                    barrier.done(1);
+                });
+            } else {
+                MANATEES[_.asyncPgUrl].start(function (err) {
+                    if (err) {
+                        return _cb(err);
+                    }
+                    barrier.done(1);
+                });
+                MANATEES[_.syncPgUrl].start(function (err) {
                     if (err) {
                         return _cb(err);
                     }
