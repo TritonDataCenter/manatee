@@ -136,6 +136,78 @@ exports.before = function (t) {
                 return _cb();
             });
         },
+        //function _wait(_, _cb) {
+            //setTimeout(_cb, 1000000000);
+        //},
+        function _waitForSyncReplication(_, _cb) {
+            _cb = once(_cb);
+            var topology;
+            var intervalId = setInterval(function() {vasync.pipeline({funcs: [
+                function _loadTopology(_2, _cb2) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        topology = top[SHARD_ID];
+                        try {
+                            assert.ok(topology, 'topology DNE');
+                            assert.ok(topology.primary, 'primary DNE');
+                            assert.ok(topology.sync, 'sync DNE');
+
+                            return _cb2();
+                        } catch (e) {
+                            LOG.warn({err: e, topology: topology},
+                                     'got unexpected topology');
+                            return _cb2(e);
+                        }
+                   });
+                },
+                function _getPgStatus(_2, _cb2) {
+                    try {
+                        manatee_common.pgStatus([topology], _cb2);
+                    } catch (e) {
+                        LOG.warn({err: e, topology: topology},
+                                 'could not get pg status');
+                        return _cb2(e);
+                    }
+                },
+                function _verifyTopology(_2, _cb2) {
+                    try {
+                        /*
+                         * here we only have to check the sync states of each
+                         * of the nodes.  if the sync states are correct, then
+                         * we know replication is working.
+                         */
+                        assert.ok(topology, 'shard topology DNE');
+                        assert.ok(topology.primary, 'primary DNE');
+                        assert.ok(topology.primary.repl, 'no sync repl state');
+                        assert.equal(topology.primary.repl.sync_state,
+                                'sync',
+                                'no sync replication state.');
+                        return _cb2();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: topology},
+                                 'unable to verify topology');
+                        return _cb2(e);
+                    }
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    LOG.warn({err: err, results: results, topology: topology},
+                             'still waiting for correct shard state');
+                    return;
+                } else {
+                    clearInterval(intervalId);
+                    return _cb();
+                }
+
+            });}, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('shard did not flip in time'));
+            }, 30000);
+        },
         function _startN3(_, _cb) {
             var manatee = new Manatee(n3Opts, function (err) {
                 if (err) {
@@ -146,7 +218,80 @@ exports.before = function (t) {
                 MANATEES[manatee.pgUrl] = manatee;
                 return _cb();
             });
-        }
+        },
+        function _waitForSyncReplication(_, _cb) {
+            _cb = once(_cb);
+            var topology;
+            var intervalId = setInterval(function() {vasync.pipeline({funcs: [
+                function _loadTopology(_2, _cb2) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        topology = top[SHARD_ID];
+                        try {
+                            assert.ok(topology, 'topology DNE');
+                            assert.ok(topology.primary, 'primary DNE');
+                            assert.ok(topology.sync, 'sync DNE');
+                            assert.ok(topology.async, 'async DNE');
+
+                            return _cb2();
+                        } catch (e) {
+                            LOG.warn({err: e, topology: topology},
+                                     'got unexpected topology');
+                            return _cb2(e);
+                        }
+                   });
+                },
+                function _getPgStatus(_2, _cb2) {
+                    try {
+                        manatee_common.pgStatus([topology], _cb2);
+                    } catch (e) {
+                        LOG.warn({err: e, topology: topology},
+                                 'could not get pg status');
+                        return _cb2(e);
+                    }
+                },
+                function _verifyTopology(_2, _cb2) {
+                    try {
+                        /*
+                         * here we only have to check the sync states of each
+                         * of the nodes.  if the sync states are correct, then
+                         * we know replication is working.
+                         */
+                        assert.ok(topology, 'shard topology DNE');
+                        assert.ok(topology.primary, 'primary DNE');
+                        assert.ok(topology.primary.repl, 'no sync repl state');
+                        assert.equal(topology.primary.repl.sync_state,
+                                'sync',
+                                'no sync replication state.');
+                        assert.equal(topology.sync.repl.sync_state,
+                                'async',
+                                'no sync replication state.');
+                        return _cb2();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: topology},
+                                 'unable to verify topology');
+                        return _cb2(e);
+                    }
+                }
+            ], arg:{}}, function (err, results) {
+                if (err) {
+                    LOG.warn({err: err, results: results, topology: topology},
+                             'still waiting for correct shard state');
+                    return;
+                } else {
+                    clearInterval(intervalId);
+                    return _cb();
+                }
+
+            });}, 3000);
+
+            setTimeout(function() {
+                clearInterval(intervalId);
+                return _cb(new verror.VError('shard did not flip in time'));
+            }, 30000);
+        },
     ], arg: {}}, function (err, results) {
         if (err) {
             t.fail(err);

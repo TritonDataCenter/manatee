@@ -32,7 +32,7 @@
         "postgresConf": "./etc/postgresql.integ.coal.conf",
         "postgresPath": "/opt/local/bin/postgres",
         "recoveryConf": "./etc/recovery.conf",
-        "replicationTimeout": 5000,
+        "replicationTimeout": 10000,
         "snapShotterCfg": {
             "dataset": null,
             "snapshotDir": null,

@@ -43,7 +43,7 @@
     },
     "devDependencies": {
         "byline": "2.0.1",
-        "nodemock": "0.2.16",
+        "nodemock": "git://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231",
         "tap": "0.2.0"
     }
 }
