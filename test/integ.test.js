@@ -2195,6 +2195,10 @@ exports.after = function (t) {
         function _cleanupZK(_, _cb) {
             ZK_CLIENT.rmr('/manatee', _cb);
         },
+        function _closeZK(_, _cb) {
+            ZK_CLIENT.once('close', _cb);
+            ZK_CLIENT.close();
+        }
     ], arg: {}}, function (err, results) {
         LOG.info({err: err, results: err ? results : null}, 'finished after()');
         t.done();
