@@ -4,7 +4,7 @@ var ConfParser = require('../lib/confParser');
 var fs = require('fs');
 var exec = require('child_process').exec;
 var path = require('path');
-var mantee_common = require('../bin/manatee_common');
+var manatee_common = require('../bin/manatee_common');
 var Manatee = require('./testManatee');
 var once = require('once');
 var spawn = require('child_process').spawn;
@@ -94,7 +94,7 @@ exports.before = function (t) {
 
     vasync.pipeline({funcs: [
         function _createZkClient(_, _cb) {
-            mantee_common.createZkClient({
+            manatee_common.createZkClient({
                 zk: ZK_URL,
                 shard: SHARD_PATH
             }, function (err, zk) {
@@ -303,7 +303,7 @@ exports.before = function (t) {
 exports.verifyShard = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 LOG.info({topology: topology});
                 LOG.info({shardId: SHARD_ID});
                 _.topology = topology[SHARD_ID];
@@ -315,7 +315,7 @@ exports.verifyShard = function (t) {
             });
         },
         function getPgStatus(_, _cb) {
-            mantee_common.pgStatus([_.topology], _cb);
+            manatee_common.pgStatus([_.topology], _cb);
         },
         function verifyTopology(_, _cb) {
             /*
@@ -349,7 +349,7 @@ exports.verifyShard = function (t) {
 exports.primaryDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -369,7 +369,7 @@ exports.primaryDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -393,7 +393,7 @@ exports.primaryDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([topology], _cb2);
+                        manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
@@ -449,7 +449,7 @@ exports.primaryDeath = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -460,7 +460,7 @@ exports.primaryDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
@@ -521,7 +521,7 @@ exports.primaryDeath = function (t) {
 exports.syncDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -542,7 +542,7 @@ exports.syncDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -566,7 +566,7 @@ exports.syncDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([topology], _cb2);
+                        manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
@@ -624,7 +624,7 @@ exports.syncDeath = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -635,7 +635,7 @@ exports.syncDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
@@ -700,7 +700,7 @@ exports.syncDeath = function (t) {
 exports.asyncDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -721,7 +721,7 @@ exports.asyncDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -745,7 +745,7 @@ exports.asyncDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([topology], _cb2);
+                        manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
@@ -803,7 +803,7 @@ exports.asyncDeath = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -814,7 +814,7 @@ exports.asyncDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
@@ -880,7 +880,7 @@ exports.asyncDeath = function (t) {
 exports.everyoneDies = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -929,7 +929,7 @@ exports.everyoneDies = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -1009,7 +1009,7 @@ exports.everyoneDies = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -1020,7 +1020,7 @@ exports.everyoneDies = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
@@ -1082,7 +1082,7 @@ exports.everyoneDies = function (t) {
 exports.primarySyncInstantaneousDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -1124,7 +1124,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -1207,7 +1207,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -1218,7 +1218,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
@@ -1279,7 +1279,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
 exports.primaryAsyncInstantaneousDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -1321,7 +1321,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -1397,7 +1397,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -1408,7 +1408,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
@@ -1469,7 +1469,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
 exports.syncAsyncInstantaneousDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -1511,7 +1511,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -1587,7 +1587,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -1598,7 +1598,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
@@ -1659,7 +1659,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
 exports.primaryDeathThenSyncDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -1681,7 +1681,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -1705,7 +1705,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([topology], _cb2);
+                        manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
@@ -1762,7 +1762,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -1838,7 +1838,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -1849,7 +1849,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
@@ -1910,7 +1910,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
 exports.primaryDeathThenAsyncDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
-            mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                 if (err) {
                     return _cb(err);
                 }
@@ -1932,7 +1932,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -1956,7 +1956,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([topology], _cb2);
+                        manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
@@ -2013,7 +2013,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
             var topology;
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _loadTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, top) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, top) {
                         if (err) {
                             return _cb2(err);
                         }
@@ -2089,7 +2089,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
             _cb = once(_cb);
             var intervalId = setInterval(function() {vasync.pipeline({funcs: [
                 function _getTopology(_2, _cb2) {
-                    mantee_common.loadTopology(ZK_CLIENT, function (err, topology) {
+                    manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
                         _2.topology = topology[SHARD_ID];
                         if (err) {
                             return _cb2(err);
@@ -2100,7 +2100,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                 },
                 function _getPgStatus(_2, _cb2) {
                     try {
-                        mantee_common.pgStatus([_2.topology], _cb2);
+                        manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
                         LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
