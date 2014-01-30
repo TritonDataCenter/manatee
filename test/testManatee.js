@@ -62,11 +62,10 @@ function Manatee(opts, cb) {
     this.ssLog = null;
     this.bsLog = null;
 
-    log.info({
-        sitterLog: self.sitterLogPath,
-        ssLog: self.ssLogPath,
-        bsLog: self.bsLogPath
-    }, 'logs');
+    console.error('logs: ');
+    console.error(self.sitterLogPath);
+    console.error(self.ssLogPath);
+    console.error(self.bsLogPath);
 
     vasync.pipeline({funcs: [
         function _createParentZfsDataset(_, _cb) {
