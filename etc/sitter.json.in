@@ -52,7 +52,7 @@
             "zfsHost": "ZONE_IP",
             "zfsPort": 1234,
             "pollInterval": 1000,
-            "zfsRecvPath": "/usr/vm/sbin/zfs_recv",
+            "zfsPath": "/usr/sbin/zfs",
             "mountpoint": "/manatee/pg"
         }
     },

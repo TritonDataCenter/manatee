@@ -136,9 +136,6 @@ exports.before = function (t) {
                 return _cb();
             });
         },
-        //function _wait(_, _cb) {
-            //setTimeout(_cb, 1000000000);
-        //},
         function _waitForSyncReplication(_, _cb) {
             _cb = once(_cb);
             var topology;

@@ -44,6 +44,7 @@ function Manatee(opts, cb) {
     var self = this;
 
     this.postgresPort = opts.postgresPort;
+    this.backupPort = opts.backupPort;
     this.snapshotDir = opts.mountPoint + '/.zfs/snapshot';
     this.pgUrl = getPostgresUrl(MY_IP, opts.postgresPort, 'postgres');
     this.configLocation = opts.metadataDir + '/config';
@@ -52,11 +53,20 @@ function Manatee(opts, cb) {
     this.logLocation = opts.metadataDir + '/logs/';
     this.opts = opts;
     this.log = opts.log.child();
+    this.sitterLogPath = self.logLocation + self.postgresPort + 'sitter.log';
+    this.ssLogPath = self.logLocation + self.postgresPort + 'ss.log';
+    this.bsLogPath = self.logLocation + self.backupPort + 'bs.log';
     this.shardPath = opts.shardPath;
     this.manatee = {};
     this.sitterLog = null;
     this.ssLog = null;
     this.bsLog = null;
+
+    log.info({
+        sitterLog: self.sitterLogPath,
+        ssLog: self.ssLogPath,
+        bsLog: self.bsLogPath
+    }, 'logs');
 
     vasync.pipeline({funcs: [
         function _createParentZfsDataset(_, _cb) {
@@ -177,8 +187,10 @@ function Manatee(opts, cb) {
             self.start(_cb);
         }
     ], arg: {}}, function (err, results) {
-        self.log.info({err: err, results: err ? results : null},
-                 'finished starting manatee');
+        self.log.info({
+            err: err,
+            results: err ? results : null,
+        }, 'finished starting manatee');
         return cb(err, self.manatee);
     });
 }
@@ -287,23 +299,21 @@ Manatee.prototype.start = function start(cb) {
 
     vasync.pipeline({funcs: [
         function _createLogFiles(_, _cb) {
-            self.sitterLog = fs.createWriteStream(self.logLocation + self.postgresPort + 'sitter.log');
+            self.sitterLog = fs.createWriteStream(self.sitterLogPath);
             self.sitterLog.on('error', function(err) {
                 log.error({err: err}, 'sitter logging stream got error');
             });
-            self.ssLog = fs.createWriteStream(self.logLocation + self.postgresPort+ 'ss.log');
+            self.ssLog = fs.createWriteStream(self.ssLogPath);
             self.ssLog.on('error', function(err) {
                 log.error({err: err}, 'snapshotter logging stream got error');
             });
-            self.bsLog = fs.createWriteStream(self.logLocation + self.backupPort + 'bs.log');
+            self.bsLog = fs.createWriteStream(self.bsLogPath);
             self.bsLog.on('error', function(err) {
                 log.error({err: err}, 'backupserver logging stream got error');
             });
             return _cb();
         },
         function _startSitter(_, _cb) {
-            log.info({log: self.logLocation + self.postgresPort + 'sitter.log'},
-                     'XXX: starting sitter');
             self.manatee.sitter = spawn('/usr/bin/ctrun', spawnSitterOpts);
             self.manatee.sitter.stdout.pipe(self.sitterLog);
             self.manatee.sitter.stderr.pipe(self.sitterLog);
