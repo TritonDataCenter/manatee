@@ -26,7 +26,7 @@ var MY_IP = '127.0.0.1';
 var ZK_CLIENT = null;
 
 var LOG = bunyan.createLogger({
-    level: (process.env.LOG_LEVEL || 'warn'),
+    level: (process.env.LOG_LEVEL || 'info'),
     name: 'manatee-integ-tests',
     serializers: {
         err: bunyan.stdSerializers.err
@@ -153,7 +153,7 @@ exports.before = function (t) {
 
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -163,7 +163,7 @@ exports.before = function (t) {
                     try {
                         manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
                         return _cb2(e);
                     }
@@ -183,14 +183,14 @@ exports.before = function (t) {
                                 'no sync replication state.');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -234,7 +234,7 @@ exports.before = function (t) {
 
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -244,7 +244,7 @@ exports.before = function (t) {
                     try {
                         manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
                         return _cb2(e);
                     }
@@ -267,14 +267,14 @@ exports.before = function (t) {
                                 'no sync replication state.');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -382,7 +382,7 @@ exports.primaryDeath = function (t) {
                             LOG.info({topology: topology}, 'got topology');
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -392,7 +392,7 @@ exports.primaryDeath = function (t) {
                     try {
                         manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
                         return _cb2(e);
                     }
@@ -416,14 +416,14 @@ exports.primaryDeath = function (t) {
                                 'sync should not have replication state.');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -459,7 +459,7 @@ exports.primaryDeath = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -486,13 +486,13 @@ exports.primaryDeath = function (t) {
                                    'primary should not be killed primary');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -555,7 +555,7 @@ exports.syncDeath = function (t) {
                             LOG.info({topology: topology}, 'got topology');
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -565,7 +565,7 @@ exports.syncDeath = function (t) {
                     try {
                         manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
                         return _cb2(e);
                     }
@@ -591,14 +591,14 @@ exports.syncDeath = function (t) {
                                         'old sync is still in shard');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -634,7 +634,7 @@ exports.syncDeath = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -664,13 +664,13 @@ exports.syncDeath = function (t) {
                                           _.syncPgUrl);
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -734,7 +734,7 @@ exports.asyncDeath = function (t) {
                             LOG.info({topology: topology}, 'got topology');
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -744,7 +744,7 @@ exports.asyncDeath = function (t) {
                     try {
                         manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
                         return _cb2(e);
                     }
@@ -770,14 +770,14 @@ exports.asyncDeath = function (t) {
                                         'old async is still in shard');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -813,7 +813,7 @@ exports.asyncDeath = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -843,14 +843,14 @@ exports.asyncDeath = function (t) {
                                           _.asyncPgUrl);
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -940,7 +940,7 @@ exports.everyoneDies = function (t) {
                                          'did not find empty topology');
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -948,7 +948,7 @@ exports.everyoneDies = function (t) {
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -1019,7 +1019,7 @@ exports.everyoneDies = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -1045,14 +1045,14 @@ exports.everyoneDies = function (t) {
                          assert.ok(_2.topology.async, 'async DNE');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -1141,7 +1141,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
 
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -1149,7 +1149,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -1217,7 +1217,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -1243,14 +1243,14 @@ exports.primarySyncInstantaneousDeath = function (t) {
                          assert.ok(_2.topology.async, 'async DNE');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -1331,7 +1331,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
 
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -1339,7 +1339,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -1407,7 +1407,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -1433,14 +1433,14 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                          assert.ok(_2.topology.async, 'async DNE');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -1521,7 +1521,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
 
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -1529,7 +1529,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -1597,7 +1597,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -1623,14 +1623,14 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                          assert.ok(_2.topology.async, 'async DNE');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -1694,7 +1694,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                             LOG.info({topology: topology}, 'got topology');
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -1704,7 +1704,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                     try {
                         manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
                         return _cb2(e);
                     }
@@ -1729,14 +1729,14 @@ exports.primaryDeathThenSyncDeath = function (t) {
                         LOG.info({topology:topology}, 'XXX');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -1772,7 +1772,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
 
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -1780,7 +1780,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -1848,7 +1848,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -1875,13 +1875,13 @@ exports.primaryDeathThenSyncDeath = function (t) {
                                    'primary should not be killed primary');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -1945,7 +1945,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                             LOG.info({topology: topology}, 'got topology');
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -1955,7 +1955,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                     try {
                         manatee_common.pgStatus([topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'could not get pg status');
                         return _cb2(e);
                     }
@@ -1980,14 +1980,14 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                         LOG.info({topology:topology}, 'XXX');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: topology},
+                        LOG.warn({err: e, topology: topology},
                                  'unable to verify topology');
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -2023,7 +2023,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
 
                             return _cb2();
                         } catch (e) {
-                            LOG.info({err: e, topology: topology},
+                            LOG.warn({err: e, topology: topology},
                                      'got unexpected topology');
                             return _cb2(e);
                         }
@@ -2031,7 +2031,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results, topology: topology},
+                    LOG.warn({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
                     return;
                 } else {
@@ -2099,7 +2099,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                     try {
                         manatee_common.pgStatus([_2.topology], _cb2);
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 },
@@ -2126,13 +2126,13 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                                    'primary should not be killed primary');
                         return _cb2();
                     } catch (e) {
-                        LOG.info({err: e, topology: _2.topology});
+                        LOG.warn({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
                 }
             ], arg:{}}, function (err, results) {
                 if (err) {
-                    LOG.info({err: err, results: results},
+                    LOG.warn({err: err, results: results},
                              'topology not correct');
                     return;
                 }
@@ -2179,7 +2179,7 @@ exports.after = function (t) {
                         clearInterval(intervalId);
                         return _cb();
                     }
-                    LOG.info({err: err}, 'unable to destroy zfs dataset');
+                    LOG.warn({err: err}, 'unable to destroy zfs dataset');
                 });
             }, 2000);
 

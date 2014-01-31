@@ -1,13 +1,14 @@
 {
     "backupPort": 12345,
-    "postgresPort": 5432,
     "shardPath": "/manatee/{{manatee_shard}}",
     "ttl": 60,
     "ip": "{{PRIMARY_IP}}",
     "zoneId": "{{ZONE_UUID}}",
+    "disableSitter": {{^DISABLE_SITTER}}false{{/DISABLE_SITTER}}{{{DISABLE_SITTER}}},
     "heartbeatClientCfg": {
         "connectTimeout": 2000,
         "heartbeatInterval": 1000,
+        "postgresUrl": "tcp://postgres@{{{PRIMARY_IP}}}:5432/postgres",
         "requestTimeout": 10000,
         "url": "{{PRIMARY_IP}}",
         "retry": {
@@ -52,7 +53,7 @@
             "zfsHost": "{{{PRIMARY_IP}}}",
             "zfsPort": 1234,
             "pollInterval": 1000,
-            "zfsPath": "/usr/sbin/zfs",
+            "zfsRecvPath": "/usr/vm/sbin/zfs_recv",
             "mountpoint": "/manatee/pg"
         }
     },
@@ -73,6 +74,5 @@
         {{/ZK_SERVERS}}
         {{/ZK_HA_SERVERS}}        ],
         "timeout": 60000
-    },
-    "disableSitter": {{^DISABLE_SITTER}}false{{/DISABLE_SITTER}}{{{DISABLE_SITTER}}}
+    }
 }
