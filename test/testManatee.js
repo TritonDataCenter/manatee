@@ -215,13 +215,14 @@ Manatee.prototype.kill = function kill(cb) {
             }, 'could not send SIGKILL');
         });
 
-        self.manatee.sitter.once('exit', function (code) {
+        self.manatee.sitter.removeAllListeners('exit');
+        self.manatee.sitter.once('exit', function (pid, code) {
             log.info({
-                url: self.pgUrl, code: code
+                url: self.pgUrl, code: code, procId: pid
             }, 'killed sitter');
             self.manatee.sitter = null;
             barrier.done('sitter');
-        });
+        }.bind(self, self.manatee.sitter.pid));
     }
 
     if (self.manatee.snapshotter) {
@@ -231,13 +232,14 @@ Manatee.prototype.kill = function kill(cb) {
             }, 'could not send SIGKILL');
         });
 
-        self.manatee.snapshotter.once('exit', function (code) {
+        self.manatee.snapshotter.removeAllListeners('exit');
+        self.manatee.snapshotter.once('exit', function (pid, code) {
             log.info({
-                url: self.pgUrl, code: code
+                url: self.pgUrl, code: code, procId: pid
             }, 'killed snapshotter');
             self.manatee.snapshotter = null;
             barrier.done('snapshotter');
-        });
+        }.bind(self, self.manatee.snapshotter.pid));
     }
 
     if (self.manatee.backupServer) {
@@ -247,13 +249,14 @@ Manatee.prototype.kill = function kill(cb) {
             }, 'could not send SIGKILL');
         });
 
-        self.manatee.backupServer.once('exit', function (code) {
+        self.manatee.backupServer.removeAllListeners('exit');
+        self.manatee.backupServer.once('exit', function (pid, code) {
             log.info({
-                url: self.pgUrl, code: code
+                url: self.pgUrl, code: code, procId: pid
             }, 'killed backupServer');
             self.manatee.backupServer = null;
             barrier.done('backupServer');
-        });
+        }.bind(self, self.manatee.backupServer.pid));
     }
 
     if (self.manatee.sitter) {
@@ -317,6 +320,14 @@ Manatee.prototype.start = function start(cb) {
             self.manatee.sitter = spawn('/usr/bin/ctrun', spawnSitterOpts);
             self.manatee.sitter.stdout.pipe(self.sitterLog);
             self.manatee.sitter.stderr.pipe(self.sitterLog);
+            self.manatee.sitter.once('exit', function (pid, code) {
+                log.error({
+                    url: self.pgUrl, code: code, procId: pid
+                }, 'sitter died unexpectedly');
+                self.manatee.sitter = null;
+                throw new Error('sitter ' + self.sitterLogPath +
+                                ' died unexpectedly');
+            }.bind(self, self.manatee.sitter.pid));
 
             return _cb();
         },
@@ -345,12 +356,27 @@ Manatee.prototype.start = function start(cb) {
             self.manatee.snapshotter = spawn('/usr/bin/ctrun', spawnSsOpts);
             self.manatee.snapshotter.stdout.pipe(self.ssLog);
             self.manatee.snapshotter.stderr.pipe(self.ssLog);
+            self.manatee.snapshotter.once('exit', function (pid, code) {
+                log.error({
+                    url: self.pgUrl, code: code, procId: pid
+                }, 'snapshotter died unexpectedly');
+                throw new Error('snapshotter ' + self.ssLogPath +
+                                ' died unexpectedly');
+            }.bind(self, self.manatee.snapshotter.pid));
             return _cb();
         },
         function _startBackupServer(_, _cb) {
             self.manatee.backupServer = spawn('/usr/bin/ctrun', spawnBsOpts);
             self.manatee.backupServer.stdout.pipe(self.bsLog);
             self.manatee.backupServer.stderr.pipe(self.bsLog);
+
+            self.manatee.backupServer.once('exit', function (pid, code) {
+                log.error({
+                    url: self.pgUrl, code: code, procId: pid
+                }, 'backupServer died unexpectedly');
+                throw new Error('backupserver' + self.bsLogPath +
+                                ' died unexpectedly');
+            }.bind(self, self.manatee.backupServer.pid));
             return _cb();
         }
     ], arg: {}}, function (err, results) {
