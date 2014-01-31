@@ -26,7 +26,7 @@ var MY_IP = '127.0.0.1';
 var ZK_CLIENT = null;
 
 var LOG = bunyan.createLogger({
-    level: (process.env.LOG_LEVEL || 'info'),
+    level: (process.env.LOG_LEVEL || 'warn'),
     name: 'manatee-integ-tests',
     serializers: {
         err: bunyan.stdSerializers.err
