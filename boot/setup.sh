@@ -42,7 +42,7 @@ function sdc_manatee_setup {
     PG_DIR=/manatee/pg/data
     PG_LOG_DIR=/var/pg
     ZONE_IP=$(json -f /var/tmp/metadata.json ADMIN_IP)
-    SHARD=$(json -f /var/tmp/metadata.json manatee_shard)
+    SHARD=$(json -f /var/tmp/metadata.json SERVICE_NAME)
     BINDER_ADMIN_IPS=$(json -f /var/tmp/metadata.json binder_admin_ips)
 
     # Cookie to identify this as a SmartDC zone and its role
@@ -63,9 +63,9 @@ function sdc_manatee_setup {
 }
 
 function manta_manatee_setup {
-    # XXX See MANTA-1613.  These manifests are shipped for SDC but aren't relevant
-    # for the manta image, so remove them until the situation with SDC/manta
-    # manifests is resolved.
+    # XXX See MANTA-1613.  These manifests are shipped for SDC but aren't
+    # relevant for the manta image, so remove them until the situation with
+    # SDC/manta manifests is resolved.
     rm -rf $SVC_ROOT/sapi_manifests/registrar
     rm -rf $SVC_ROOT/sapi_manifests/sitter
 
@@ -179,6 +179,7 @@ function add_manatee_profile_functions {
     echo "source /opt/smartdc/etc/zk_ips.sh" >> $PROFILE
 
     #functions
+    echo "zbunyan() { bunyan -c \"this.component !== 'ZKPlus'\" }" >> $PROFILE
     echo "mbunyan() { bunyan -c \"this.component !== 'ZKPlus'\"  -c 'level >= 30'; }" >> $PROFILE
     echo "manatee-history(){ /opt/smartdc/manatee/bin/manatee-history '$SHARD' \"\$ZK_IPS\"; }" >> $PROFILE
     echo "manatee-stat() { /opt/smartdc/manatee/bin/manatee-stat -p \"\$ZK_IPS\"; }" >> $PROFILE
