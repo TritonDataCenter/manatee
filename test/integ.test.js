@@ -352,6 +352,9 @@ exports.primaryDeath = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.primary.pgUrl);
                 _.primaryPgUrl = _.topology.primary.pgUrl;
                 LOG.info({topology: topology}, 'got topology');
@@ -524,7 +527,9 @@ exports.syncDeath = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
                 assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.sync.pgUrl);
                 _.syncPgUrl = _.topology.sync.pgUrl;
                 LOG.info({topology: topology}, 'got topology');
@@ -703,7 +708,9 @@ exports.asyncDeath = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
                 assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.sync.pgUrl);
                 _.asyncPgUrl = _.topology.async.pgUrl;
                 LOG.info({topology: topology}, 'got topology');
@@ -883,7 +890,9 @@ exports.everyoneDies = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
                 assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.sync.pgUrl);
                 _.asyncPgUrl = _.topology.async.pgUrl;
                 _.syncPgUrl = _.topology.sync.pgUrl;
@@ -1085,6 +1094,9 @@ exports.primarySyncInstantaneousDeath = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.primary.pgUrl);
                 _.asyncPgUrl = _.topology.async.pgUrl;
                 _.syncPgUrl = _.topology.sync.pgUrl;
@@ -1282,6 +1294,9 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.primary.pgUrl);
                 _.asyncPgUrl = _.topology.async.pgUrl;
                 _.syncPgUrl = _.topology.sync.pgUrl;
@@ -1472,6 +1487,9 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.primary.pgUrl);
                 _.asyncPgUrl = _.topology.async.pgUrl;
                 _.syncPgUrl = _.topology.sync.pgUrl;
@@ -1662,6 +1680,9 @@ exports.primaryDeathThenSyncDeath = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.primary.pgUrl);
                 _.asyncPgUrl = _.topology.async.pgUrl;
                 _.syncPgUrl = _.topology.sync.pgUrl;
@@ -1913,6 +1934,9 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                 }
                 _.topology = topology[SHARD_ID];
                 assert.ok(_.topology);
+                assert.ok(_.topology.primary);
+                assert.ok(_.topology.sync);
+                assert.ok(_.topology.async);
                 assert.ok(_.topology.primary.pgUrl);
                 _.asyncPgUrl = _.topology.async.pgUrl;
                 _.syncPgUrl = _.topology.sync.pgUrl;
