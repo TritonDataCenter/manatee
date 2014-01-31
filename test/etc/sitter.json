@@ -5,6 +5,7 @@
     "ttl": 60,
     "ip": "0.0.0.0",
     "zoneId": "integ-test-zone",
+    "heartbeatServerPort": null,
     "heartbeatClientCfg": {
         "connectTimeout": 2000,
         "heartbeatInterval": 1000,

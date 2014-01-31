@@ -179,7 +179,7 @@ function add_manatee_profile_functions {
     echo "source /opt/smartdc/etc/zk_ips.sh" >> $PROFILE
 
     #functions
-    echo "zbunyan() { bunyan -c \"this.component !== 'ZKPlus'\" }" >> $PROFILE
+    echo "zbunyan() { bunyan -c \"this.component !== 'ZKPlus'\"; }" >> $PROFILE
     echo "mbunyan() { bunyan -c \"this.component !== 'ZKPlus'\"  -c 'level >= 30'; }" >> $PROFILE
     echo "manatee-history(){ /opt/smartdc/manatee/bin/manatee-history '$SHARD' \"\$ZK_IPS\"; }" >> $PROFILE
     echo "manatee-stat() { /opt/smartdc/manatee/bin/manatee-stat -p \"\$ZK_IPS\"; }" >> $PROFILE

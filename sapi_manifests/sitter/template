@@ -5,6 +5,7 @@
     "ttl": 60,
     "ip": "{{PRIMARY_IP}}",
     "zoneId": "{{ZONE_UUID}}",
+    "heartbeatServerPort": 12344,
     "heartbeatClientCfg": {
         "connectTimeout": 2000,
         "heartbeatInterval": 1000,
