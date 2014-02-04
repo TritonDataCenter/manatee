@@ -25,7 +25,7 @@ MY_IP=
 LOCK_PATH=/pg_dump_lock
 PG_DIR=
 PG_PID=
-PG_START_TIMEOUT=300
+PG_START_TIMEOUT=$1 || 300
 SHARD_NAME=
 UPLOAD_SNAPSHOT=
 ZFS_CFG=/opt/smartdc/manatee/etc/snapshotter.json
@@ -114,10 +114,17 @@ function backup
     for i in `sed 'N;$!P;$!D;$d' $schema | tr -d ' '| cut -d '|' -f2`
     do
         local time=$(date -u +%F-%H-%M-%S)
-        local dump_file=$DUMP_DIR/$date'_'$i-$time.gz
-        sudo -u postgres pg_dump -p 23456 moray -a -t $i | gsed 's/\\\\/\\/g' |\
-            sqlToJson.js | gzip -1 > $dump_file
+        local dump_file=$DUMP_DIR/$date'_'$i-$time.json
+        local pg_file=$DUMP_DIR/`uuid`
+        local sed_file=$pg_file.sed
+        sudo -u postgres pg_dump -p 23456 moray -a -t $i > $dump_file
         [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
+        gsed 's/\\\\/\\/g' < $dump_file > $sed_file
+        [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
+        sqlToJson2.js < $sed_file > $dump_file
+        [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
+        rm $pg_file
+        rm $sed_file
     done
     # dump the entire moray db as well for manatee backups.
     full_dump_file=$DUMP_DIR/$date'_'moray-$time.gz

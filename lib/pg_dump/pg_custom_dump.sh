@@ -89,13 +89,20 @@ function backup
     for i in `sed 'N;$!P;$!D;$d' $schema | tr -d ' '| cut -d '|' -f2`
     do
         local time=$(date -u +%F-%H-%M-%S)
-        local dump_file=$DUMP_DIR/$date'_'$i-$time.gz
-        sudo -u postgres pg_dump -p 23456 moray -a -t $i | gsed 's/\\\\/\\/g' |\
-            sqlToJson.js | gzip -1 > $dump_file
+        local dump_file=$DUMP_DIR/$date'_'$i-$time.json
+        local pg_file=$DUMP_DIR/`uuid`
+        local sed_file=$pg_file.sed
+        sudo -u postgres pg_dump -p 23456 moray -a -t $i > $dump_file
         [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
+        gsed 's/\\\\/\\/g' < $dump_file > $sed_file
+        [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
+        sqlToJson2.js < $sed_file > $dump_file
+        [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
+        rm $pg_file
+        rm $sed_file
     done
     # dump the entire moray db as well for manatee backups.
-    full_dump_file=$DUMP_DIR/$date'_'moray-$time.gz
+    full_dump_file=$DUMP_DIR/$date'_'moray-$time.json
     sudo -u postgres pg_dump -p 23456 moray > $full_dump_file
     [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump full moray db")
     rm $schema
@@ -105,7 +112,7 @@ function backup
 function upload_pg_dumps
 {
     local upload_error=0;
-    for f in $(ls $DUMP_DIR); do
+    for f in $(ls $DUMP_DIR *.json); do
         local year=$(echo $f | cut -d _ -f 1 | cut -d - -f 1)
         local month=$(echo $f | cut -d _ -f 1 | cut -d - -f 2)
         local day=$(echo $f | cut -d _ -f 1 | cut -d - -f 3)
@@ -193,19 +200,19 @@ SHARD_NAME=$(cat $CFG | json -a service_name)
 ZK_IP=$(cat $CFG | json -a zkCfg.servers.0.host)
 [[ -n "$ZK_IP" ]] || fatal "Unable to retrieve nameservers from metadata"
 
-    check_lock
-    mount_data_set
-    backup
-    for tries in {1..5}; do
-        echo "upload attempt $tries"
-        upload_pg_dumps
-        if [[ $? -eq 0 ]]; then
-            echo "successfully finished uploading attempt $tries"
-            cleanup
-            exit 0
-        else
-            echo "attempt $tries failed"
-        fi
-    done
+check_lock
+mount_data_set
+backup
+for tries in {1..5}; do
+    echo "upload attempt $tries"
+    upload_pg_dumps
+    if [[ $? -eq 0 ]]; then
+        echo "successfully finished uploading attempt $tries"
+        cleanup
+        exit 0
+    else
+        echo "attempt $tries failed"
+    fi
+done
 
-    fatal "unable to upload all pg dumps"
+fatal "unable to upload all pg dumps"
