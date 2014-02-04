@@ -137,7 +137,7 @@ function backup
 function upload_pg_dumps
 {
     local upload_error=0;
-    for f in $(ls $DUMP_DIR/*.json); do
+    for f in $(ls $DUMP_DIR); do
         local year=$(echo $f | cut -d _ -f 1 | cut -d - -f 1)
         local month=$(echo $f | cut -d _ -f 1 | cut -d - -f 2)
         local day=$(echo $f | cut -d _ -f 1 | cut -d - -f 3)
