@@ -25,12 +25,21 @@ MY_IP=
 LOCK_PATH=/pg_dump_lock
 PG_DIR=
 PG_PID=
-PG_START_TIMEOUT=$1 || 300
+PG_START_TIMEOUT=$1 || 10
+PG_START_MAX_TRIES=50
+PG_START_TRIES=0
 SHARD_NAME=
 UPLOAD_SNAPSHOT=
 ZFS_CFG=/opt/smartdc/manatee/etc/snapshotter.json
 ZFS_SNAPSHOT=
 ZK_IP=
+
+function finish {
+    kill -9 $PG_PID
+    zfs destroy -R $DUMP_DATASET
+    rm -rf $DUMP_DIR/*
+}
+trap finish EXIT
 
 function fatal
 {
@@ -95,9 +104,25 @@ function mount_data_set
     PG_PID=$!
     [[ $? -eq 0 ]] || fatal "unable to start postgres"
 
-    echo 'sleep some seconds while we wait for pg to start'
+    wait_for_pg_start
+}
+
+function wait_for_pg_start
+{
+    echo "waiting $PG_START_TIMEOUT for PG to start"
+    PG_START_TRIES=$(($PG_START_TRIES + 1))
+    if [[ $PG_START_TRIES -gt $PG_START_MAX_TRIES ]]; then
+        fatal "PG start tries exceeded, did not start in time"
+    fi
     sleep $PG_START_TIMEOUT
-    echo "postgres started"
+    # check and see if pg is up.
+    sudo -u postgres psql -p 23456 moray -c 'select current_time'
+    if [[ $? -eq 0 ]]; then
+        echo "PG has started"
+    else
+        echo "PG not started yet, waiting again"
+        wait_for_pg_start
+    fi
 }
 
 function backup
@@ -121,13 +146,13 @@ function backup
         [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
         gsed 's/\\\\/\\/g' < $dump_file > $sed_file
         [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
-        sqlToJson2.js < $sed_file > $dump_file
+        sqlToJson.js < $sed_file > $dump_file
         [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
         rm $pg_file
         rm $sed_file
     done
     # dump the entire moray db as well for manatee backups.
-    full_dump_file=$DUMP_DIR/$date'_'moray-$time.gz
+    full_dump_file=$DUMP_DIR/$date'_'moray-$time.sql
     sudo -u postgres pg_dump -p 23456 moray > $full_dump_file
     [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump full moray db")
     rm $schema
