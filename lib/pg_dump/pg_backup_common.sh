@@ -128,7 +128,12 @@ function wait_for_pg_start
 
 function backup
 {
-    local date=$DATE
+    local date
+    if [[ -z "$DATE" ]]; then
+        date=$(date -u +%Y-%m-%d-%H)
+    else
+        date=$DATE
+    fi
 
     mkdir $DUMP_DIR
 
@@ -141,21 +146,13 @@ function backup
     do
         local time=$(date -u +%F-%H-%M-%S)
         local dump_file=$DUMP_DIR/$date'_'$i-$time.json
-        local pg_file=$DUMP_DIR/`uuid`
-        local sed_file=$pg_file.sed
-        sudo -u postgres pg_dump -p 23456 moray -a -t $i > $dump_file
-        [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
-        gsed 's/\\\\/\\/g' < $dump_file > $sed_file
-        [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
-        sqlToJson.js < $sed_file > $dump_file
-        [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump table $i")
-        rm $pg_file
-        rm $sed_file
+        sudo -u postgres pg_dump -p 23456 moray -a -t $i | gsed 's/\\\\/\\/g' | sqlToJson.js > $dump_file
+        [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
     done
     # dump the entire moray db as well for manatee backups.
     full_dump_file=$DUMP_DIR/$date'_'moray-$time.sql
     sudo -u postgres pg_dump -p 23456 moray > $full_dump_file
-    [[ $? -eq 0 ]] || (rm $schema; fatal "Unable to dump full moray db")
+    [[ $? -eq 0 ]] || fatal "Unable to dump full moray db"
     rm $schema
     [[ $? -eq 0 ]] || fatal "unable to remove schema"
 }

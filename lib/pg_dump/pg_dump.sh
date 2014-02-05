@@ -4,7 +4,7 @@
 # data dir, then mounts said snapshot, and dumps all of the tables from
 # postgres, and uploads them to manta
 
-source ./pg_backup_common.sh
+source /opt/smartdc/manatee/lib/pg_dump/pg_backup_common.sh
 
 PG_START_TIMEOUT=$1
 PG_START_MAX_TRIES=50
@@ -21,7 +21,7 @@ ZK_IP=
 
 if [[ -z "$1" ]]
     then
-        PG_START_TIMEOUT=300
+        PG_START_TIMEOUT=10
     else
         PG_START_TIMEOUT=$1
 fi
