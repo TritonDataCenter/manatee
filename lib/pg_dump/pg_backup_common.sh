@@ -12,11 +12,12 @@ set -o pipefail
 
 PATH=/opt/smartdc/manatee/build/node/bin:/opt/local/bin:/usr/sbin/:/usr/bin:/usr/sbin:/usr/bin:/opt/smartdc/registrar/build/node/bin:/opt/smartdc/registrar/node_modules/.bin:/opt/smartdc/manatee/lib/tools:/opt/smartdc/manatee/lib/pg_dump/
 
+FATAL=
 CFG=/opt/smartdc/manatee/etc/backup.json
 DATASET=
 DATE=
 DUMP_DATASET=
-DUMP_DIR=/var/tmp/upload
+DUMP_DIR=/var/tmp/upload/$(uuid)
 MANATEE_LOCK=/opt/smartdc/manatee/bin/manatee-lock
 MANATEE_STAT=/opt/smartdc/manatee/bin/manatee-stat
 MANTA_DIR_PREFIX=/poseidon/stor/manatee_backups
@@ -36,7 +37,9 @@ ZFS_SNAPSHOT=$1
 ZK_IP=
 
 function finish {
-    rm -rf $DUMP_DIR/*
+    if [[ $FATAL -ne 1 ]]; then
+        rm -rf $DUMP_DIR
+    fi
     kill -9 $PG_PID
     zfs destroy -R $DUMP_DATASET
 }
@@ -44,6 +47,7 @@ trap finish EXIT
 
 function fatal
 {
+    FATAL=1
     echo "$(basename $0): fatal error: $*"
     kill -9 $PG_PID
     zfs destroy -R $DUMP_DATASET
@@ -145,13 +149,13 @@ function backup
     for i in `sed 'N;$!P;$!D;$d' $schema | tr -d ' '| cut -d '|' -f2`
     do
         local time=$(date -u +%F-%H-%M-%S)
-        local dump_file=$DUMP_DIR/$date'_'$i-$time.json
-        sudo -u postgres pg_dump -p 23456 moray -a -t $i | gsed 's/\\\\/\\/g' | sqlToJson.js > $dump_file
+        local dump_file=$DUMP_DIR/$date'_'$i-$time.gz
+        sudo -u postgres pg_dump -p 23456 moray -a -t $i | gsed 's/\\\\/\\/g' | sqlToJson.js | gzip -1 > $dump_file
         [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
     done
     # dump the entire moray db as well for manatee backups.
-    full_dump_file=$DUMP_DIR/$date'_'moray-$time.sql
-    sudo -u postgres pg_dump -p 23456 moray > $full_dump_file
+    full_dump_file=$DUMP_DIR/$date'_'moray-$time.gz
+    sudo -u postgres pg_dump -p 23456 moray | gzip -1 > $full_dump_file
     [[ $? -eq 0 ]] || fatal "Unable to dump full moray db"
     rm $schema
     [[ $? -eq 0 ]] || fatal "unable to remove schema"
