@@ -130,7 +130,8 @@ function wait_for_pg_start
     fi
 }
 
-function backup
+# $1 optional, dictates whether to backup the moray DB
+function backup ()
 {
     local date
     if [[ -z "$DATE" ]]; then
@@ -153,10 +154,14 @@ function backup
         sudo -u postgres pg_dump -p 23456 moray -a -t $i | gsed 's/\\\\/\\/g' | sqlToJson.js | gzip -1 > $dump_file
         [[ $? -eq 0 ]] || fatal "Unable to dump table $i"
     done
-    # dump the entire moray db as well for manatee backups.
-    full_dump_file=$DUMP_DIR/$date'_'moray-$time.gz
-    sudo -u postgres pg_dump -p 23456 moray | gzip -1 > $full_dump_file
-    [[ $? -eq 0 ]] || fatal "Unable to dump full moray db"
+    if [[ -z "$1" ]]; then
+        # dump the entire moray db as well for manatee backups.
+        full_dump_file=$DUMP_DIR/$date'_'moray-$time.gz
+        sudo -u postgres pg_dump -p 23456 moray | gzip -1 > $full_dump_file
+        [[ $? -eq 0 ]] || fatal "Unable to dump full moray db"
+    else
+        echo "not dumping moray db"
+    fi
     rm $schema
     [[ $? -eq 0 ]] || fatal "unable to remove schema"
 }
