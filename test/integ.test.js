@@ -1,5 +1,6 @@
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
+var ManateeClient = require('../client.js');
 var ConfParser = require('../lib/confParser');
 var fs = require('fs');
 var exec = require('child_process').exec;
@@ -34,7 +35,13 @@ var LOG = bunyan.createLogger({
     src: true
 });
 
+var n1Opts = null;
+var n2Opts = null;
+var n3Opts = null;
+
 var MANATEES = {};
+
+var manateeClient = null;
 
 //setTimeout(function() { console.error(process._getActiveHandles(), process._getActiveRequests()); }, 30000).unref();
 
@@ -49,7 +56,7 @@ exports.before = function (t) {
     var n2Port = 20000;
     var n3 = uuid.v4();
     var n3Port = 30000;
-    var n1Opts = {
+    n1Opts = {
         zfsDataset: PARENT_ZFS_DS + '/' + n1,
         zfsPort: n1Port,
         heartbeatServerPort: ++n1Port,
@@ -63,7 +70,7 @@ exports.before = function (t) {
         shardPath: SHARD_PATH,
         log: LOG
     };
-    var n2Opts = {
+    n2Opts = {
         zfsDataset: PARENT_ZFS_DS + '/' + n2,
         zfsPort: n2Port,
         heartbeatServerPort: ++n2Port,
@@ -77,7 +84,7 @@ exports.before = function (t) {
         shardPath: SHARD_PATH,
         log: LOG
     };
-    var n3Opts = {
+    n3Opts = {
         zfsDataset: PARENT_ZFS_DS + '/' + n3,
         zfsPort: n3Port,
         heartbeatServerPort: ++n3Port,
@@ -294,6 +301,45 @@ exports.before = function (t) {
             t.fail(err);
         }
         t.done();
+    });
+};
+
+exports.initClient = function (t) {
+    manateeClient = ManateeClient.createClient({
+        path: SHARD_PATH + '/election',
+        zk: {
+            servers: [{host: '127.0.0.1', port: 2181}],
+            timeout: 30000
+        }
+    });
+    var emitReady = false;
+    var done = once(t.done);
+    var id = setTimeout(function() {
+        t.fail('client test exceeded tiemout');
+        manateeClient.removeAllListeners();
+        done();
+    }, 40000);
+
+    manateeClient.once('topology', function (dbs) {
+        var barrier = vasync.barrier();
+        barrier.on('drain', function () {
+            t.ok(emitReady, 'manatee client did not emit ready event');
+            clearTimeout(id);
+            manateeClient.removeAllListeners();
+            done();
+        });
+        Object.keys(MANATEES).forEach(function (k) {
+            m = MANATEES[k];
+            barrier.start(m.pgUrl);
+            if (dbs.indexOf(m.pgUrl) === -1) {
+                t.fail('client did not get url ' + m.pgUrl);
+            }
+            barrier.done(m.pgUrl);
+        });
+    });
+
+    manateeClient.once('ready', function () {
+        emitReady = true;
     });
 };
 

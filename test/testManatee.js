@@ -392,6 +392,10 @@ Manatee.prototype.start = function start(cb) {
     });
 };
 
+Manatee.prototype.getPgUrl = function getPgUrl() {
+    return self.pgUrl;
+}
+
 Manatee.prototype.healthCheck = function (callback) {
     var self = this;
     var log = self.log;
