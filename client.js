@@ -50,6 +50,7 @@ function Client(options) {
     } else {
         self._log = bunyan.createLogger({
             level: (process.env.LOG_LEVEL || 'info'),
+            //level: (process.env.LOG_LEVEL || 'debug'),
             name: 'mantee-client',
             serializers: {
                 err: bunyan.stdSerializers.err
@@ -102,8 +103,7 @@ module.exports = {
 };
 
 //
-// Reads the topology from ZK, and creates the initial
-// DB pool
+// Reads the topology from ZK.
 //
 Client.prototype._init = function _init() {
     var self = this;
@@ -114,25 +114,26 @@ Client.prototype._init = function _init() {
         if (err) {
             log.fatal(err, 'init: error reading from zookeeper');
             throw new VError(err, 'init: error reading from ZK');
-        } else if (!urls || !urls.length) {
+        }
+        if (!urls || !urls.length) {
             log.error('init: no DB shards available');
-            self._watch();
-            return;
         }
 
+        self._watch();
         process.nextTick(self.emit.bind(self, 'ready'));
+        log.info({db: urls}, 'Manatee._init: emitting db topology');
         process.nextTick(self.emit.bind(self, 'topology', urls));
     });
 };
 
 
 Client.prototype._watch = function _watch() {
-    var log = this.log;
     var self = this;
-    var zk = this.zk;
+    var log = self._log;
+    var zk = self._zk;
 
     log.debug('watch: entered');
-    zk.watch(this.path, {method: 'list'}, function (werr, listener) {
+    zk.watch(self._path, {method: 'list'}, function (werr, listener) {
         if (werr) {
             log.fatal(werr, 'watch: failed');
             self.emit('error', werr);
@@ -145,7 +146,9 @@ Client.prototype._watch = function _watch() {
         });
 
         listener.on('children', function(children) {
+            log.debug({children: children}, 'Manatee.watch: got children');
             var urls = self._childrenToURLs(children);
+            log.info({dbs: urls}, 'Manatee.watch: emitting new db topology');
             zk.emit('topology', urls);
         });
         log.debug('watch: started');
@@ -168,7 +171,6 @@ Client.prototype._topology = function _topology(cb) {
 
     log.debug({path: self._path}, 'topology: entered');
     zk.readdir(self._path, function (err, children) {
-
         if (err) {
             log.debug(err, 'topology: failed');
 

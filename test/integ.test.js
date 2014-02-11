@@ -344,6 +344,9 @@ exports.initClient = function (t) {
 };
 
 exports.verifyShard = function (t) {
+    manateeClient.on('topology', function (dbs) {
+        console.log(dbs);
+    });
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
             manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
