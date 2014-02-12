@@ -131,7 +131,7 @@ module.exports = {
 /**
  * Reads the topology from ZK.
  */
-Client.prototype._init = function _init() {
+Manatee.prototype._init = function _init() {
     var self = this;
     var log = self._log;
 
@@ -156,7 +156,7 @@ Client.prototype._init = function _init() {
 /**
  * Watch the election path for any changes.
  */
-Client.prototype._watch = function _watch() {
+Manatee.prototype._watch = function _watch() {
     var self = this;
     var log = self._log;
     var zk = self._zk;
@@ -189,7 +189,7 @@ Client.prototype._watch = function _watch() {
  * order: that is, '0' is always primary, '1' is always sync, and '2+' are
  * async slaves
  */
-Client.prototype._topology = function _topology(cb) {
+Manatee.prototype._topology = function _topology(cb) {
     var self =  this;
     assert.func(cb, 'callback');
 
@@ -228,7 +228,7 @@ Client.prototype._topology = function _topology(cb) {
  * @return {string[]} The array of transformed PG URLs. e.g.
  * [tcp://postgres@10.0.0.0:5432]
  */
-Client.prototype._childrenToURLs = function (children) {
+Manatee.prototype._childrenToURLs = function (children) {
     var self = this;
 
     function compare(a, b) {
@@ -286,7 +286,7 @@ Client.prototype._childrenToURLs = function (children) {
  * attempt in ms.
  * @param {Shard-createZkClientCb} cb
  */
-Client.prototype._createZkClient = function (opts, cb) {
+Manatee.prototype._createZkClient = function (opts, cb) {
     var self = this;
     var log = self._log;
     assert.object(opts, 'options');

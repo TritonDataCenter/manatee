@@ -194,7 +194,7 @@ function Manatee(opts, cb) {
     ], arg: {}}, function (err, results) {
         self.log.info({
             err: err,
-            results: err ? results : null,
+            results: err ? results : null
         }, 'finished starting manatee');
         return cb(err, self.manatee);
     });
@@ -308,15 +308,15 @@ Manatee.prototype.start = function start(cb) {
     vasync.pipeline({funcs: [
         function _createLogFiles(_, _cb) {
             self.sitterLog = fs.createWriteStream(self.sitterLogPath);
-            self.sitterLog.on('error', function(err) {
+            self.sitterLog.on('error', function (err) {
                 log.error({err: err}, 'sitter logging stream got error');
             });
             self.ssLog = fs.createWriteStream(self.ssLogPath);
-            self.ssLog.on('error', function(err) {
+            self.ssLog.on('error', function (err) {
                 log.error({err: err}, 'snapshotter logging stream got error');
             });
             self.bsLog = fs.createWriteStream(self.bsLogPath);
-            self.bsLog.on('error', function(err) {
+            self.bsLog.on('error', function (err) {
                 log.error({err: err}, 'backupserver logging stream got error');
             });
             return _cb();
@@ -393,8 +393,9 @@ Manatee.prototype.start = function start(cb) {
 };
 
 Manatee.prototype.getPgUrl = function getPgUrl() {
+    var self = this;
     return self.pgUrl;
-}
+};
 
 Manatee.prototype.healthCheck = function (callback) {
     var self = this;
@@ -404,17 +405,17 @@ Manatee.prototype.healthCheck = function (callback) {
     var client = new Client(self.pgUrl);
 
     try {
-        client.connect(function(err) {
+        client.connect(function (err) {
             if (err) {
                 client.end();
                 return callback(err);
             }
-            client.query('select current_time;', function(err) {
-                if (err) {
-                    log.trace({err: err}, 'Manatee.health: failed');
+            client.query('select current_time;', function (err2) {
+                if (err2) {
+                    log.trace({err: err2}, 'Manatee.health: failed');
                 }
                 client.end();
-                return callback(err);
+                return callback(err2);
             });
         });
     } catch (e) {
