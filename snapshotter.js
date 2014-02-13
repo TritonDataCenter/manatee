@@ -15,7 +15,6 @@ var bunyan = require('bunyan');
 var extend = require('xtend');
 var fs = require('fs');
 var getopt = require('posix-getopt');
-var panic = require('panic');
 var SnapShotter = require('./lib/snapShotter');
 
 
@@ -91,11 +90,6 @@ function readConfig(options) {
 /*
  * mainline
  */
-
-panic.enablePanicOnCrash({
-    'skipDump': true,
-    'abortOnPanic': true
-});
 
 var _config;
 var _options = parseOptions();
