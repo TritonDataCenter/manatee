@@ -10,6 +10,7 @@ var pg = require('pg');
 var Client = pg.Client;
 var spawn = require('child_process').spawn;
 var shelljs = require('shelljs');
+var url = require('url');
 var util = require('util');
 var uuid = require('node-uuid');
 var vasync = require('vasync');
@@ -46,7 +47,9 @@ function Manatee(opts, cb) {
     this.postgresPort = opts.postgresPort;
     this.backupPort = opts.backupPort;
     this.snapshotDir = opts.mountPoint + '/.zfs/snapshot';
-    this.pgUrl = getPostgresUrl(MY_IP, opts.postgresPort, 'postgres');
+    this.postgresPort = opts.postgresPort;
+    this.pgUrl = 'tcp://postgres@' + MY_IP + ':' + self.postgresPort +
+                 '/postgres';
     this.configLocation = opts.metadataDir + '/config';
     this.postgresConf = self.configLocation + '/postgres.conf';
     this.cookieLocation = opts.metadataDir + '/sync_cookie';
@@ -392,9 +395,13 @@ Manatee.prototype.start = function start(cb) {
     });
 };
 
+/**
+ * @return {string} return the pgurl that a client would return. e.g.:
+ * tcp://10.0.0.0:5432
+ */
 Manatee.prototype.getPgUrl = function getPgUrl() {
     var self = this;
-    return self.pgUrl;
+    return 'tcp://' + MY_IP + ':' + self.postgresPort;
 };
 
 Manatee.prototype.healthCheck = function (callback) {

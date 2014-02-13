@@ -331,11 +331,11 @@ exports.initClient = function (t) {
         });
         Object.keys(MANATEES).forEach(function (k) {
             var m = MANATEES[k];
-            barrier.start(m.pgUrl);
-            if (dbs.indexOf(m.pgUrl) === -1) {
-                t.fail('client did not get url ' + m.pgUrl);
+            barrier.start(m.getPgUrl());
+            if (dbs.indexOf(m.getPgUrl()) === -1) {
+                t.fail('client did not get url ' + m.getPgUrl());
             }
-            barrier.done(m.pgUrl);
+            barrier.done(m.getPgUrl());
         });
     });
 

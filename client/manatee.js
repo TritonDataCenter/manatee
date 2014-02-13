@@ -241,9 +241,9 @@ Manatee.prototype._childrenToURLs = function (children) {
     /**
      * transform an zk election node name into a postgres url.
      * @param {string} zkNode The zknode, e.g.
-     * 10.77.77.9:pgPort:backupPort:hbPort-0000000057, however previous versions of
-     * manatee will only have 10.77.77.9-0000000057, so we have to be able to
-     * disambiguate between the 2.
+     * 10.77.77.9:pgPort:backupPort:hbPort-0000000057, however previous
+     * versions of manatee will only have 10.77.77.9-0000000057, so we have to
+     * be able to disambiguate between the 2.
      *
      * @return {string} The transformed PG URL, e.g.
      * tcp://postgres@10.0.0.0:5432
@@ -256,9 +256,9 @@ Manatee.prototype._childrenToURLs = function (children) {
          * the split will return an array of length 1
          */
         if (data.length === 1) {
-            return 'tcp://postgres@' + data[0];
+            return 'tcp://' + data[0];
         } else {
-            return 'tcp://postgres@' + data[0] + ':' + data[1];
+            return 'tcp://' + data[0] + ':' + data[1];
         }
     }
 
