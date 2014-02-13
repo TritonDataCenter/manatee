@@ -175,7 +175,6 @@ function Manatee(opts, cb) {
             var cfg = JSON.parse(fs.readFileSync(SS_CFG));
             cfg.dataset = opts.zfsDataset;
             cfg.snapshotDir = self.snapshotDir;
-            cfg.pgUrl = self.pgUrl;
 
             self.ssCfg = cfg;
             return _cb();
