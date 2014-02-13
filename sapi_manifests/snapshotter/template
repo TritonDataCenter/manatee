@@ -2,7 +2,6 @@
   "dataset": "zones/{{ZONE_UUID}}/data/manatee",
   "snapshotDir": "/manatee/pg/.zfs/snapshot/",
   "pollInterval": 3600000,
-  "snapshotNumber": 50,
-  "pgUrl": "tcp://postgres@{{PRIMARY_IP}}:5432/postgres",
+  "snapshotNumber": 200,
   "startupDelay": 90000
 }
