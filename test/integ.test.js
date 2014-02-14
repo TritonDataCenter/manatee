@@ -2256,9 +2256,6 @@ exports.primaryDeathThenAsyncDeath = function (t) {
 
 exports.after = function (t) {
     vasync.pipeline({funcs: [
-        function _wait(_, _cb) {
-
-        },
         function _stopManatees(_, _cb) {
             var barrier = vasync.barrier();
             barrier.on('drain', function () {
