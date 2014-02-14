@@ -171,6 +171,10 @@ Manatee.prototype._watch = function _watch() {
 
         listener.once('error', function (err) {
             log.fatal(err, 'watch: error event fired; exiting');
+            /*
+             * we never emit zk errors up stack, since we'll handle the
+             * reconnect ourselves
+             */
             zk.emit('error', new VError(err, 'watch: unsolicited error event'));
         });
 
@@ -178,7 +182,7 @@ Manatee.prototype._watch = function _watch() {
             log.debug({children: children}, 'Manatee.watch: got children');
             var urls = self._childrenToURLs(children);
             log.info({dbs: urls}, 'Manatee.watch: emitting new db topology');
-            zk.emit('topology', urls);
+            self.emit('topology', urls);
         });
         log.debug('watch: started');
     });
@@ -190,14 +194,13 @@ Manatee.prototype._watch = function _watch() {
  * async slaves
  */
 Manatee.prototype._topology = function _topology(cb) {
-    var self =  this;
+    var self = this;
     assert.func(cb, 'callback');
 
     cb = once(cb);
 
     var log = self._log;
     var zk = self._zk;
-
     log.debug({path: self._path}, 'topology: entered');
     zk.readdir(self._path, function (err, children) {
         if (err) {
@@ -207,7 +210,7 @@ Manatee.prototype._topology = function _topology(cb) {
                 cb(err);
             } else {
                 setTimeout(function () {
-                    _topology(opts, cb);
+                    self._topology(cb);
                 }, 1000);
             }
             return;
