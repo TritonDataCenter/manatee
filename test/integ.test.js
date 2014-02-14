@@ -20,6 +20,7 @@ var ZK_URL = process.env.ZK_URL || 'localhost:2181';
 var PARENT_ZFS_DS = process.env.PARENT_ZFS_DS;
 var SHARD_ID = uuid.v4();
 var SHARD_PATH = '/manatee/' + SHARD_ID;
+console.log('shard path', SHARD_PATH);
 var SITTER_CFG = './etc/sitter.json';
 var BS_CFG = './etc/backupserver.json';
 var SS_CFG = './etc/snapshotter.json';
@@ -345,9 +346,6 @@ exports.initClient = function (t) {
 };
 
 exports.verifyShard = function (t) {
-    manateeClient.on('topology', function (dbs) {
-        console.log(dbs);
-    });
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
             manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
