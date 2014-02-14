@@ -18,11 +18,10 @@ var verror = require('verror');
 var FS_PATH_PREFIX = process.env.FS_PATH_PREFIX || '/var/tmp/manatee_tests';
 var ZK_URL = process.env.ZK_URL || 'localhost:2181';
 var PARENT_ZFS_DS = process.env.PARENT_ZFS_DS;
-var SHARD_ID = '8dbdcef3-a82b-4403-bab0-a5c4053bb40f';
-//var SHARD_ID = uuid.v4();
+//var SHARD_ID = '8dbdcef3-a82b-4403-bab0-a5c4053bb40f';
+var SHARD_ID = uuid.v4();
 var SHARD_PATH = '/manatee/' + SHARD_ID;
-//var SHARD_PATH = '/manatee/' + SHARD_ID;
-console.log('shard path', SHARD_PATH + '/election');
+console.error('shard path', SHARD_PATH + '/election');
 var SITTER_CFG = './etc/sitter.json';
 var BS_CFG = './etc/backupserver.json';
 var SS_CFG = './etc/snapshotter.json';
@@ -44,7 +43,7 @@ var n3Opts = null;
 
 var MANATEES = {};
 
-var manateeClient = null;
+var MANATEE_CLIENT = null;
 
 /* JSSTYLED */
 //setTimeout(function() { console.error(process._getActiveHandles(), process._getActiveRequests()); }, 30000).unref();
@@ -309,8 +308,8 @@ exports.before = function (t) {
 };
 
 //exports.initClient = function (t) {
-function foo (t) {
-    manateeClient = ManateeClient.createClient({
+function clientTest(t) {
+    MANATEE_CLIENT = ManateeClient.createClient({
         path: SHARD_PATH + '/election',
         zk: {
             servers: [ {host: '127.0.0.1', port: 2181} ],
@@ -321,16 +320,16 @@ function foo (t) {
     var done = once(t.done);
     var id = setTimeout(function () {
         t.fail('client test exceeded tiemout');
-        manateeClient.removeAllListeners();
+        MANATEE_CLIENT.removeAllListeners();
         done();
     }, 40000);
 
-    manateeClient.once('topology', function (dbs) {
+    MANATEE_CLIENT.once('topology', function (dbs) {
         var barrier = vasync.barrier();
         barrier.on('drain', function () {
             t.ok(emitReady, 'manatee client did not emit ready event');
             clearTimeout(id);
-            manateeClient.removeAllListeners();
+            MANATEE_CLIENT.removeAllListeners();
             done();
         });
         Object.keys(MANATEES).forEach(function (k) {
@@ -343,7 +342,7 @@ function foo (t) {
         });
     });
 
-    manateeClient.once('ready', function () {
+    MANATEE_CLIENT.once('ready', function () {
         emitReady = true;
     });
 };
