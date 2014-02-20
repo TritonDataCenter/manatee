@@ -114,6 +114,7 @@ var getHistory = function(shardId, zookeeperIp, callback) {
                     switch (j) {
                         case 0:
                             node['time'] = entry;
+                            node['date'] = new Date(parseInt(entry, 10));
                             break;
                         case 1:
                             node['ip'] = entry;
