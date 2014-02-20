@@ -90,6 +90,7 @@ function manta_manatee_setup {
     SITTER_CFG_FILE=/opt/smartdc/manatee/etc/sitter.json
     SNAPSHOT_CFG_FILE=/opt/smartdc/manatee/etc/snapshotter.json
     BACKUP_CFG_FILE=/opt/smartdc/manatee/etc/backupserver.json
+    SHARD=$(json -f /var/tmp/metadata.json SERVICE_NAME)
 
     common_manatee_setup
 
