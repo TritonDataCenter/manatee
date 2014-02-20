@@ -10,6 +10,7 @@
         "connectTimeout": 2000,
         "heartbeatInterval": 1000,
         "requestTimeout": 10000,
+        "pgUrl": "tcp://postgres@{{{PRIMARY_IP}}}:5432/postgres",
         "url": "{{PRIMARY_IP}}",
         "retry": {
             "retry": 2

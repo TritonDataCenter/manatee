@@ -142,7 +142,7 @@ function Manatee(opts, cb) {
             cfg.ip = MY_IP;
 
             cfg.heartbeatClientCfg.url = MY_IP;
-            cfg.heartbeatClientCfg.postgresUrl = self.pgUrl;
+            cfg.heartbeatClientCfg.pgUrl = self.pgUrl;
 
             cfg.heartbeatServerCfg.port = opts.heartbeatServerPort;
 
