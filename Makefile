@@ -29,7 +29,7 @@ endif
 # Files
 #
 DOC_FILES	 = index.restdown
-JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js') $(find ./bin/* -type f)
+JS_FILES	:= $(shell ls *.js) $(shell find lib client test -name '*.js') $(find ./bin/* -type f)
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
@@ -42,7 +42,7 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 # Variables
 #
 
-NODE_PREBUILT_VERSION   := v0.8.21
+NODE_PREBUILT_VERSION   := v0.10.25
 NODE_PREBUILT_TAG       := zone
 # Allow building on a SmartOS image other than smartos-1.6.3.
 NODE_PREBUILT_IMAGE=01b2c898-945f-11e1-a523-af1afbe22822

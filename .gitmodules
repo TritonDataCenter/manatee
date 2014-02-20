@@ -16,3 +16,7 @@
 [submodule "deps/closure-linter"]
 	path = deps/closure-linter
 	url = git@github.com:yunong/closure-linter.git
+[submodule "deps/jsdoc3"]
+	path = deps/jsdoc3
+	url = git@github.com:jsdoc3/jsdoc.git
+	branch = remotes/origin/releases/3.1

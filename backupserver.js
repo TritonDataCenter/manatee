@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2013, Joyent, Inc. All rights reserved.
+/**
+ * @copyright Copyright (c) 2013, Joyent, Inc. All rights reserved.
  *
  *                   _.---.._
  *      _        _.-' \  \    ''-.
@@ -15,13 +15,13 @@ var bunyan = require('bunyan');
 var extend = require('xtend');
 var fs = require('fs');
 var getopt = require('posix-getopt');
-var panic = require('panic');
 var BackupServer = require('./lib/backupServer');
 var BackupSender = require('./lib/backupSender');
 
-/**
+/*
  * globals
  */
+
 var NAME = 'manatee-backupserver';
 
 var LOG = bunyan.createLogger({
@@ -36,9 +36,10 @@ var LOG = bunyan.createLogger({
 
 var LOG_LEVEL_OVERRIDE = false;
 
-/**
+/*
  * private functions
  */
+
 function parseOptions() {
     var option;
     var opts = {};
@@ -86,14 +87,9 @@ function readConfig(options) {
     return (extend({}, cfg, options));
 }
 
-/**
+/*
  * mainline
  */
-
-panic.enablePanicOnCrash({
-    'skipDump': true,
-    'abortOnPanic': true
-});
 
 var _config;
 var _options = parseOptions();
@@ -114,7 +110,7 @@ _config.backupSenderCfg.log = LOG;
 var server = new BackupServer(_config.backupServerCfg);
 
 // server and sender share the same queue
-_config.backupSenderCfg.queue = server.queue;
+_config.backupSenderCfg.queue = server.getQueue();
 var backupSender = new BackupSender(_config.backupSenderCfg);
 
 server.init();

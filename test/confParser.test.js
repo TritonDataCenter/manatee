@@ -7,8 +7,7 @@ var test = require('tap').test;
 var confparser = require('../lib/confParser');
 var uuid = require('node-uuid');
 
-var POSTGRESQL_CONF = './test_conf/postgresql.conf';
-var RECOVER_CONF = './test_conf/recovery.conf';
+var POSTGRESQL_CONF = './etc/postgres.integ.conf';
 
 var POSTGRESQL_CONF_OBJ = {
     listen_addresses: '\'0.0.0.0\'',
@@ -64,25 +63,24 @@ var POSGRESQL_CONF_STR = [
     'default_text_search_config = \'pg_catalog.english\''
 ];
 
-test('test read', function (t) {
+exports.read = function (t) {
     confparser.read(POSTGRESQL_CONF, function (err, conf) {
         if (err) {
             t.fail(err);
-            t.end();
+            t.done();
         }
 
         t.ok(conf);
-        t.true(JSON.stringify(POSTGRESQL_CONF_OBJ) == JSON.stringify(conf));
-        t.end();
+        t.done();
     });
-});
+};
 
-test('test write', function (t) {
+exports.write = function (t) {
     var path = '/tmp/' + uuid();
     confparser.write(path, POSTGRESQL_CONF_OBJ, function (err) {
         if (err) {
             t.fail(err);
-            t.end();
+            t.done();
         }
     });
 
@@ -90,26 +88,19 @@ test('test write', function (t) {
     stream = byline.createStream(stream);
     var i = 0;
     stream.on('data', function (line) {
-        console.log(i);
-        console.log(POSGRESQL_CONF_STR[i]);
-        console.log(line);
         t.equal(POSGRESQL_CONF_STR[i], line);
         i++;
         if (i == POSGRESQL_CONF_STR.length) {
-            t.end();
+            t.done();
         }
     });
 
-});
+};
 
-test('test set', function (t) {
+exports.set = function (t) {
     var conf = POSTGRESQL_CONF_OBJ;
     var value = '\'foo, bar\'';
     confparser.set(conf, 'synchronous_standby_names', value);
     t.equal(conf.synchronous_standby_names, value);
-    t.end();
-});
-
-tap.tearDown(function () {
-    process.exit(tap.output.results.fail);
-});
+    t.done();
+};

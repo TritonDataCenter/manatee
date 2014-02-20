@@ -58,7 +58,7 @@ function createZkClient(opts, cb) {
     zk.connect();
     timeoutId = setTimeout(function() {
         console.error('zookeeper connect timed out');
-        process.exit(0);
+        process.exit(1);
     }, 10000);
 }
 
@@ -79,21 +79,21 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                 case 0:
                     output['primary'] = !err ? {
                         ip: obj.ip,
-                        pgUrl: transformPgUrl(obj.ip),
+                        pgUrl: transformPgUrl(nodes[j]),
                         zoneId: obj.zoneId
                     } : JSON.stringify(err);
                     break;
                 case 1:
                     output['sync'] = !err ? {
                         ip: obj.ip,
-                        pgUrl: transformPgUrl(obj.ip),
+                        pgUrl: transformPgUrl(nodes[j]),
                         zoneId: obj.zoneId
                     } : JSON.stringify(err);
                     break;
                 case 2:
                     output['async'] = !err ? {
                         ip: obj.ip,
-                        pgUrl: transformPgUrl(obj.ip),
+                        pgUrl: transformPgUrl(nodes[j]),
                         zoneId: obj.zoneId
                     } : JSON.stringify(err);
                     break;
@@ -101,7 +101,7 @@ function formatNodes(nodes, zk, pathPrefix, cb) {
                     var asyncNumber = j - 2;
                     output['async' + asyncNumber] = !err ? {
                         ip: obj.ip,
-                        pgUrl: transformPgUrl(obj.ip),
+                        pgUrl: transformPgUrl(nodes[j]),
                         zoneId: obj.zoneId
                     } : JSON.stringify(err);
                     break;
@@ -206,9 +206,9 @@ function loadTopology(zk, callback) {
     vasync.pipeline({
         funcs: tasks,
         arg: {}
-    }, function(err) {
+    }, function(err, results) {
         if (err) {
-            LOG.error(err, 'loadTopology: error');
+            LOG.error({err: err, results: results}, 'loadTopology: error');
         } else {
             LOG.debug(topology, 'loadTopology: done');
         }
@@ -320,5 +320,6 @@ function transformPgUrl(url) {
         return ('');
     }
 
-    return ('tcp://postgres@' + url + ':5432/postgres');
+    var data = url.split('-')[0].split(':');
+    return 'tcp://postgres@' + data[0] + ':' + data[1] + '/postgres';
 }
