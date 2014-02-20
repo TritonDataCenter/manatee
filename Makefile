@@ -42,10 +42,10 @@ SMF_MANIFESTS_IN = smf/manifests/backupserver.xml.in \
 # Variables
 #
 
-NODE_PREBUILT_VERSION   := v0.10.25
+NODE_PREBUILT_VERSION   := v0.10.26
 NODE_PREBUILT_TAG       := zone
-# Allow building on a SmartOS image other than smartos-1.6.3.
-NODE_PREBUILT_IMAGE=01b2c898-945f-11e1-a523-af1afbe22822
+# Allow building on a SmartOS image other than sdc-multiarch/13.3.1.
+NODE_PREBUILT_IMAGE=b4bdc598-8939-11e3-bea4-8341f6861379
 
 
 include ./tools/mk/Makefile.defs
@@ -94,8 +94,7 @@ release: all deps docs $(SMF_MANIFESTS)
 	@mkdir -p $(RELSTAGEDIR)/site
 	@touch $(RELSTAGEDIR)/site/.do-not-delete-me
 	@mkdir -p $(RELSTAGEDIR)/root
-	cp -r   $(ROOT)/build \
-		$(ROOT)/lib \
+	cp -r   $(ROOT)/lib \
 		$(ROOT)/bin \
 		$(ROOT)/deps \
 		$(ROOT)/sitter.js \
@@ -107,6 +106,10 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(ROOT)/smf \
 		$(ROOT)/etc \
 		$(RELSTAGEDIR)/root/opt/smartdc/manatee/
+	mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/manatee/build
+	cp -r \
+		$(TOP)/build/node \
+		$(RELSTAGEDIR)/root/opt/smartdc/manatee/build
 	mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/boot/scripts
 	cp -R $(RELSTAGEDIR)/root/opt/smartdc/manatee/build/scripts/* \
 	    $(RELSTAGEDIR)/root/opt/smartdc/boot/scripts/
