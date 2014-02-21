@@ -108,10 +108,10 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(RELSTAGEDIR)/root/opt/smartdc/manatee/
 	mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/manatee/build
 	cp -r \
-		$(TOP)/build/node \
+		$(ROOT)/build/node \
 		$(RELSTAGEDIR)/root/opt/smartdc/manatee/build
 	mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/boot/scripts
-	cp -R $(RELSTAGEDIR)/root/opt/smartdc/manatee/build/scripts/* \
+	cp -R $(BUILD)/scripts/* \
 	    $(RELSTAGEDIR)/root/opt/smartdc/boot/scripts/
 	cp -R $(ROOT)/deps/sdc-scripts/* \
 	    $(RELSTAGEDIR)/root/opt/smartdc/boot/
