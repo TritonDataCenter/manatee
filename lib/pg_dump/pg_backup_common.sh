@@ -140,7 +140,7 @@ function backup ()
         date=$DATE
     fi
 
-    mkdir $DUMP_DIR
+    mkdir -p $DUMP_DIR
 
     echo "getting db tables"
     schema=$DUMP_DIR/$date'_schema'
