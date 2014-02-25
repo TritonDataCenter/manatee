@@ -105,7 +105,7 @@ function Manatee(options) {
 
             self._zk.once('close', reconnect);
             self._zk.on('error', function onZKClientError(err) {
-                self.log.error(err, 'ZooKeeper client error');
+                self._log.error(err, 'ZooKeeper client error');
                 self._zk.removeAllListeners('close');
                 self._zk.close();
                 reconnect();
