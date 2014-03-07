@@ -298,13 +298,13 @@ Manatee.prototype.start = function start(cb) {
     var self = this;
     var log = self.log;
     var spawnSitterOpts = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
-        'postgres', '../build/node/bin/node', '../sitter.js', '-v', '-f',
+        'postgres', 'node', '../sitter.js', '-v', '-f',
         self.sitterCfgLocation || './etc/sitter.json'];
     var spawnBsOpts = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
-        'postgres', '../build/node/bin/node', '../backupserver.js', '-v', '-f',
+        'postgres', 'node', '../backupserver.js', '-v', '-f',
         self.bsCfgLocation || './etc/backupserver.json'];
     var spawnSsOpts = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
-        'postgres', '../build/node/bin/node', '../snapshotter.js', '-v', '-f',
+        'postgres', 'node', '../snapshotter.js', '-v', '-f',
         self.ssCfgLocation || './etc/snapshotter.json'];
 
     vasync.pipeline({funcs: [

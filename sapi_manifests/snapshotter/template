@@ -1,7 +1,0 @@
-{
-  "dataset": "zones/{{ZONE_UUID}}/data/manatee",
-  "snapshotDir": "/manatee/pg/.zfs/snapshot/",
-  "pollInterval": 3600000,
-  "snapshotNumber": 200,
-  "startupDelay": 90000
-}

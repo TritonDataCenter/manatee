@@ -1,5 +1,0 @@
-{
-    "name": "manatee-backupserver",
-    "path": "/opt/smartdc/manatee/etc/backupserver.json",
-	"master": true
-}
