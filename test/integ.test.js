@@ -345,7 +345,7 @@ function clientTest(t) {
     MANATEE_CLIENT.once('ready', function () {
         emitReady = true;
     });
-};
+}
 
 exports.setupMoray = function (t) {
     /* JSSTYLED */
