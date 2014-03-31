@@ -219,7 +219,7 @@ Manatee.prototype.kill = function kill(cb) {
         self.manatee.sitter.once('error', function (err) {
             log.error({
                 err: err, url: self.pgUrl
-            }, 'could not send SIGKILL');
+            }, 'could not send SIGTERM');
         });
 
         self.manatee.sitter.removeAllListeners('exit');
@@ -236,7 +236,7 @@ Manatee.prototype.kill = function kill(cb) {
         self.manatee.snapshotter.once('error', function (err) {
             log.error({
                 err: err, url: self.pgUrl
-            }, 'could not send SIGKILL');
+            }, 'could not send SIGTERM');
         });
 
         self.manatee.snapshotter.removeAllListeners('exit');
@@ -253,7 +253,7 @@ Manatee.prototype.kill = function kill(cb) {
         self.manatee.backupServer.once('error', function (err) {
             log.error({
                 err: err, url: self.pgUrl
-            }, 'could not send SIGKILL');
+            }, 'could not send SIGTERM');
         });
 
         self.manatee.backupServer.removeAllListeners('exit');
@@ -270,7 +270,7 @@ Manatee.prototype.kill = function kill(cb) {
         log.info({
             url: self.pgUrl, procId: self.manatee.sitter.pid
         }, 'killing sitter');
-        self.manatee.sitter.kill('SIGKILL');
+        self.manatee.sitter.kill('SIGTERM');
     } else {
         barrier.done('sitter');
     }
@@ -279,7 +279,7 @@ Manatee.prototype.kill = function kill(cb) {
         log.info({
             url: self.pgUrl, procId: self.manatee.snapshotter.pid
         }, 'killing snapshotter');
-        self.manatee.snapshotter.kill('SIGKILL');
+        self.manatee.snapshotter.kill('SIGTERM');
     } else {
         barrier.done('snapshotter');
     }
@@ -288,7 +288,7 @@ Manatee.prototype.kill = function kill(cb) {
         log.info({
             url: self.pgUrl, procId: self.manatee.backupServer.pid
         }, 'killing backupServer');
-        self.manatee.backupServer.kill('SIGKILL');
+        self.manatee.backupServer.kill('SIGTERM');
     } else {
         barrier.done('backupServer');
     }
