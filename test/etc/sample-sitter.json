@@ -1,0 +1,70 @@
+{
+  "backupPort": 10002,
+  "postgresPort": 10003,
+  "shardPath": "/manatee/82bbb0bd-6011-47d0-8a26-62fa5ba7e2c1",
+  "ttl": 60,
+  "ip": "127.0.0.1",
+  "zoneId": "integ-test-zone",
+  "heartbeatServerPort": 10001,
+  "heartbeatClientCfg": {
+    "connectTimeout": 2000,
+    "heartbeatInterval": 1000,
+    "requestTimeout": 5000,
+    "url": "127.0.0.1",
+    "retry": {
+      "retry": 2
+    },
+    "pgUrl": "tcp://postgres@127.0.0.1:10003/postgres"
+  },
+  "heartbeatServerCfg": {
+    "expirationTime": 5000,
+    "pollInterval": 1000,
+    "port": 10001
+  },
+  "postgresMgrCfg": {
+    "dataDir": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf/data",
+    "dbUser": "postgres",
+    "hbaConf": "./etc/pg_hba.conf",
+    "healthChkInterval": 1000,
+    "healthChkTimeout": 5000,
+    "oneNodeWriteMode": false,
+    "opsTimeout": 5000,
+    "pgCtlPath": "/opt/local/bin/pg_ctl",
+    "pgInitDbPath": "/opt/local/bin/initdb",
+    "postgresConf": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf_metadata/config/postgres.conf",
+    "postgresPath": "/opt/local/bin/postgres",
+    "recoveryConf": "./etc/recovery.conf",
+    "replicationTimeout": 10000,
+    "snapShotterCfg": {
+      "dataset": "zones/e9b121cd-4915-64ba-cb80-cfcb385ae7c1/data/manatee_integ_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf",
+      "snapshotDir": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf/.zfs/snapshot",
+      "pollInterval": 1000,
+      "snapshotNumber": 5,
+      "pgUrl": "tcp://postgres@127.0.0.1:10003/postgres"
+    },
+    "syncStateCheckerCfg": {
+      "interval": 1000,
+      "cookieLocation": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf_metadata/sync_cookie"
+    },
+    "url": "tcp://postgres@127.0.0.1:10003/postgres",
+    "zfsClientCfg": {
+      "dataset": "zones/e9b121cd-4915-64ba-cb80-cfcb385ae7c1/data/manatee_integ_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf",
+      "parentDataset": "zones/e9b121cd-4915-64ba-cb80-cfcb385ae7c1/data/manatee_integ_tests",
+      "snapshotDir": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf/.zfs/snapshot",
+      "zfsHost": "0.0.0.0",
+      "zfsPort": 10000,
+      "pollInterval": 1000,
+      "zfsPath": "/usr/sbin/zfs",
+      "mountpoint": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf"
+    }
+  },
+  "zkCfg": {
+    "servers": [
+      {
+        "host": "0.0.0.0",
+        "port": 2181
+      }
+    ],
+    "timeout": 5000
+  }
+}
