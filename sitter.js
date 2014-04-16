@@ -89,32 +89,31 @@ function readConfig(options) {
 /*
  * mainline
  */
+(function main() {
+    var _config;
+    var _options = parseOptions();
 
-var _config;
-var _options = parseOptions();
+    LOG.debug({options: _options}, 'command line options parsed');
+    _config = readConfig(_options);
+    LOG.debug({config: _config}, 'configuration loaded');
 
-LOG.debug({options: _options}, 'command line options parsed');
-_config = readConfig(_options);
-LOG.debug({config: _config}, 'configuration loaded');
-
-if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
-    if (bunyan.resolveLevel(_config.logLevel)) {
-        LOG.level(_config.logLevel);
+    if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
+        if (bunyan.resolveLevel(_config.logLevel)) {
+            LOG.level(_config.logLevel);
+        }
     }
-}
 
-// set loggers of the sub components
-_config.log = LOG;
-_config.zkCfg.log = LOG;
-_config.postgresMgrCfg.log = LOG;
-_config.postgresMgrCfg.zfsClientCfg.log = LOG;
-_config.postgresMgrCfg.snapShotterCfg.log = LOG;
-_config.postgresMgrCfg.syncStateCheckerCfg.log = LOG;
-_config.heartbeatServerCfg.log = LOG;
-_config.heartbeatClientCfg.log = LOG;
+    // set loggers of the sub components
+    _config.log = LOG;
+    _config.zkCfg.log = LOG;
+    _config.postgresMgrCfg.log = LOG;
+    _config.postgresMgrCfg.zfsClientCfg.log = LOG;
+    _config.postgresMgrCfg.snapShotterCfg.log = LOG;
+    _config.postgresMgrCfg.syncStateCheckerCfg.log = LOG;
+    _config.heartbeatServerCfg.log = LOG;
+    _config.heartbeatClientCfg.log = LOG;
 
-LOG.info('starting manatee');
-var shard = new Shard(_config);
-
-LOG.info('manatee started');
-LOG.trace('manatee shard', shard);
+    LOG.info('starting manatee');
+    Shard.start(_config);
+    LOG.info('manatee started');
+})();

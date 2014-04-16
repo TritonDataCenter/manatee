@@ -90,37 +90,30 @@ function readConfig(options) {
 /*
  * mainline
  */
+(function main() {
+    var _config;
+    var _options = parseOptions();
 
-var _config;
-var _options = parseOptions();
+    LOG.debug({options: _options}, 'command line options parsed');
+    _config = readConfig(_options);
+    LOG.debug({config: _config}, 'configuration loaded');
 
-LOG.debug({options: _options}, 'command line options parsed');
-_config = readConfig(_options);
-LOG.debug({config: _config}, 'configuration loaded');
-
-if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
-    if (bunyan.resolveLevel(_config.logLevel)) {
-        LOG.level(_config.logLevel);
+    if (_config.logLevel && !LOG_LEVEL_OVERRIDE) {
+        if (bunyan.resolveLevel(_config.logLevel)) {
+            LOG.level(_config.logLevel);
+        }
     }
-}
 
-_config.log = LOG;
+    _config.log = LOG;
 
-// set a timeout so we don't collide with the snapshot taken from the sitter
-setTimeout(function () { startSnapshotter(); }, _config.startupDelay);
-
-function startSnapshotter() {
     var snapShotter = new SnapShotter(_config);
 
     snapShotter.on('err', function (err) {
-        // only exit if zfs snapshotting fails.
-        if (err.snapshotErr) {
-            LOG.fatal('got error from snapshotter', err);
-            process.exit(1);
-        }
+        LOG.fatal('got error from snapshotter', err);
+        throw err;
     });
 
     snapShotter.start(function () {
-        LOG.info('started snapshotter');
+        LOG.info('snapshotter started');
     });
-}
+})();
