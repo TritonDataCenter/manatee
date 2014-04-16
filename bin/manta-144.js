@@ -39,7 +39,7 @@ function backfill(client, cb) {
     });
 }
 
-var pgClient = new Client('tcp://postgres@localhost:5432/moray')
+var pgClient = new Client('tcp://postgres@localhost:5432/moray');
 function bfcb(err) {
     if (err) {
         throw new Error(err);

@@ -3,6 +3,7 @@
     "name": "manatee",
     "version": "1.0.0",
     "private": true,
+    "homepage": "seacow.io",
     "description": "H/A Postgres Minder",
     "repository": {
         "type": "git",
@@ -12,7 +13,7 @@
     "directories": {
         "lib": "./lib",
         "bin": "./bin",
-        "client": "./client"
+        "man": "todo"
     },
     "engines": {
         "node": ">=0.10"
@@ -42,5 +43,10 @@
     },
     "devDependencies": {
         "nodeunit": "git://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231"
+    },
+    "os": ["SunOs"],
+    "scripts": {
+        "pretest": "./lint.sh",
+        "test": "./test/integ-test.sh"
     }
 }
