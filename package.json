@@ -42,11 +42,14 @@
         "zkplus": "git://github.com/mcavage/node-zkplus.git#9fb0f34490627fb5e777159ddee8f22462ca9ca9"
     },
     "devDependencies": {
-        "nodeunit": "git://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231"
+        "byline": "4.1.1",
+        "nodeunit": "git://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231",
+        "node-manatee": "git+ssh://git@github.com:joyent/node-manatee#master",
+        "tap": "0.4.8"
     },
     "os": ["SunOs"],
     "scripts": {
         "pretest": "./lint.sh",
-        "test": "./test/integ-test.sh"
+        "test": "cd ./test && ./integ-test.sh"
     }
 }
