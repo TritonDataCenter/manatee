@@ -28,6 +28,8 @@ var SS_CFG = './etc/snapshotter.json';
 var MY_IP = '127.0.0.1';
 var ZK_CLIENT = null;
 
+var TIMEOUT = process.env.TEST_TIMEOUT || (120 * 1000);
+
 var LOG = bunyan.createLogger({
     level: (process.env.LOG_LEVEL || 'warn'),
     name: 'manatee-integ-tests',
@@ -213,7 +215,7 @@ exports.before = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function _startN3(_, _cb) {
             var manatee = new Manatee(n3Opts, function (err) {
@@ -297,7 +299,7 @@ exports.before = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -322,7 +324,7 @@ function clientTest(t) {
         t.fail('client test exceeded tiemout');
         MANATEE_CLIENT.removeAllListeners();
         done();
-    }, 40000);
+    }, TIMEOUT);
 
     MANATEE_CLIENT.once('topology', function (dbs) {
         var barrier = vasync.barrier();
@@ -501,7 +503,7 @@ exports.primaryDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function addNewManatee(_, _cb) {
             LOG.info({url: _.primaryPgUrl}, 'adding back old primary');
@@ -572,7 +574,7 @@ exports.primaryDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -681,7 +683,7 @@ exports.syncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function addNewManatee(_, _cb) {
             LOG.info({url: _.syncPgUrl}, 'adding back old sync');
@@ -753,7 +755,7 @@ exports.syncDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -863,7 +865,7 @@ exports.asyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function addNewManatee(_, _cb) {
             LOG.info({url: _.asyncPgUrl}, 'adding back old async');
@@ -936,7 +938,7 @@ exports.asyncDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1037,7 +1039,7 @@ exports.everyoneDies = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1141,7 +1143,7 @@ exports.everyoneDies = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1243,7 +1245,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1344,7 +1346,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1437,7 +1439,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1538,7 +1540,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1631,7 +1633,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1732,7 +1734,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1842,7 +1844,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function killNewPrimary(_, _cb) {
             MANATEES[_.syncPgUrl].kill(_cb);
@@ -1886,7 +1888,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1987,7 +1989,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -2097,7 +2099,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function killAsync(_, _cb) {
             MANATEES[_.asyncPgUrl].kill(_cb);
@@ -2141,7 +2143,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -2242,7 +2244,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, 30000);
+            }, TIMEOUT);
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -2285,7 +2287,7 @@ exports.after = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'timed out trying to destroy dataset'));
-            }, 30000);
+            }, TIMEOUT);
         },
         function _cleanupZK(_, _cb) {
             ZK_CLIENT.rmr('/manatee', _cb);
