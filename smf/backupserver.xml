@@ -1,0 +1,28 @@
+<?xml version='1.0'?>
+<!DOCTYPE service_bundle SYSTEM '/usr/share/lib/xml/dtd/service_bundle.dtd.1'>
+<service_bundle type='manifest' name='export'>
+  <service name='manta/application/manatee-backupserver' type='service' version='0'>
+    <create_default_instance enabled='true'/>
+    <dependency name='network' grouping='require_all' restart_on='error' type='service'>
+      <service_fmri value='svc:/network/physical'/>
+    </dependency>
+    <dependency name='filesystem' grouping='require_all' restart_on='error' type='service'>
+      <service_fmri value='svc:/system/filesystem/local'/>
+    </dependency>
+    <exec_method name='start' type='method' exec='node --abort-on-uncaught-exception ./node_modules/manatee/backupserver.js -v -f ./etc/backupserver.json &amp;' timeout_seconds='30'>
+      <method_context working_directory='/opt/manatee'>
+        <method_credential user='postgres' group='postgres'/>
+        <method_environment>
+          <envvar name='PATH' value='/opt/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin'/>
+        </method_environment>
+      </method_context>
+    </exec_method>
+    <exec_method name='stop' type='method' exec=':kill' timeout_seconds='30'/>
+    <stability value='Unstable'/>
+    <template>
+      <common_name>
+        <loctext xml:lang='C'>HA Postgres Service BackupServer</loctext>
+      </common_name>
+    </template>
+  </service>
+</service_bundle>
