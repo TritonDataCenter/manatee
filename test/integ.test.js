@@ -27,7 +27,7 @@ var SS_CFG = './etc/snapshotter.json';
 var MY_IP = '127.0.0.1';
 var ZK_CLIENT = null;
 
-var TIMEOUT = process.env.TEST_TIMEOUT || (120 * 1000);
+var TIMEOUT = process.env.TEST_TIMEOUT || (30 * 1000);
 var PG_UID = process.env.PG_UID ? parseInt(process.env.PG_UID, 10) : null;
 
 var LOG = bunyan.createLogger({
@@ -126,9 +126,6 @@ exports.before = function (t) {
         function _removeMetadata(_, _cb) {
             exec('rm -rf ' + FS_PATH_PREFIX, _cb);
         },
-        //function _cleanupZK(_, _cb) {
-            //ZK_CLIENT.rmr('/manatee', function () { return _cb(); });
-        //},
         function _startN1(_, _cb) {
             var manatee = new Manatee(n1Opts, function (err) {
                 if (err) {
@@ -218,7 +215,7 @@ exports.before = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function _startN3(_, _cb) {
             var manatee = new Manatee(n3Opts, function (err) {
@@ -302,7 +299,7 @@ exports.before = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -327,7 +324,7 @@ function clientTest(t) {
         t.fail('client test exceeded tiemout');
         MANATEE_CLIENT.removeAllListeners();
         done();
-    }, TIMEOUT);
+    }, TIMEOUT).unref();
 
     MANATEE_CLIENT.once('topology', function (dbs) {
         var barrier = vasync.barrier();
@@ -413,20 +410,11 @@ exports.verifyShard = function (t) {
 exports.primaryDeath = function (t) {
 //function foo () {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.primary.pgUrl);
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
                 _.primaryPgUrl = _.topology.primary.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                return _cb(err);
             });
         },
         function killPrimary(_, _cb) {
@@ -507,7 +495,7 @@ exports.primaryDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function addNewManatee(_, _cb) {
             LOG.info({url: _.primaryPgUrl}, 'adding back old primary');
@@ -578,7 +566,7 @@ exports.primaryDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -592,20 +580,13 @@ exports.primaryDeath = function (t) {
 //function foo () {
 exports.syncDeath = function (t) {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.sync.pgUrl);
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
+                _.primaryPgUrl = _.topology.primary.pgUrl;
                 _.syncPgUrl = _.topology.sync.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                return _cb(err);
             });
         },
         function killSync(_, _cb) {
@@ -688,7 +669,7 @@ exports.syncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function addNewManatee(_, _cb) {
             LOG.info({url: _.syncPgUrl}, 'adding back old sync');
@@ -760,7 +741,7 @@ exports.syncDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -775,20 +756,13 @@ exports.syncDeath = function (t) {
 exports.asyncDeath = function (t) {
 //function foo () {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.sync.pgUrl);
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
+                _.primaryPgUrl = _.topology.primary.pgUrl;
+                _.syncPgUrl = _.topology.sync.pgUrl;
                 _.asyncPgUrl = _.topology.async.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                return _cb(err);
             });
         },
         function killAsync(_, _cb) {
@@ -871,7 +845,7 @@ exports.asyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function addNewManatee(_, _cb) {
             LOG.info({url: _.asyncPgUrl}, 'adding back old async');
@@ -944,7 +918,7 @@ exports.asyncDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -959,22 +933,13 @@ exports.asyncDeath = function (t) {
 exports.everyoneDies = function (t) {
 //function foo () {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.sync.pgUrl);
-                _.asyncPgUrl = _.topology.async.pgUrl;
-                _.syncPgUrl = _.topology.sync.pgUrl;
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
                 _.primaryPgUrl = _.topology.primary.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                return _cb(err);
             });
         },
         function killEveryone(_, _cb) {
@@ -1046,7 +1011,7 @@ exports.everyoneDies = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1150,7 +1115,7 @@ exports.everyoneDies = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1165,22 +1130,13 @@ exports.everyoneDies = function (t) {
 exports.primarySyncInstantaneousDeath = function (t) {
 //function foo() {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.primary.pgUrl);
-                _.asyncPgUrl = _.topology.async.pgUrl;
-                _.syncPgUrl = _.topology.sync.pgUrl;
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
                 _.primaryPgUrl = _.topology.primary.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                return _cb(err);
             });
         },
         function killPrimaryAndSync(_, _cb) {
@@ -1253,7 +1209,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1354,7 +1310,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1367,25 +1323,16 @@ exports.primarySyncInstantaneousDeath = function (t) {
 
 exports.primaryAsyncInstantaneousDeath = function (t) {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.primary.pgUrl);
-                _.asyncPgUrl = _.topology.async.pgUrl;
-                _.syncPgUrl = _.topology.sync.pgUrl;
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
                 _.primaryPgUrl = _.topology.primary.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                return _cb(err);
             });
         },
-        function killPrimaryAndSync(_, _cb) {
+        function killPrimaryAndAsync(_, _cb) {
             // hacky way to pick either async or primary first
             var seed = Math.round(Math.random());
             var barrier = vasync.barrier();
@@ -1447,7 +1394,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1548,7 +1495,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1561,22 +1508,13 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
 
 exports.syncAsyncInstantaneousDeath = function (t) {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.primary.pgUrl);
-                _.asyncPgUrl = _.topology.async.pgUrl;
-                _.syncPgUrl = _.topology.sync.pgUrl;
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
                 _.primaryPgUrl = _.topology.primary.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                return _cb(err);
             });
         },
         function killSyncAndSync(_, _cb) {
@@ -1641,7 +1579,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1742,7 +1680,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -1755,22 +1693,13 @@ exports.syncAsyncInstantaneousDeath = function (t) {
 
 exports.primaryDeathThenSyncDeath = function (t) {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.primary.pgUrl);
-                _.asyncPgUrl = _.topology.async.pgUrl;
-                _.syncPgUrl = _.topology.sync.pgUrl;
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
                 _.primaryPgUrl = _.topology.primary.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                return _cb(err);
             });
         },
         function killPrimary(_, _cb) {
@@ -1851,7 +1780,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function killNewPrimary(_, _cb) {
             MANATEES[_.syncPgUrl].kill(_cb);
@@ -1895,7 +1824,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -1996,7 +1925,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -2009,22 +1938,13 @@ exports.primaryDeathThenSyncDeath = function (t) {
 
 exports.primaryDeathThenAsyncDeath = function (t) {
     vasync.pipeline({funcs: [
-        function loadTopology(_, _cb) {
-            manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
-                if (err) {
-                    return _cb(err);
-                }
-                _.topology = topology[SHARD_ID];
-                assert.ok(_.topology);
-                assert.ok(_.topology.primary);
-                assert.ok(_.topology.sync);
-                assert.ok(_.topology.async);
-                assert.ok(_.topology.primary.pgUrl);
-                _.asyncPgUrl = _.topology.async.pgUrl;
-                _.syncPgUrl = _.topology.sync.pgUrl;
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
                 _.primaryPgUrl = _.topology.primary.pgUrl;
-                LOG.info({topology: topology}, 'got topology');
-                return _cb();
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                return _cb(err);
             });
         },
         function killPrimary(_, _cb) {
@@ -2105,7 +2025,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function killAsync(_, _cb) {
             MANATEES[_.asyncPgUrl].kill(_cb);
@@ -2149,7 +2069,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('shard did not flip in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function restartManatees(_, _cb) {
             _cb = once(_cb);
@@ -2250,7 +2170,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         }
     ], arg: {}}, function (err, results) {
         if (err) {
@@ -2293,7 +2213,7 @@ exports.after = function (t) {
                 clearInterval(intervalId);
                 return _cb(new verror.VError(
                     'timed out trying to destroy dataset'));
-            }, TIMEOUT);
+            }, TIMEOUT).unref();
         },
         function _cleanupZK(_, _cb) {
             ZK_CLIENT.rmr('/manatee', _cb);
@@ -2304,10 +2224,71 @@ exports.after = function (t) {
         }
     ], arg: {}}, function (err, results) {
         LOG.info({err: err, results: err ? results : null}, 'finished after()');
-        setTimeout(function () {
-            console.log(process._getActiveHandles());
-            console.log(process._getActiveRequests());
-        }, 10000).unref();
         t.done();
     });
 };
+
+/*
+ * Private helpers.
+ */
+
+function getTopology(callback) {
+    callback = once(callback);
+    LOG.info('entering getTopology');
+    var error;
+    var _ = {};
+    var intervalId = setInterval(manatee_common.loadTopology(ZK_CLIENT,
+                                    function (err, topology) {
+        if (err) {
+            error = err;
+            return;
+        }
+        _.topology = topology[SHARD_ID];
+        try {
+            assert.ok(_.topology);
+            assert.ok(_.topology.primary);
+            assert.ok(_.topology.sync);
+            assert.ok(_.topology.async);
+            assert.ok(_.topology.primary.pgUrl);
+            assert.ok(_.topology.sync.pgUrl);
+            assert.ok(_.topology.async.pgUrl);
+        } catch (e) {
+            error = e;
+            return;
+        }
+        _.asyncPgUrl = _.topology.async.pgUrl;
+        _.syncPgUrl = _.topology.sync.pgUrl;
+        _.primaryPgUrl = _.topology.primary.pgUrl;
+        LOG.info({topology: topology}, 'got topology');
+
+        manatee_common.pgStatus([_.topology], function (err2) {
+            LOG.info({err2: err, topology: topology}, 'got topology with repl');
+            if (err2) {
+                error = err;
+                return;
+            }
+
+            try {
+                assert.ok(_.topology.primary.repl);
+                assert.ok(_.topology.sync.repl);
+                assert.equal(_.topology.primary.repl.sync_state, 'sync');
+                assert.equal(_.topology.sync.repl.sync_state, 'async');
+            } catch (e) {
+                error = e;
+                return;
+            }
+
+            clearInterval(intervalId);
+            return callback(null, _.topology);
+        });
+    }), 3000);
+
+    setTimeout(function () {
+        if (!callback.called) {
+            clearInterval(intervalId);
+            LOG.error({error: error, topology: _.topology},
+                      'unable to veryify topology');
+            return callback(error, _.topology);
+        }
+    }, TIMEOUT).unref();
+}
