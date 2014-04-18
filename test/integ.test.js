@@ -8,7 +8,6 @@ var path = require('path');
 var manatee_common = require('../node_modules/node-manatee/bin/manatee_common');
 var Manatee = require('./testManatee');
 var once = require('once');
-var spawn = require('child_process').spawn;
 var shelljs = require('shelljs');
 var util = require('util');
 var uuid = require('node-uuid');
@@ -29,6 +28,7 @@ var MY_IP = '127.0.0.1';
 var ZK_CLIENT = null;
 
 var TIMEOUT = process.env.TEST_TIMEOUT || (120 * 1000);
+var PG_UID = process.env.PG_UID ? parseInt(process.env.PG_UID, 10) : null;
 
 var LOG = bunyan.createLogger({
     level: (process.env.LOG_LEVEL || 'warn'),
@@ -73,7 +73,8 @@ exports.before = function (t) {
         configLocation: FS_PATH_PREFIX + '/' + n1 + '_metadata' + '/config',
         metadataDir: FS_PATH_PREFIX + '/' + n1 + '_metadata',
         shardPath: SHARD_PATH,
-        log: LOG
+        log: LOG,
+        postgresUserId: PG_UID
     };
     n2Opts = {
         zfsDataset: PARENT_ZFS_DS + '/' + n2,
@@ -87,6 +88,7 @@ exports.before = function (t) {
         configLocation: FS_PATH_PREFIX + '/' + n2 + '_metadata' + '/config',
         metadataDir: FS_PATH_PREFIX + '/' + n2 + '_metadata',
         shardPath: SHARD_PATH,
+        postgresUserId: PG_UID,
         log: LOG
     };
     n3Opts = {
@@ -101,6 +103,7 @@ exports.before = function (t) {
         configLocation: FS_PATH_PREFIX + '/' + n3 + '_metadata' + '/config',
         metadataDir: FS_PATH_PREFIX + '/' + n3 + '_metadata',
         shardPath: SHARD_PATH,
+        postgresUserId: PG_UID,
         log: LOG
     };
 
@@ -408,6 +411,7 @@ exports.verifyShard = function (t) {
 };
 
 exports.primaryDeath = function (t) {
+//function foo () {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
             manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
@@ -585,6 +589,7 @@ exports.primaryDeath = function (t) {
     });
 };
 
+//function foo () {
 exports.syncDeath = function (t) {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
@@ -768,6 +773,7 @@ exports.syncDeath = function (t) {
 };
 
 exports.asyncDeath = function (t) {
+//function foo () {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
             manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
@@ -951,6 +957,7 @@ exports.asyncDeath = function (t) {
 };
 
 exports.everyoneDies = function (t) {
+//function foo () {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
             manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
@@ -1156,6 +1163,7 @@ exports.everyoneDies = function (t) {
 };
 
 exports.primarySyncInstantaneousDeath = function (t) {
+//function foo() {
     vasync.pipeline({funcs: [
         function loadTopology(_, _cb) {
             manatee_common.loadTopology(ZK_CLIENT, function (err, topology) {
@@ -1378,7 +1386,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
             });
         },
         function killPrimaryAndSync(_, _cb) {
-            // hacky way to pick either sync or primary first
+            // hacky way to pick either async or primary first
             var seed = Math.round(Math.random());
             var barrier = vasync.barrier();
             barrier.on('drain', _cb);
@@ -1821,7 +1829,6 @@ exports.primaryDeathThenSyncDeath = function (t) {
                         assert.equal(Object.keys(topology.sync.repl).length, 0,
                                 'sync should not have replication state.');
                         assert.equal(topology.async, null, 'async exists');
-                        LOG.info({topology:topology}, 'XXX');
                         return _cb2();
                     } catch (e) {
                         LOG.info({err: e, topology: topology},
@@ -2076,7 +2083,6 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                         assert.equal(Object.keys(topology.sync.repl).length, 0,
                                 'sync should not have replication state.');
                         assert.equal(topology.async, null, 'async exists');
-                        LOG.info({topology:topology}, 'XXX');
                         return _cb2();
                     } catch (e) {
                         LOG.info({err: e, topology: topology},
@@ -2298,6 +2304,10 @@ exports.after = function (t) {
         }
     ], arg: {}}, function (err, results) {
         LOG.info({err: err, results: err ? results : null}, 'finished after()');
+        setTimeout(function () {
+            console.log(process._getActiveHandles());
+            console.log(process._getActiveRequests());
+        }, 10000).unref();
         t.done();
     });
 };

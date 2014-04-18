@@ -39,6 +39,7 @@ function Manatee(opts, cb) {
     assert.number(opts.postgresPort, 'opts.postgresPort');
     assert.string(opts.metadataDir, 'opts.metadataDir');
     assert.string(opts.shardPath, 'opts.shardPath');
+    assert.optionalNumber(opts.postgresUserId, 'opts.postgresUserId');
 
     var log = opts.log;
     log.info('instance opts', opts);
@@ -64,6 +65,7 @@ function Manatee(opts, cb) {
     this.sitterLog = null;
     this.ssLog = null;
     this.bsLog = null;
+    this.postgresUserId = opts.postgresUserId;
 
     log.info({
         sitterLog: self.sitterLogPath,
@@ -222,8 +224,8 @@ Manatee.prototype.kill = function kill(cb) {
             }, 'could not send SIGINT');
         });
 
-        self.manatee.sitter.removeAllListeners('exit');
-        self.manatee.sitter.once('exit', function (pid, code) {
+        self.manatee.sitter.removeAllListeners('close');
+        self.manatee.sitter.once('close', function (pid, code) {
             log.info({
                 url: self.pgUrl, code: code, procId: pid
             }, 'killed sitter');
@@ -239,8 +241,8 @@ Manatee.prototype.kill = function kill(cb) {
             }, 'could not send SIGINT');
         });
 
-        self.manatee.snapshotter.removeAllListeners('exit');
-        self.manatee.snapshotter.once('exit', function (pid, code) {
+        self.manatee.snapshotter.removeAllListeners('close');
+        self.manatee.snapshotter.once('close', function (pid, code) {
             log.info({
                 url: self.pgUrl, code: code, procId: pid
             }, 'killed snapshotter');
@@ -256,8 +258,8 @@ Manatee.prototype.kill = function kill(cb) {
             }, 'could not send SIGINT');
         });
 
-        self.manatee.backupServer.removeAllListeners('exit');
-        self.manatee.backupServer.once('exit', function (pid, code) {
+        self.manatee.backupServer.removeAllListeners('close');
+        self.manatee.backupServer.once('close', function (pid, code) {
             log.info({
                 url: self.pgUrl, code: code, procId: pid
             }, 'killed backupServer');
@@ -297,15 +299,12 @@ Manatee.prototype.kill = function kill(cb) {
 Manatee.prototype.start = function start(cb) {
     var self = this;
     var log = self.log;
-    var spawnSitterOpts = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
-        'postgres', 'node', '--abort-on-uncaught-exception', '../sitter.js',
+    var spawnSitterOpts = ['--abort-on-uncaught-exception', '../sitter.js',
         '-v', '-f', self.sitterCfgLocation || './etc/sitter.json'];
-    var spawnBsOpts = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
-        'postgres', 'node', '--abort-on-uncaught-exception',
+    var spawnBsOpts = ['--abort-on-uncaught-exception',
         '../backupserver.js', '-v', '-f',
         self.bsCfgLocation || './etc/backupserver.json'];
-    var spawnSsOpts = ['-l', 'child', '-o', 'noorphan', 'sudo', '-u',
-        'postgres', 'node', '--abort-on-uncaught-exception',
+    var spawnSsOpts = ['--abort-on-uncaught-exception',
         '../snapshotter.js', '-v', '-f',
         self.ssCfgLocation || './etc/snapshotter.json'];
 
@@ -326,10 +325,11 @@ Manatee.prototype.start = function start(cb) {
             return _cb();
         },
         function _startSitter(_, _cb) {
-            self.manatee.sitter = spawn('/usr/bin/ctrun', spawnSitterOpts);
+            self.manatee.sitter = spawn('node', spawnSitterOpts,
+                                        {uid: self.postgresUserId});
             self.manatee.sitter.stdout.pipe(self.sitterLog);
             self.manatee.sitter.stderr.pipe(self.sitterLog);
-            self.manatee.sitter.once('exit', function (pid, code) {
+            self.manatee.sitter.once('close', function (pid, code) {
                 log.error({
                     url: self.pgUrl, code: code, procId: pid
                 }, 'sitter died unexpectedly');
@@ -362,10 +362,11 @@ Manatee.prototype.start = function start(cb) {
 
         },
         function _startSnapshotter(_, _cb) {
-            self.manatee.snapshotter = spawn('/usr/bin/ctrun', spawnSsOpts);
+            self.manatee.snapshotter = spawn('node', spawnSsOpts,
+                                             {uid: self.postgresUserId});
             self.manatee.snapshotter.stdout.pipe(self.ssLog);
             self.manatee.snapshotter.stderr.pipe(self.ssLog);
-            self.manatee.snapshotter.once('exit', function (pid, code) {
+            self.manatee.snapshotter.once('close', function (pid, code) {
                 log.error({
                     url: self.pgUrl, code: code, procId: pid
                 }, 'snapshotter died unexpectedly');
@@ -375,11 +376,12 @@ Manatee.prototype.start = function start(cb) {
             return _cb();
         },
         function _startBackupServer(_, _cb) {
-            self.manatee.backupServer = spawn('/usr/bin/ctrun', spawnBsOpts);
+            self.manatee.backupServer = spawn('node', spawnBsOpts,
+                                             {uid: self.postgresUserId});
             self.manatee.backupServer.stdout.pipe(self.bsLog);
             self.manatee.backupServer.stderr.pipe(self.bsLog);
 
-            self.manatee.backupServer.once('exit', function (pid, code) {
+            self.manatee.backupServer.once('close', function (pid, code) {
                 log.error({
                     url: self.pgUrl, code: code, procId: pid
                 }, 'backupServer died unexpectedly');

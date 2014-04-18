@@ -92,6 +92,7 @@ function readConfig(options) {
 (function main() {
     var _config;
     var _options = parseOptions();
+    var node;
 
     LOG.debug({options: _options}, 'command line options parsed');
     _config = readConfig(_options);
@@ -102,6 +103,22 @@ function readConfig(options) {
             LOG.level(_config.logLevel);
         }
     }
+
+    // gracefully shutdown this node on SIGINT
+    process.on('SIGINT', function () {
+        LOG.info('Sitter.main: got SIGINT');
+        if (!node) {
+            process.exit();
+        }
+
+        node.shutdown(function (err) {
+            LOG.info({err: err}, 'Sitter.main: done shutdown procedures');
+            if (err) {
+                process.abort();
+            }
+            process.exit();
+        });
+    });
 
     // set loggers of the sub components
     _config.log = LOG;
@@ -114,6 +131,6 @@ function readConfig(options) {
     _config.heartbeatClientCfg.log = LOG;
 
     LOG.info('starting manatee');
-    Shard.start(_config);
+    node = Shard.start(_config);
     LOG.info('manatee started');
 })();
