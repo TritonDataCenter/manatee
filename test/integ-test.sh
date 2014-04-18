@@ -11,5 +11,4 @@ chown postgres /var/pg
 
 export PG_UID=$(id -u postgres)
 
-#/usr/bin/ctrun -l child -o noorphan node ../node_modules/.bin/nodeunit ./integ.test.js 2>&1 | bunyan
-node ../node_modules/.bin/nodeunit ./integ.test.js 2>&1 | bunyan
+/usr/bin/ctrun -l child -o noorphan node ../node_modules/.bin/nodeunit ./integ.test.js 2>&1 | bunyan

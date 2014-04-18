@@ -300,12 +300,12 @@ Manatee.prototype.start = function start(cb) {
     var self = this;
     var log = self.log;
     var spawnSitterOpts = ['--abort-on-uncaught-exception', '../sitter.js',
-        '-v', '-f', self.sitterCfgLocation || './etc/sitter.json'];
+        '-vvv', '-f', self.sitterCfgLocation || './etc/sitter.json'];
     var spawnBsOpts = ['--abort-on-uncaught-exception',
-        '../backupserver.js', '-v', '-f',
+        '../backupserver.js', '-vvv', '-f',
         self.bsCfgLocation || './etc/backupserver.json'];
     var spawnSsOpts = ['--abort-on-uncaught-exception',
-        '../snapshotter.js', '-v', '-f',
+        '../snapshotter.js', '-vvv', '-f',
         self.ssCfgLocation || './etc/snapshotter.json'];
 
     vasync.pipeline({funcs: [
