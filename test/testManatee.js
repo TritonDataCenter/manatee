@@ -358,7 +358,7 @@ Manatee.prototype.start = function start(cb) {
             setTimeout(function () {
                 clearInterval(intervalId);
                 return _cb(new verror.VError('postgres start timed out'));
-            }, 30000);
+            }, 30000).unref();
 
         },
         function _startSnapshotter(_, _cb) {
