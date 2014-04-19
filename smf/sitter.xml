@@ -9,7 +9,7 @@
     <dependency name='filesystem' grouping='require_all' restart_on='error' type='service'>
       <service_fmri value='svc:/system/filesystem/local'/>
     </dependency>
-    <exec_method name='start' type='method' exec='node --abort-on-uncaught-exception ./node_modules/manatee/sitter.js -v -f ./etc/sitter.json &amp;' timeout_seconds='65'>
+    <exec_method name='start' type='method' exec='node --abort-on-uncaught-exception sitter.js -v -f ./etc/sitter.json &amp;' timeout_seconds='65'>
       <method_context working_directory='/opt/manatee'>
         <method_credential user='postgres' group='postgres'/>
         <method_environment>
