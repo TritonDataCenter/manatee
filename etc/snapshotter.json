@@ -1,6 +1,6 @@
 {
   "dataset": null,
-  "pollInterval": 2000,
+  "pollInterval": 3600000,
   "snapshotDir": null,
   "snapshotNumber": 50
 }
