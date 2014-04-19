@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <!DOCTYPE service_bundle SYSTEM '/usr/share/lib/xml/dtd/service_bundle.dtd.1'>
 <service_bundle type='manifest' name='export'>
-  <service name='manta/application/manatee-snapshotter' type='service' version='0'>
+  <service name='manatee-snapshotter' type='service' version='0'>
     <create_default_instance enabled='true'/>
     <dependency name='network' grouping='require_all' restart_on='error' type='service'>
       <service_fmri value='svc:/network/physical'/>
