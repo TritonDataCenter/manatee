@@ -1,5 +1,5 @@
 {
-    "backupPort": null,
+    "backupPort": 10002,
     "heartbeatClientCfg": {
         "connectTimeout": 2000,
         "heartbeatInterval": 1000,
@@ -9,58 +9,58 @@
         },
         "url": "0.0.0.0"
     },
-    "heartbeatServerPort": null,
+    "heartbeatServerPort": 10000,
     "heartbeatServerCfg": {
-        "expirationTime": 5000,
+        "expirationTime": 60000,
         "pollInterval": 1000,
-        "port": null
+        "port":10000
     },
     "ip": "0.0.0.0",
     "postgresMgrCfg": {
-        "dataDir": null,
+        "dataDir": "/var/manatee",
         "dbUser": "postgres",
         "hbaConf": "./etc/pg_hba.conf",
         "healthChkInterval": 1000,
         "healthChkTimeout": 5000,
         "oneNodeWriteMode": false,
-        "opsTimeout": 5000,
+        "opsTimeout": 60000,
         "pgInitDbPath": "/opt/local/bin/initdb",
         "postgresConf": "./etc/postgresql.conf",
         "postgresPath": "/opt/local/bin/postgres",
         "recoveryConf": "./etc/recovery.conf",
-        "replicationTimeout": 10000,
+        "replicationTimeout": 60000,
         "snapShotterCfg": {
-            "dataset": null,
+            "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
             "pollInterval": 1000,
-            "snapshotDir": null,
+            "snapshotDir": "/var/manatee/.zfs",
             "snapshotNumber": 5
         },
         "syncStateCheckerCfg": {
-            "cookieLocation": null,
+            "cookieLocation": "/var/tmp/manatee_sync_cookie",
             "interval": 1000
         },
-        "url": null,
+        "url": "tcp://postgres@10.88.88.52:5432/postgres",
         "zfsClientCfg": {
-            "dataset": null,
-            "mountpoint": null,
-            "parentDataset": null,
+            "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
+            "mountpoint": "/var/manatee",
+            "parentDataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446",
             "pollInterval": 1000,
             "zfsHost": "0.0.0.0",
-            "zfsPath": "/usr/sbin/zfs"
-            "zfsPort": null
+            "zfsPath": "/usr/sbin/zfs",
+            "zfsPort": 10001
         }
     },
-    "postgresPort": null,
-    "shardPath": null,
+    "postgresPort": 5432,
+    "shardPath": "/manatee/1",
     "ttl": 60,
     "zkCfg": {
         "servers": [
             {
-                "host": "0.0.0.0",
+                "host": "10.88.88.55",
                 "port": 2181
             }
         ],
-        "timeout": 5000
+        "timeout": 60000
     },
-    "zoneId": "foo"
+    "zoneId": "f9e6661b-82e6-4c19-873c-eb869d689446"
 }

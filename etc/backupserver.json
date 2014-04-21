@@ -1,10 +1,10 @@
 {
   "backupSenderCfg": {
-    "dataset": null,
-    "snapshotDir": null,
+    "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
+    "snapshotDir": "/var/manatee/.zfs",
     "zfsPath": "/usr/sbin/zfs"
   },
   "backupServerCfg": {
-    "port": null
+    "port": 10002
   }
 }

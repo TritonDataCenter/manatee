@@ -1,6 +1,6 @@
 {
-  "dataset": null,
+  "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
   "pollInterval": 3600000,
-  "snapshotDir": null,
+  "snapshotDir": "/var/manatee/.zfs",
   "snapshotNumber": 50
 }
