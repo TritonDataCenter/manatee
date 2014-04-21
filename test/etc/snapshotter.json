@@ -1,8 +1,7 @@
 {
   "dataset": null,
-  "snapshotDir": null,
   "pollInterval": 2000,
-  "snapshotNumber": 50,
+  "snapshotNumber": 5,
   "pgUrl": null,
   "startupDelay": 0
 }

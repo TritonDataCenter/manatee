@@ -47,7 +47,6 @@ function Manatee(opts, cb) {
 
     this.postgresPort = opts.postgresPort;
     this.backupPort = opts.backupPort;
-    this.snapshotDir = opts.mountPoint + '/.zfs/snapshot';
     this.postgresPort = opts.postgresPort;
     this.pgUrl = 'tcp://postgres@' + MY_IP + ':' + self.postgresPort +
                  '/postgres';
@@ -120,10 +119,6 @@ function Manatee(opts, cb) {
             shelljs.mkdir('-p', self.logLocation);
             return _cb();
         },
-        function _enableSnapshotDir(_, _cb) {
-            var cmd = 'zfs set snapdir=visible ' + opts.zfsDataset;
-            exec(cmd, _cb);
-        },
         function _updatePostgresConfig(_, _cb) {
             ConfParser.read('./etc/postgres.integ.conf', function (err, conf) {
                 if (err) {
@@ -150,7 +145,6 @@ function Manatee(opts, cb) {
 
             cfg.postgresMgrCfg.dataDir = opts.mountPoint + '/data';
             cfg.postgresMgrCfg.snapShotterCfg.dataset = opts.zfsDataset;
-            cfg.postgresMgrCfg.snapShotterCfg.snapshotDir = self.snapshotDir;
             cfg.postgresMgrCfg.snapShotterCfg.pgUrl = self.pgUrl;
             cfg.postgresMgrCfg.syncStateCheckerCfg.cookieLocation =
                 self.cookieLocation;
@@ -159,7 +153,6 @@ function Manatee(opts, cb) {
             cfg.postgresMgrCfg.zfsClientCfg.dataset = opts.zfsDataset;
             cfg.postgresMgrCfg.zfsClientCfg.parentDataset =
                 path.dirname(opts.zfsDataset);
-            cfg.postgresMgrCfg.zfsClientCfg.snapshotDir = self.snapshotDir;
             cfg.postgresMgrCfg.zfsClientCfg.zfsPort = opts.zfsPort;
             cfg.postgresMgrCfg.zfsClientCfg.mountpoint = opts.mountPoint;
             self.sitterCfg = cfg;
@@ -169,14 +162,12 @@ function Manatee(opts, cb) {
             var cfg = JSON.parse(fs.readFileSync(BS_CFG));
             cfg.backupServerCfg.port = opts.backupPort;
             cfg.backupSenderCfg.dataset = opts.zfsDataset;
-            cfg.backupSenderCfg.snapshotDir = self.snapshotDir;
             self.bsCfg = cfg;
             return _cb();
         },
         function _updateSsConfig(_, _cb) {
             var cfg = JSON.parse(fs.readFileSync(SS_CFG));
             cfg.dataset = opts.zfsDataset;
-            cfg.snapshotDir = self.snapshotDir;
 
             self.ssCfg = cfg;
             return _cb();

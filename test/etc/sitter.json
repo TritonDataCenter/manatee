@@ -36,7 +36,6 @@
         "replicationTimeout": 10000,
         "snapShotterCfg": {
             "dataset": null,
-            "snapshotDir": null,
             "pollInterval": 1000,
             "snapshotNumber": 5,
             "pgUrl": null
@@ -49,7 +48,6 @@
         "zfsClientCfg": {
             "dataset": null,
             "parentDataset": null,
-            "snapshotDir": null,
             "zfsHost": "0.0.0.0",
             "zfsPort": null,
             "pollInterval": 1000,
