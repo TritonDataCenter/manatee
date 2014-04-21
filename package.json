@@ -47,7 +47,6 @@
         "node-manatee": "git+ssh://git@github.com:joyent/node-manatee#master",
         "tap": "0.4.8"
     },
-    "os": ["SunOs"],
     "scripts": {
         "pretest": "./lint.sh",
         "test": "cd ./test && ./integ-test.sh"

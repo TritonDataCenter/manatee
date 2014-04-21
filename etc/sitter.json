@@ -43,7 +43,7 @@
         "zfsClientCfg": {
             "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
             "mountpoint": "/var/manatee",
-            "parentDataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446",
+            "parentDataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data",
             "pollInterval": 1000,
             "zfsHost": "0.0.0.0",
             "zfsPath": "/usr/sbin/zfs",
