@@ -7,7 +7,8 @@
         "retry": {
             "retry": 2
         },
-        "url": "0.0.0.0"
+        "url": "10.88.88.52",
+        "pgUrl": "tcp://postgres@10.88.88.52:5432/postgres"
     },
     "heartbeatServerPort": 10000,
     "heartbeatServerCfg": {
@@ -15,7 +16,7 @@
         "pollInterval": 1000,
         "port":10000
     },
-    "ip": "0.0.0.0",
+    "ip": "10.88.88.52",
     "postgresMgrCfg": {
         "dataDir": "/var/manatee",
         "dbUser": "postgres",
@@ -45,7 +46,7 @@
             "mountpoint": "/var/manatee",
             "parentDataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data",
             "pollInterval": 1000,
-            "zfsHost": "0.0.0.0",
+            "zfsHost": "10.88.88.52",
             "zfsPath": "/usr/sbin/zfs",
             "zfsPort": 10001
         }
