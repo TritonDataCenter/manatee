@@ -47,7 +47,6 @@
         "url": null,
         "zfsClientCfg": {
             "dataset": null,
-            "parentDataset": null,
             "zfsHost": "0.0.0.0",
             "zfsPort": null,
             "pollInterval": 1000,
