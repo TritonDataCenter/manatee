@@ -15,8 +15,6 @@ read) capability.  Client configuration changes are minimal and failover is
 completely free of operator intervention.  New shard members are automatically
 replicated upon introduction.
 
-TODO: add a quick getting started example maybe?
-
 # Features
 
 * Automated liveliness detection, failover, and recovery. Reads are always

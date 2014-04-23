@@ -61,7 +61,8 @@ function parseOptions() {
                 break;
 
             default:
-                process.exit(1);
+                LOG.fatal('Unsupported option: ', option.option);
+                process.abort();
                 break;
         }
     }
@@ -81,7 +82,7 @@ function readConfig(options) {
             err: e,
             file: options.file
         }, 'Unable to read/parse configuration file');
-        process.exit(1);
+        process.abort();
     }
 
     return (extend({}, cfg, options));
