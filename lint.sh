@@ -13,6 +13,12 @@ cd ../..
 
 ./deps/jsstyle/jsstyle -f ./tools/jsstyle.conf ./*.js ./lib/*.js ./test/*.js
 
-./deps/json/lib/jsontool.js -f ./etc/*.json
-./deps/json/lib/jsontool.js -f ./test/etc/*.json
-
+./deps/json/lib/jsontool.js -f ./package.json 1>/dev/null
+for i in $(ls ./etc/*.json)
+do
+    ./deps/json/lib/jsontool.js -f $i 1>/dev/null
+done
+for i in $(ls ./test/etc/*.json)
+do
+    ./deps/json/lib/jsontool.js -f $i 1>/dev/null
+done
