@@ -13,3 +13,6 @@ cd ../..
 
 ./deps/jsstyle/jsstyle -f ./tools/jsstyle.conf ./*.js ./lib/*.js ./test/*.js
 
+./deps/json/lib/jsontool.js -f ./etc/*.json
+./deps/json/lib/jsontool.js -f ./test/etc/*.json
+
