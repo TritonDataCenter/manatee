@@ -1,63 +1,106 @@
 {
+    "// ": "Listen port used by the Manatee backupserver. Should be the same as the port in backupServer.json",
     "backupPort": 10002,
+    "// ": "Config for the sitter's internal heartbeat client",
     "heartbeatClientCfg": {
+        "// ": "Client conneciton timeout in ms",
         "connectTimeout": 2000,
+        "// ": "Heartbeat period in ms. This indicates how often the client will heartbeat to the server.",
         "heartbeatInterval": 1000,
+        "// ": "Timeout a heartbeat request after this many ms.",
         "requestTimeout": 5000,
+        "// ": "Restify retry object.",
         "retry": {
             "retry": 2
         },
+        "// ": "URL of the client.",
         "url": "10.88.88.52",
+        "// ": "URL of the PG instance.",
         "pgUrl": "tcp://postgres@10.88.88.52:5432/postgres"
     },
+    "// ": "Listen port of this heartbeat server.",
     "heartbeatServerPort": 10000,
+    "// ": "Heartbeat server config.",
     "heartbeatServerCfg": {
+        "// ": "Time in ms before a heartbeat from a client is expired. When a client heartbeat has expired, that client is marked as dead and removed as the standby to this node.",
         "expirationTime": 60000,
+        "// ": "Period in ms used to check heartbeat expiration, i.e. check heartbeat expiration every x ms.",
         "pollInterval": 1000,
+        "// ": "Listen port of this heartbeat server.",
         "port":10000
     },
+    "// ": "The IP of this Manatee node.",
     "ip": "10.88.88.52",
+    "// ": "The Postgres Manager config.",
     "postgresMgrCfg": {
+        "// ": "The postgres data directory.",
         "dataDir": "/var/manatee",
+        "// ": "The postgres user.",
         "dbUser": "postgres",
+        "// ": "The pg_hba conf pattern that's used to seed the postgres instance. Edit this config instead of the pg_hba in the postgres data directory.",
         "hbaConf": "./etc/pg_hba.conf",
+        "// ": "Period of postgres healthchecks.",
         "healthChkInterval": 1000,
+        "// ": "Timeout of the PG healthcheck. If this timeout is exceeded, we assume the PG instance to be dead and we abort all processes.",
         "healthChkTimeout": 5000,
+        "// ": "Enable writes when there's only 1 node in the shard. Only enable this if you are running with only 1 Manatee.",
         "oneNodeWriteMode": false,
+        "// ": "Timeout of PG operations such as initdb, start, stop.",
         "opsTimeout": 60000,
+        "// ": "Path to the PG initdb binary.",
         "pgInitDbPath": "/opt/local/bin/initdb",
+        "// ": "The postgresql.conf pattern that's used to seed the PG instance. Edit this config for config changes to PG.",
         "postgresConf": "./etc/postgresql.conf",
+        "// ": "Path to the postgres binary.",
         "postgresPath": "/opt/local/bin/postgres",
+        "// ": "The recovery.conf pattern that's used to seed the PG instance. Edit this config for config chanegs.",
         "recoveryConf": "./etc/recovery.conf",
+        "// ": "When a synchronous standby joins, it has to make forward replication progress without exceeding this timeout. Otherwise, Manatee will assume that replication has become inconsistent and put the shard in read-only mode.",
         "replicationTimeout": 60000,
         "snapShotterCfg": {
+            "// ": "The manatee ZFS datset.",
             "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee"
         },
+        "// ": "Config used to check the current replication state.",
         "syncStateCheckerCfg": {
+            "// ": "File on disk where the replication state is persisted.",
             "cookieLocation": "/var/tmp/manatee_sync_cookie",
+            "// ": "Check stated period in ms.",
             "interval": 1000
         },
+        "// ": "The PG url.",
         "url": "tcp://postgres@10.88.88.52:5432/postgres",
+        "// ": "ZFS client config.",
         "zfsClientCfg": {
+            "// ": "The ZFS dataset.",
             "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
+            "// ": "Mount point of the ZFS dataset.",
             "mountpoint": "/var/manatee",
+            "// ": "How often to poll the backup server when restoring a dataset.",
             "pollInterval": 1000,
+            "// ": "The IP of this Manatee node.",
             "zfsHost": "10.88.88.52",
+            "// ": "Path to the ZFS binary",
             "zfsPath": "/usr/sbin/zfs",
+            "// ": "Port used for ZFS recv",
             "zfsPort": 10001
         }
     },
+    "// ": "Port used by the PG instance.",
     "postgresPort": 5432,
+    "// ": "The path of this shard in ZK. This must be the same across all nodes of the same shard.",
     "shardPath": "/manatee/1",
     "ttl": 60,
+    "// ": "Zookeeper client config. See https://github.com/mcavage/node-zkplus",
     "zkCfg": {
         "servers": [
-            {
-                "host": "10.88.88.55",
-                "port": 2181
-            }
+        {
+            "host": "10.88.88.55",
+            "port": 2181
+        }
         ],
-        "timeout": 60000
+            "timeout": 60000
     },
+    "// ": "The name of the zone this node is running in.",
     "zoneId": "f9e6661b-82e6-4c19-873c-eb869d689446"
 }

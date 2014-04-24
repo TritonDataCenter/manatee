@@ -1,9 +1,14 @@
 {
-  "backupSenderCfg": {
-    "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
-    "zfsPath": "/usr/sbin/zfs"
-  },
-  "backupServerCfg": {
-    "port": 10002
-  }
+    "// ": "Config for the backup sender",
+    "backupSenderCfg": {
+        "// ": "The Manatee ZFS dataset.",
+        "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
+        "// ": "Path to the zfs binary.",
+        "zfsPath": "/usr/sbin/zfs"
+    },
+    "// ": "REST backup server config",
+    "backupServerCfg": {
+        "// ": "Server port.",
+        "port": 10002
+    }
 }

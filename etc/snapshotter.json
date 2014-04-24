@@ -1,5 +1,8 @@
 {
-  "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
-  "pollInterval": 3600000,
-  "snapshotNumber": 50
+    "// ": "The ZFS dataset used by Manatee",
+    "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
+    "// ": "Snapshot period in ms",
+    "pollInterval": 3600000,
+    "// ": "Number of snapshots to keep.",
+    "snapshotNumber": 50
 }
