@@ -11,7 +11,6 @@
     </dependency>
     <exec_method name='start' type='method' exec='node --abort-on-uncaught-exception backupserver.js -vvv -f ./etc/backupserver.json &amp;' timeout_seconds='30'>
       <method_context working_directory='/opt/manatee'>
-        <method_credential user='postgres' group='postgres'/>
         <method_environment>
           <envvar name='PATH' value='/opt/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin'/>
         </method_environment>

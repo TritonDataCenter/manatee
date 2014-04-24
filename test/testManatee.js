@@ -16,7 +16,6 @@ var uuid = require('node-uuid');
 var vasync = require('vasync');
 var verror = require('verror');
 
-var FS_PATH_PREFIX = process.env.FS_PATH_PREFIX || '/var/tmp/manatee_tests';
 var ZK_URL = process.env.ZK_URL || 'localhost:2181';
 var PARENT_ZFS_DS = process.env.PARENT_ZFS_DS;
 var SITTER_CFG = './etc/sitter.json';
@@ -145,7 +144,6 @@ function Manatee(opts, cb) {
 
             cfg.postgresMgrCfg.dataDir = opts.mountPoint + '/data';
             cfg.postgresMgrCfg.snapShotterCfg.dataset = opts.zfsDataset;
-            cfg.postgresMgrCfg.snapShotterCfg.pgUrl = self.pgUrl;
             cfg.postgresMgrCfg.syncStateCheckerCfg.cookieLocation =
                 self.cookieLocation;
             cfg.postgresMgrCfg.url = self.pgUrl;
@@ -316,8 +314,7 @@ Manatee.prototype.start = function start(cb) {
             return _cb();
         },
         function _startSitter(_, _cb) {
-            self.manatee.sitter = spawn('node', spawnSitterOpts,
-                                        {uid: self.postgresUserId});
+            self.manatee.sitter = spawn('node', spawnSitterOpts);
             self.manatee.sitter.stdout.pipe(self.sitterLog);
             self.manatee.sitter.stderr.pipe(self.sitterLog);
             self.manatee.sitter.once('close', function (pid, code) {
@@ -353,8 +350,7 @@ Manatee.prototype.start = function start(cb) {
 
         },
         function _startSnapshotter(_, _cb) {
-            self.manatee.snapshotter = spawn('node', spawnSsOpts,
-                                             {uid: self.postgresUserId});
+            self.manatee.snapshotter = spawn('node', spawnSsOpts);
             self.manatee.snapshotter.stdout.pipe(self.ssLog);
             self.manatee.snapshotter.stderr.pipe(self.ssLog);
             self.manatee.snapshotter.once('close', function (pid, code) {
@@ -367,8 +363,7 @@ Manatee.prototype.start = function start(cb) {
             return _cb();
         },
         function _startBackupServer(_, _cb) {
-            self.manatee.backupServer = spawn('node', spawnBsOpts,
-                                             {uid: self.postgresUserId});
+            self.manatee.backupServer = spawn('node', spawnBsOpts);
             self.manatee.backupServer.stdout.pipe(self.bsLog);
             self.manatee.backupServer.stderr.pipe(self.bsLog);
 

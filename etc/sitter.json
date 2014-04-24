@@ -31,9 +31,7 @@
         "recoveryConf": "./etc/recovery.conf",
         "replicationTimeout": 60000,
         "snapShotterCfg": {
-            "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee",
-            "pollInterval": 1000,
-            "snapshotNumber": 5
+            "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee"
         },
         "syncStateCheckerCfg": {
             "cookieLocation": "/var/tmp/manatee_sync_cookie",

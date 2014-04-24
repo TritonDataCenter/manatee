@@ -35,10 +35,7 @@
         "recoveryConf": "./etc/recovery.conf",
         "replicationTimeout": 10000,
         "snapShotterCfg": {
-            "dataset": null,
-            "pollInterval": 1000,
-            "snapshotNumber": 5,
-            "pgUrl": null
+            "dataset": null
         },
         "syncStateCheckerCfg": {
             "interval": 1000,
