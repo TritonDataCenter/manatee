@@ -34,7 +34,7 @@ replicated upon introduction.
 var manatee = require('node-manatee');
 
 var client = manatee.createClient({
-   "path": "/manatee/2.moray.emy.joyent.us/election",
+   "path": "/manatee/1/election",
    "zk": {
        "connectTimeout": 2000,
        "servers": [{
