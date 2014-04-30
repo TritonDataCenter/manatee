@@ -166,7 +166,8 @@ Setup a Zookeeper instance by following this
 
 ## Manatee Configuration
 
-Manatee comes with sample configs under the ```./etc``` directory. Manatee
+Manatee comes with sample configs under the
+[etc](https://github.com/joyent/manatee/tree/master/etc) directory. Manatee
 configs are in JSON format.
 
 The default configs have been well tested and deployed in production. Refrain
@@ -175,15 +176,17 @@ consequences.
 
 ## Configuring PostgreSQL
 
-Manatee comes with a default set of PG configs. You'll want to tune your
-postgresql.conf with parameters that suit your workload. Refer to the
+Manatee comes with a default set of PG
+[configs](https://github.com/joyent/manatee/tree/master/etc). You'll want to
+tune your postgresql.conf with parameters that suit your workload. Refer to the
 PostgreSQL [documentation](www.postgres.com).
 
 ## SMF
 The Solaris [Service Management Facility](http://www.illumos.org/man/5/smf) can
 be used as a process manager for the manatee processes. SMF provides restarter
 functionality for Manatee, among other things. There is a set of sample SMF
-manifests under the ```./smf``` directory.
+manifests under the [smf](https://github.com/joyent/manatee/tree/master/smf)
+directory.
 
 # Administration
 This section assumes you are using SMF to manage the Manatee instances and are
