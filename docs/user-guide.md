@@ -10,65 +10,79 @@
 Welcome to the Manatee guide. This guide is intended to give you a quick
 introduction to Manatee, and to help you setup your own instance of Manatee.
 
-We assume that you already know how to administor a replicated PostgreSQL(PG)
+We assume that you already know how to administer a replicated PostgreSQL(PG)
 instance, and are familiar with general Unix concepts. For background
 information on HA PostgreSQL, look
 [here](http://www.postgresql.org/docs/9.2/static/high-availability.html).
 
+You can also download a sample [Manatee](http://todo) vmware appliance
+with Manatee already setup.
+
+Additionally there are [screen casts](http://todo) that walks you through the
+various setup and administration processes.
+
 ## What is Manatee?
-Manatee is an automated fault monitoring and leader-election system built for
-managing a set of replicated PG servers. It is written completely in Node.js.
+Manatee is an automated failover, fault monitoring and leader-election system
+built for managing a set of replicated PG servers. It is written completely in
+Node.js.
 
 A traditional replicated PG shard is not resilient to the death or partition
 of any of the nodes from the rest. This is generally solved by involving a
-human in the loop. e.g.  Having monitoring systems which alerts an operator to
-fix the shard when failure events occur. Worse still, involving an operator
-may lead to operator error, and can result in irrecoverable database
-corruption.
+human in the loop; such as having monitoring systems which alerts an operator to
+fix the shard manually when failure events occur.
 
-Additionally, backups, restores and rebuilds of nodes in the shard are often
-difficult, error prone, and time consuming.
+Manatee automates failover by using using a consensus layer (Zookeeper) and
+takes the human out of the loop.  In the face of network partitions or death of
+any node, Manatee will automatically detect these events, and rearrange the
+shard topology so that neither durability nor availability is compromised.
+Specifically, the loss of one node in a Manatee shard will not impact r/w
+availability, even if that node was the primary of the shard. Reads are still
+available as long as there is __a__ node in the shard. Data integrity is never
+compromised -- Manatee has built in data divergence detection and will prevent
+data on the nodes from forking from each other.
 
-Manatee automates failure detection and takes the human out of the loop.  In
-the face of network partitions or node death, Manatee will automatically detect
-these events, and rearrange the shard topology so that neither durability nor
-availability is compromised. Manatee also simplifies backups, restores and
-rebuilds. New nodes in the shard are automatically bootstrapped from existing
-nodes. If a node becomes unrecoverrable, it can be rebuilt by restoring from an
-existing node in the shard.
+Manatee also simplifies backups, restores and rebuilds. New nodes in the shard
+are automatically bootstrapped from existing nodes. If a node becomes
+unrecoverrable, it can be rebuilt by restoring from an existing node in the
+shard.
 
 ## Architectural Components
 ### Shard Overview
 This is the component diagram of a fully setup Manatee Shard. Much of the
-details of each Manatee node itself has been simplified, and the detailed
-review will follow in later sections.
+details of each Manatee node itself has been simplified, with detailed
+descriptions in later sections.
 
 ![Manatee Architecture](http://us-east.manta.joyent.com/yunong/public/manatee/docs/Manatee-Shard.jpg "Manatee Shard")
 
-Each shard consists of 3 Manatee nodes, a Primary, Synchronous Standby and
-Asynchronous Standby.  It's important to note the Shard is a daisy chain. Using
-node A as an example, it is only aware of the node directly in front of it
-(none) and the node directly behind it, B.
+Each shard consists of 3 Manatee nodes, a primary(A), synchronous standby(B)
+and asynchronous standby(C) setup in a daisy chain. Nodes only gossip to other
+nodes thare are immediately adjacent. Using node A as an example, it is only
+aware of the node directly in front of it (none) and the node directly behind
+it, B.
 
 [PostgreSQL Cascading
 replication](http://www.postgresql.org/docs/9.2/static/warm-standby.html#CASCADING-REPLICATION)
 is used in the Shard at (3). There is only one direct replication connection to
-each node from the node immediately behind it. e.g. only B replicates from A,
-and only C replicates from B. C will never replicate from A as long as B is
+each node from the node immediately behind it. That is, only B replicates from
+A, and only C replicates from B. C will never replicate from A as long as B is
 alive.
 
 The primary uses [PostgreSQL synchronous
 replication](http://www.postgresql.org/docs/9.2/static/warm-standby.html#SYNCHRONOUS-REPLICATION)
-to the synchronous standby. This ensures data written to Manatee will be
-persisted to at least the primary and sync standby. Without this, failovers of
-a node in the shard can cause data inconsistency between nodes. The
-synchronous standby uses asynchronous replication to the async standby.
+to replicate to the synchronous standby. This ensures data written to Manatee
+will be persisted to at least the primary and sync standby. Without this,
+failovers of a node in the shard can cause data inconsistency between nodes.
+The synchronous standby uses asynchronous replication to the async standby.
 
-The topology of the Shard is maintained by (1) and (2). Leaders, i.e. who is
-the node directly in front of self? are determined by (2) via Zookeeper(ZK).
-Standbys are determined by the standby node itself, the standby in thei case B,
-determines via (2) that its leader is A. And communicates its standby status to
-A via (1).
+The topology of the Shard is maintained by (1) and (2). Leaders of each node,
+(i.e. the node directly in front of self) are determined by (2) via
+Zookeeper(ZK).  Standbys are determined by the standby node itself, the standby
+in this case B, determines via (2) that its leader is A, and communicates its
+standby status to A via (1).
+
+When a node dies, the node that's directly behind it is promoted in the
+topology. If the promoted node was an async peer and is promoted to the sync
+peer, it's PG replication type is also changed from async to sync.
 
 ### Manatee Node Detail
 Here are the components encapsulated within a single Manatee node.
@@ -175,7 +189,15 @@ manifests under the ```./smf``` directory.
 This section assumes you are using SMF to manage the Manatee instances and are
 running on Joyent's SmartOS.
 
-## Importing SMF Manifests
+## Creating a new Manatee Shard
+The physical location of each Manatee node in the shard is important. Each
+Manatee node should be located on a different __physical__ host than the others
+in the Shard, and if possible in different data centers. In this way, failures
+of a single physical host or DC will not impact the availability of your
+Manatee shard.
+
+### Setting up SMF
+It's recommended that you use a service restarter with Manatee such as SMF.
 Before running Manatee as an SMF service, you must first import the service
 manifest.
 ``` bash
@@ -198,6 +220,27 @@ Once the manifests have been imported, you can start the services.
 [root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# svcadm enable manatee-backupserver
 [root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# svcadm enable manatee-snapshotter
 ```
+
+Repeat these steps all all Manatee nodes. You now have a highly available
+automated failover PG shard.
+
+## Adding a new Node to the Manatee Shard
+Adding a new node is easy.
+* Create a new node.
+* Install and configure Manatee from the steps above.
+* Setup and start the Manatee SMF services.
+
+This new node will automatically determine its position in the shard and clone
+its PG data from its leader. You do not need to manually build the new node.
+
+## Moving Manatee Nodes
+In the normal course of maintenance, you may need to move or upgrade the
+Manatee nodes in the shard. You can do this by adding a new node to the shard,
+waiting for it to catch up (using tools descriped in the following sectons),
+and then removing the node you wanted to move/upgrade.
+
+Additional nodes past the initial 3 will just be asynchronous standbys and will
+not impact the shard's performance or availability.
 
 ## Shard Status
 The node-manatee client provides the `manatee-stat` utility which gives
@@ -273,8 +316,13 @@ This prints out the current topology of the shard. The "repl" field shows the
 standby that's currently connected to the node. It's the same set of fields
 that is returned by the PG query ```select * from pg_stat_replication```. The
 repl field is helpful in verifying the status of the PostgreSQL instances. If
-there is no repl field, it means that the PG instance isn't running on that
-node.
+the repl field exists, it means that the node's standby is caught up and
+streaming. If there is no repl field, it means that there is no PG instance
+replication from this node. This is expected with the last node in the shard.
+
+However, if there is another node after the current one in the shard, and there
+is no repl field, it indicatees there is a problem with replication between the
+two nodes.
 
 ## Shard History
 You can query any past topology changes by using the `manatee-history` tool.
@@ -328,6 +376,8 @@ You can check that the shard is in safe mode via `manatee-stat`.
     }
 }
 ```
+
+The `error` field indicates that the shard is in safe mode.
 
 When in safe mode, manatee will be only available for reads but you will not be
 able to write to it until it is manually cleared by an operator.
@@ -401,5 +451,3 @@ node will become the new primary of the shard. Follow these steps:
   manatee-sitter`
 * Check via `manatee-stat` and `psql` as before to verify the shard is up and
   running.
-
-

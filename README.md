@@ -24,10 +24,20 @@ replicated upon introduction.
 * Automated bootstrap. New peers will bootstrap and join the shard
   without human intervention.
 
-* Data integrity. Built atop modern copy-on-write file systems and synchronous
-  replication for safe, reliable storage.
+* Data integrity. Built atop ZFS and synchronous replication for safe, reliable
+  storage.
 
 # Quick Start
+
+## Server
+Checkout the server [user-guide](http://seacow.io/user-guide.html) for details
+on server setup.
+
+There is a sample [Manatee](http://mantalinktovm) appliance with Manatee
+already setup.
+
+There are also [screen-casts](http://seacow.io/screencasts.htm) on setting up a
+Manatee shard.
 
 ## Client
 ```javascript
@@ -58,4 +68,3 @@ client.on('topology', function (urls) {
     console.log({urls: urls}, 'topology changed');
 });
 ```
-## Server
