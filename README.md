@@ -44,7 +44,7 @@ Manatee shard.
 var manatee = require('node-manatee');
 
 var client = manatee.createClient({
-   "path": "/manatee/1/election",
+   "path": "/manatee/1",
    "zk": {
        "connectTimeout": 2000,
        "servers": [{
@@ -60,11 +60,15 @@ var client = manatee.createClient({
        "timeout": 20000
    }
 });
-client.on('ready', function () {
+client.once('ready', function () {
     console.log('manatee client ready');
 });
 
 client.on('topology', function (urls) {
     console.log({urls: urls}, 'topology changed');
+});
+
+client.on('error', function (err) {
+    console.error({err: err}, 'got client error');
 });
 ```
