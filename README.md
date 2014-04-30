@@ -36,8 +36,8 @@ on server setup.
 There is a sample [Manatee](http://mantalinktovm) appliance with Manatee
 already setup.
 
-There are also [screen-casts](http://seacow.io/screencasts.htm) on setting up a
-Manatee shard.
+There are also [screen-casts](http://seacow.io/screencasts.htm) on setting up
+and administering a Manatee shard.
 
 ## Client
 ```javascript
