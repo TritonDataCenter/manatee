@@ -28,16 +28,16 @@ Node.js.
 
 A traditional replicated PG shard is not resilient to the death or partition
 of any of the nodes from the rest. This is generally solved by involving a
-human in the loop; such as having monitoring systems which alerts an operator to
+human in the loop, such as having monitoring systems which alerts an operator to
 fix the shard manually when failure events occur.
 
-Manatee automates failover by using using a consensus layer (Zookeeper) and
-takes the human out of the loop.  In the face of network partitions or death of
-any node, Manatee will automatically detect these events, and rearrange the
-shard topology so that neither durability nor availability is compromised.
-Specifically, the loss of one node in a Manatee shard will not impact r/w
-availability, even if that node was the primary of the shard. Reads are still
-available as long as there is __a__ node in the shard. Data integrity is never
+Manatee automates failover by using a consensus layer (Zookeeper) and takes the
+human out of the loop.  In the face of network partitions or death of any node,
+Manatee will automatically detect these events and rearrange the shard topology
+so that neither durability nor availability are compromised.  The loss of one
+node in a Manatee shard will not impact system read/write availability, even if
+it was the primary node in the shard. Reads are still available as long as
+there is _at least one_ active node left in the shard.  Data integrity is never
 compromised -- Manatee has built in data divergence detection and will prevent
 data on the nodes from forking from each other.
 
@@ -56,9 +56,9 @@ descriptions in later sections.
 
 Each shard consists of 3 Manatee nodes, a primary(A), synchronous standby(B)
 and asynchronous standby(C) setup in a daisy chain. Nodes only gossip to other
-nodes thare are immediately adjacent. Using node A as an example, it is only
-aware of the node directly in front of it (none) and the node directly behind
-it, B.
+nodes that are immediately adjacent in the graph. Using node A as an example,
+it is only aware of the node directly in front of it (none) and the node
+directly behind it, B.
 
 [PostgreSQL Cascading
 replication](http://www.postgresql.org/docs/9.2/static/warm-standby.html#CASCADING-REPLICATION)
@@ -112,7 +112,7 @@ The snapshotter takes periodic ZFS snapshots of the PG instance. (2) These
 snapshots are used to backup and restore the database to other nodes in the
 shard.
 
-### Manatee Backupserver
+### Manatee Backup Server
 The snapshots taken by the snapshotter are made available to other nodes by the
 REST backupserver. The backupserver, upon receiving a backup request, will send
 the snapshots to another node. (3) (8)
@@ -120,15 +120,15 @@ the snapshots to another node. (3) (8)
 ### ZFS
 Manatee relies on the [ZFS](http://en.wikipedia.org/wiki/ZFS) file system.
 Specifically, ZFS [snapshots](http://illumos.org/man/1m/zfs) are used to create
-point in time snapshots of the PG database. The ZFS send and recv utilites are
-used to restore or bootstrap other nodes in the shard.
+point-in-time snapshots of the PG database. The `zfs send` and `zfs recv`
+utilities are used to restore or bootstrap other nodes in the shard.
 
 # Supported Platforms
 
 Manatee has been tested and runs in production on Joyent's
 [SmartOS](http://www.joyent.com/technology/smartos), and should work on most
-[Illumos](http://illumos.org) distributions such as OmniOS. Unix like operating
-systems that have ZFS support should work, but they haven't been tested.
+[Illumos](http://illumos.org) distributions such as OmniOS. Unix-like operating
+systems that have ZFS support should work, but have not been tested.
 
 # Dependencies
 
@@ -154,64 +154,64 @@ Alternatively, you can grab the release
 
 Install the package dependencies via npm install.
 ``` bash
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# npm install
+[root@host ~/manatee]# npm install
 ```
 
 # Configuration
 
 ## Setup Zookeeper
 
-Setup a Zookeeper instance by following this
-[guide](http://zookeeper.apache.org/doc/trunk/zookeeperAdmin.html).
+Setup a Zookeeper instance by following
+[this guide](http://zookeeper.apache.org/doc/trunk/zookeeperAdmin.html).
 
 ## Manatee Configuration
 
-Manatee comes with sample configs under the
-[etc](https://github.com/joyent/manatee/tree/master/etc) directory. Manatee
-configs are in JSON format.
+Manatee comes with sample configs under
+[the etc directory](https://github.com/joyent/manatee/tree/master/etc). Manatee
+configuration files are JSON-formatted.
 
-The default configs have been well tested and deployed in production. Refrain
-from tuning them, especially the timeouts, unless you are sure of the
-consequences.
+The default configuration files have been well tested and deployed in
+production. Refrain from tuning them, especially the timeouts, unless you are
+sure of the consequences.
 
 ## Configuring PostgreSQL
 
 Manatee comes with a default set of PG
 [configs](https://github.com/joyent/manatee/tree/master/etc). You'll want to
-tune your postgresql.conf with parameters that suit your workload. Refer to the
-PostgreSQL [documentation](www.postgres.com).
+tune your `postgresql.conf` with parameters that suit your workload. Refer to the
+[PostgreSQL documentation](www.postgres.com).
 
 ## SMF
-The Solaris [Service Management Facility](http://www.illumos.org/man/5/smf) can
-be used as a process manager for the manatee processes. SMF provides restarter
-functionality for Manatee, among other things. There is a set of sample SMF
-manifests under the [smf](https://github.com/joyent/manatee/tree/master/smf)
-directory.
+The illumos [Service Management Facility](http://www.illumos.org/man/5/smf) can
+be used as a process manager for the Manatee processes. SMF provides service
+supervision and restarter functionality for Manatee, among other things. There
+is a set of sample SMF manifests under
+[the smf directory](https://github.com/joyent/manatee/tree/master/smf).
 
 # Administration
 This section assumes you are using SMF to manage the Manatee instances and are
-running on Joyent's SmartOS.
+running on SmartOS.
 
 ## Creating a new Manatee Shard
 The physical location of each Manatee node in the shard is important. Each
-Manatee node should be located on a different __physical__ host than the others
+Manatee node should be located on a different _physical_ host than the others
 in the Shard, and if possible in different data centers. In this way, failures
 of a single physical host or DC will not impact the availability of your
 Manatee shard.
 
 ### Setting up SMF
-It's recommended that you use a service restarter with Manatee such as SMF.
+It's recommended that you use a service restarter, such as SMF, with Manatee.
 Before running Manatee as an SMF service, you must first import the service
 manifest.
 ``` bash
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# svccfg import ./smf/sitter.xml
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# svccfg import ./smf/backupserver.xml
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# svccfg import ./smf/snapshotter.xml
+[root@host ~/manatee]# svccfg import ./smf/sitter.xml
+[root@host ~/manatee]# svccfg import ./smf/backupserver.xml
+[root@host ~/manatee]# svccfg import ./smf/snapshotter.xml
 ```
 
 Check the svcs have been imported:
 ``` bash
-[root@manatee2 ~]# svcs -a | grep manatee
+[root@host ~]# svcs -a | grep manatee
 disabled       17:33:13 svc:/manatee-sitter:default
 disabled       17:33:13 svc:/manatee-backupserver:default
 disabled       17:33:13 svc:/manatee-snapshotter:default
@@ -219,12 +219,12 @@ disabled       17:33:13 svc:/manatee-snapshotter:default
 
 Once the manifests have been imported, you can start the services.
 ``` bash
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# svcadm enable manatee-sitter
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# svcadm enable manatee-backupserver
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# svcadm enable manatee-snapshotter
+[root@host ~/manatee]# svcadm enable manatee-sitter
+[root@host ~/manatee]# svcadm enable manatee-backupserver
+[root@host ~/manatee]# svcadm enable manatee-snapshotter
 ```
 
-Repeat these steps all all Manatee nodes. You now have a highly available
+Repeat these steps on all Manatee nodes. You now have a highly available
 automated failover PG shard.
 
 ## Adding a new Node to the Manatee Shard
@@ -249,7 +249,7 @@ not impact the shard's performance or availability.
 The node-manatee client provides the `manatee-stat` utility which gives
 visibility into the status of the Manatee shard.
 ``` bash
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# ./node_modules/manatee/bin/manatee-stat -p <zk_ip>
+[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-stat -p <zk_ip>
 {
 "1": {
     "primary": {
@@ -330,7 +330,7 @@ two nodes.
 ## Shard History
 You can query any past topology changes by using the `manatee-history` tool.
 ```bash
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# ./node_modules/manatee/bin/manatee-history '1' <zk_ips>
+[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-history '1' <zk_ips>
 {"time":"1394597418025","date":"2014-03-12T04:10:18.025Z","ip":"172.27.3.8","action":"AssumeLeader","role":"Leader","master":"","slave":"","zkSeq":"0000000000"}
 {"time":"1394597438430","date":"2014-03-12T04:10:38.430Z","ip":"172.27.4.13","action":"NewLeader","role":"Standby","master":"172.27.3.8","slave":"","zkSeq":"0000000001"}
 {"time":"1394597451091","date":"2014-03-12T04:10:51.091Z","ip":"172.27.3.8","action":"NewStandby","role":"Leader","master":"","slave":"5432","zkSeq":"0000000002"}
@@ -346,30 +346,31 @@ You can query any past topology changes by using the `manatee-history` tool.
 {"time":"1395450122033","date":"2014-03-22T01:02:02.033Z","ip":"172.27.4.13","action":"NewStandby","role":"Standby","master":"172.27.3.8","slave":"5432","zkSeq":"0000000012"}
 ```
 
-This will return a list of every single manatee flip sorted by time. The node
+This will return a list of every single Manatee flip sorted by time. The node
 is identified by the "ip" field. The type of transition is identified by the
 "action" field. The current role of the node is identified by the "role" field.
 Only the first element of the daisy chain, i.e. the Primary node, will ever
 have the role of Leader. All other nodes will be standbys.
 
- There are 3 different types of manatee flips.
-* AssumeLeader. This means the node has become the primary of the Shard. This
+There are 3 different types of Manatee flips:
+
+* `AssumeLeader`. This means the node has become the primary of the Shard. This
   might mean that the primary has changed. Verify against the last AssumeLeader
   event to see if the primary has changed.
-* NewLeader. This means the current node's leader may have changed. the
+* `NewLeader`. This means the current node's leader may have changed. the
   "master" field represents its new leader. Note that its leader may not
   neccessarily be the primary of the shard, it only represents the node directly
   in front of the current node.
-* NewStandby. This means the current node's standby may have changed. The
+* `NewStandby`. This means the current node's standby may have changed. The
   "slave" field represents the new standby node.
 
-This tool is invaluable when trying to reconstruct the timeline of flips in a
-Manatee shard, especially when the shard is in safe mode.
+This tool is invaluable when attempting to reconstruct the timeline of flips in
+a Manatee shard, especially when the shard is in safe mode.
 
 ## Safe Mode
 You can check that the shard is in safe mode via `manatee-stat`.
-``` bash
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# ./node_modules/manatee/bin/manatee-stat -p <zk_ip>
+```bash
+[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-stat -p <zk_ip>
 {
     "1": {
         "error": {
@@ -382,18 +383,18 @@ You can check that the shard is in safe mode via `manatee-stat`.
 
 The `error` field indicates that the shard is in safe mode.
 
-When in safe mode, manatee will be only available for reads but you will not be
+When in safe mode, Manatee will be only available for reads but you will not be
 able to write to it until it is manually cleared by an operator.
 
-Before we run through how to bring a manatee back up from safe mode, it's
+Before we run through how to bring a Manatee back up from safe mode, it's
 important to discuss why safe mode exists.
 
-There are situations through a series of manatee flips where the Shard's data
-could potentially become inconsistent. Consider the following scenario. We have
-a Manatee shard at rest with nodes A, B, and C. Refer to the Shard Overview
+There are situations through a series of Manatee flips where the Shard's data
+could potentially become inconsistent. Consider the following scenario: We have
+a Manatee shard at rest with nodes A, B, and C. Refer to the _Shard Overview_
 section for the diagram of this topology.
 
-Now imagine that all 3 nodes restart at around the same time. If C enters the
+Now, imagine that all 3 nodes restart at around the same time. If C enters the
 shard first, it becomes the primary of the Shard. Because it was previously the
 async, its PG xlog may not be completely up to date. If C starts taking writes
 at this point then the data between C, and A/B will become forked and the
@@ -406,7 +407,7 @@ In practice this situation could occur frequently, e.g. in the face of network
 partitions. Instead of taking a 33% chance each time this happens that the
 shard will enter safe mode (if the async gets promoted to primary), Manatee
 proactively tries to avoid this by persisting information about the previous
-tolographical state. Only the previous primary or sync can be promoted to the
+topological state. Only the previous primary or sync can be promoted to the
 primary.
 
 However, due to some limitations in PG itself, this is sometimes not
@@ -416,7 +417,7 @@ writes and put itself into safe mode.
 ### Clearing a Shard from Safe Mode
 In order to clear a shard, you must first figure out who the last primary is.
 The correct potential primary is the node with the largest PG current xlog
-location. Follow these stesp to figure out who has the largest current xlog
+location. Follow these steps to figure out who has the largest current xlog
 location. On each node:
 
 * Shutdown the manatee-sitter process. `svcadm disable manatee-sitter`
@@ -427,7 +428,7 @@ location. On each node:
 * Query the latset xlog location
 
 ```
-[root@fa858d48-4cc5-6cd9-a6b0-9d07f5603265 ~/manatee]# sudo -u postgres psql
+[root@host ~/manatee]# sudo -u postgres psql
 postgres=# select * from pg_current_xlog_location();
  pg_current_xlog_location
 --------------------------
@@ -442,11 +443,11 @@ node will become the new primary of the shard. Follow these steps:
 * You'll want to delete the file pointed to by the config key
   `SyncStateCheckerCfg.cookielocation` that's in the sitter config on disk
   first.
-* Ensure that all other manatee nodes in the shard are down. You should have
+* Ensure that all other Manatee nodes in the shard are down. You should have
   done this as part of querying for the latest xlog location.
 * Clear the shard from error node by running the `manatee-clear` tool. This
   removes the `error` node from ZK.
-* Restart manatee on this node. `svcadm enable manatee-sitter`.
+* Restart Manatee on this node. `svcadm enable manatee-sitter`.
 * Verify this node is up and running. Check via `manatee-stat` to see if you
   see a `primary` entry. And by attempting to login to the database via `sudo
   -u postgres psql`.
