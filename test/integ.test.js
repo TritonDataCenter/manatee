@@ -2181,6 +2181,41 @@ exports.primaryDeathThenAsyncDeath = function (t) {
     });
 };
 
+//exports.safeMode = function (t) {
+    //vasync.pipeline({funcs: [
+        //function _stopManatees(_, _cb) {
+            //var barrier = vasync.barrier();
+            //barrier.on('drain', function () {
+                //return _cb();
+            //});
+
+            //Object.keys(MANATEES).forEach(function (m) {
+                //var id = uuid.v4();
+                //barrier.start(id);
+                //MANATEES[m].kill(function () {
+                    //barrier.done(id);
+                //});
+            //});
+        //},
+        //function loadAndVerifyTopology(_, _cb) {
+            //getTopology(function (err, topology) {
+                //_.topology = topology;
+                //_.primaryPgUrl = _.topology.primary.pgUrl;
+                //_.syncPgUrl = _.topology.sync.pgUrl;
+                //_.asyncPgUrl = _.topology.async.pgUrl;
+                //return _cb(err);
+            //});
+        //},
+        //function
+    //], arg: {}}, function (err, results) {
+        //if (err) {
+            //LOG.error({err: err, results: results});
+            //t.fail(err);
+        //}
+        //t.done();
+    //});
+//};
+
 exports.after = function (t) {
     vasync.pipeline({funcs: [
         function _stopManatees(_, _cb) {
