@@ -48,7 +48,7 @@ shard.
 
 ## Architectural Components
 ### Shard Overview
-This is the component diagram of a fully setup Manatee Shard. Much of the
+This is the component diagram of a fully setup Manatee shard. Much of the
 details of each Manatee node itself has been simplified, with detailed
 descriptions in later sections.
 
@@ -62,7 +62,7 @@ directly behind it, B.
 
 [PostgreSQL Cascading
 replication](http://www.postgresql.org/docs/9.2/static/warm-standby.html#CASCADING-REPLICATION)
-is used in the Shard at (3). There is only one direct replication connection to
+is used in the shard at (3). There is only one direct replication connection to
 each node from the node immediately behind it. That is, only B replicates from
 A, and only C replicates from B. C will never replicate from A as long as B is
 alive.
@@ -74,7 +74,7 @@ will be persisted to at least the primary and sync standby. Without this,
 failovers of a node in the shard can cause data inconsistency between nodes.
 The synchronous standby uses asynchronous replication to the async standby.
 
-The topology of the Shard is maintained by (1) and (2). Leaders of each node,
+The topology of the shard is maintained by (1) and (2). Leaders of each node,
 (i.e. the node directly in front of self) are determined by (2) via
 Zookeeper(ZK).  Standbys are determined by the standby node itself, the standby
 in this case B, determines via (2) that its leader is A, and communicates its
@@ -97,7 +97,7 @@ responsible for:
 * Managing the underlying PG instance. The PG process runs as a child process
   of the sitter. This means that PG doesn't run unless the sitter is running.
   Additionally, the sitter initializes, restores, and configures the PG instance
-  depending on its current role in the Shard. (1)
+  depending on its current role in the shard. (1)
 * Managing leadership status with ZK. Each sitter participates in a ZK
   election, and is notified when its leader node has changed. (7)
 * Managing standby heartbeats from its standby if it exists. When a standby
@@ -195,7 +195,7 @@ running on SmartOS.
 ## Creating a new Manatee Shard
 The physical location of each Manatee node in the shard is important. Each
 Manatee node should be located on a different _physical_ host than the others
-in the Shard, and if possible in different data centers. In this way, failures
+in the shard, and if possible in different data centers. In this way, failures
 of a single physical host or DC will not impact the availability of your
 Manatee shard.
 
@@ -354,7 +354,7 @@ have the role of Leader. All other nodes will be standbys.
 
 There are 3 different types of Manatee flips:
 
-* `AssumeLeader`. This means the node has become the primary of the Shard. This
+* `AssumeLeader`. This means the node has become the primary of the shard. This
   might mean that the primary has changed. Verify against the last AssumeLeader
   event to see if the primary has changed.
 * `NewLeader`. This means the current node's leader may have changed. the
@@ -389,13 +389,13 @@ able to write to it until it is manually cleared by an operator.
 Before we run through how to bring a Manatee back up from safe mode, it's
 important to discuss why safe mode exists.
 
-There are situations through a series of Manatee flips where the Shard's data
+There are situations through a series of Manatee flips where the shard's data
 could potentially become inconsistent. Consider the following scenario: We have
 a Manatee shard at rest with nodes A, B, and C. Refer to the _Shard Overview_
 section for the diagram of this topology.
 
 Now, imagine that all 3 nodes restart at around the same time. If C enters the
-shard first, it becomes the primary of the Shard. Because it was previously the
+shard first, it becomes the primary of the shard. Because it was previously the
 async, its PG xlog may not be completely up to date. If C starts taking writes
 at this point then the data between C, and A/B will become forked and the
 shard has become inconsistent.
@@ -411,7 +411,7 @@ topological state. Only the previous primary or sync can be promoted to the
 primary.
 
 However, due to some limitations in PG itself, this is sometimes not
-sufficient. In this case, the Shard will detect that it can no longer take
+sufficient. In this case, the shard will detect that it can no longer take
 writes and put itself into safe mode.
 
 ### Clearing a Shard from Safe Mode
@@ -440,7 +440,7 @@ postgres=# select * from pg_current_xlog_location();
 Once you've figured out the node that has the largest xlog location, then that
 node will become the new primary of the shard. Follow these steps:
 
-* You'll want to delete the file pointed to by the config key
+* Delete the file pointed to by the config key
   `SyncStateCheckerCfg.cookielocation` that's in the sitter config on disk
   first.
 * Ensure that all other Manatee nodes in the shard are down. You should have

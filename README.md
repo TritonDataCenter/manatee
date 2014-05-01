@@ -24,22 +24,27 @@ replicated upon introduction.
 * Automated bootstrap. New peers will bootstrap and join the shard
   without human intervention.
 
-* Data integrity. Built atop ZFS and synchronous replication for safe, reliable
+* Data integrity. Built atop [ZFS](http://en.wikipedia.org/wiki/ZFS) and
+  [PostgreSQL synchronous
+  replication](http://www.postgresql.org/docs/9.2/static/warm-standby.html#SYNCHRONOUS-REPLICATION)
+  for safe, reliable
   storage.
 
 # Quick Start
 
 ## Server
-Checkout the server [user-guide](http://seacow.io/user-guide.html) for details
-on server setup.
+Checkout the server
+[user-guide](https://github.com/joyent/manatee/blob/master/docs/user-guide.md)
+for details on server setup.
 
-There is a sample [Manatee](http://mantalinktovm) appliance with Manatee
-already setup.
+There is a sample Manatee [vm](http://mantalinktovm) with a provisioned Manatee
+shard.
 
-There are also [screen-casts](http://seacow.io/screencasts.htm) on setting up
-and administering a Manatee shard.
+There are also [screen-casts](http://seacow.io/screencasts.htm) on Manatee
+installation, setup, and administration.
 
 ## Client
+Detailed client docs are [here](https://github.com/joyent/node-manatee).
 ```javascript
 var manatee = require('node-manatee');
 
