@@ -210,7 +210,7 @@ Manatee.prototype.kill = function kill(cb) {
         self.manatee.sitter.once('error', function (err) {
             log.error({
                 err: err, url: self.pgUrl
-            }, 'could not send SIGINT');
+            }, 'could not send SIGKILL');
         });
 
         self.manatee.sitter.removeAllListeners('close');
@@ -227,7 +227,7 @@ Manatee.prototype.kill = function kill(cb) {
         self.manatee.snapshotter.once('error', function (err) {
             log.error({
                 err: err, url: self.pgUrl
-            }, 'could not send SIGINT');
+            }, 'could not send SIGKILL');
         });
 
         self.manatee.snapshotter.removeAllListeners('close');
@@ -244,7 +244,7 @@ Manatee.prototype.kill = function kill(cb) {
         self.manatee.backupServer.once('error', function (err) {
             log.error({
                 err: err, url: self.pgUrl
-            }, 'could not send SIGINT');
+            }, 'could not send SIGKILL');
         });
 
         self.manatee.backupServer.removeAllListeners('close');
@@ -261,7 +261,7 @@ Manatee.prototype.kill = function kill(cb) {
         log.info({
             url: self.pgUrl, procId: self.manatee.sitter.pid
         }, 'killing sitter');
-        self.manatee.sitter.kill('SIGINT');
+        self.manatee.sitter.kill('SIGKILL');
     } else {
         barrier.done('sitter');
     }
@@ -270,7 +270,7 @@ Manatee.prototype.kill = function kill(cb) {
         log.info({
             url: self.pgUrl, procId: self.manatee.snapshotter.pid
         }, 'killing snapshotter');
-        self.manatee.snapshotter.kill('SIGINT');
+        self.manatee.snapshotter.kill('SIGKILL');
     } else {
         barrier.done('snapshotter');
     }
@@ -279,7 +279,7 @@ Manatee.prototype.kill = function kill(cb) {
         log.info({
             url: self.pgUrl, procId: self.manatee.backupServer.pid
         }, 'killing backupServer');
-        self.manatee.backupServer.kill('SIGINT');
+        self.manatee.backupServer.kill('SIGKILL');
     } else {
         barrier.done('backupServer');
     }
@@ -288,13 +288,14 @@ Manatee.prototype.kill = function kill(cb) {
 Manatee.prototype.start = function start(cb) {
     var self = this;
     var log = self.log;
-    var spawnSitterOpts = ['--abort-on-uncaught-exception', '../sitter.js',
-        '-vvv', '-f', self.sitterCfgLocation || './etc/sitter.json'];
-    var spawnBsOpts = ['--abort-on-uncaught-exception',
-        '../backupserver.js', '-vvv', '-f',
+    var spawnSitterOpts = ['-l', 'child', '-o', 'noorphan', 'node',
+        '--abort-on-uncaught-exception', '../sitter.js', '-vvv', '-f',
+        self.sitterCfgLocation || './etc/sitter.json'];
+    var spawnBsOpts = ['-l', 'child', '-o', 'noorphan', 'node',
+        '--abort-on-uncaught-exception', '../backupserver.js', '-vvv', '-f',
         self.bsCfgLocation || './etc/backupserver.json'];
-    var spawnSsOpts = ['--abort-on-uncaught-exception',
-        '../snapshotter.js', '-vvv', '-f',
+    var spawnSsOpts = ['-l', 'child', '-o', 'noorphan', 'node',
+        '--abort-on-uncaught-exception', '../snapshotter.js', '-vvv', '-f',
         self.ssCfgLocation || './etc/snapshotter.json'];
 
     vasync.pipeline({funcs: [
@@ -314,7 +315,7 @@ Manatee.prototype.start = function start(cb) {
             return _cb();
         },
         function _startSitter(_, _cb) {
-            self.manatee.sitter = spawn('node', spawnSitterOpts);
+            self.manatee.sitter = spawn('/usr/bin/ctrun', spawnSitterOpts);
             self.manatee.sitter.stdout.pipe(self.sitterLog);
             self.manatee.sitter.stderr.pipe(self.sitterLog);
             self.manatee.sitter.once('close', function (pid, code) {
@@ -350,7 +351,7 @@ Manatee.prototype.start = function start(cb) {
 
         },
         function _startSnapshotter(_, _cb) {
-            self.manatee.snapshotter = spawn('node', spawnSsOpts);
+            self.manatee.snapshotter = spawn('/usr/bin/ctrun', spawnSsOpts);
             self.manatee.snapshotter.stdout.pipe(self.ssLog);
             self.manatee.snapshotter.stderr.pipe(self.ssLog);
             self.manatee.snapshotter.once('close', function (pid, code) {
@@ -363,7 +364,7 @@ Manatee.prototype.start = function start(cb) {
             return _cb();
         },
         function _startBackupServer(_, _cb) {
-            self.manatee.backupServer = spawn('node', spawnBsOpts);
+            self.manatee.backupServer = spawn('/usr/bin/ctrun', spawnBsOpts);
             self.manatee.backupServer.stdout.pipe(self.bsLog);
             self.manatee.backupServer.stderr.pipe(self.bsLog);
 
