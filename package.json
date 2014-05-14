@@ -40,7 +40,7 @@
         "vasync": "1.4.3",
         "verror": "1.3.7",
         "xtend": "1.0.3",
-        "zkplus": "git://github.com/mcavage/node-zkplus.git#9fb0f34490627fb5e777159ddee8f22462ca9ca9"
+        "zkplus": "git://github.com/mcavage/node-zkplus.git#9f65fc5'
     },
     "devDependencies": {
         "byline": "4.1.1",
