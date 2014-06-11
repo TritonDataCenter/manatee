@@ -52,12 +52,9 @@
         }
     },
     "zkCfg": {
-        "servers": [
-            {
-                "host": "0.0.0.0",
-                "port": 2181
-            }
-        ],
-        "timeout": 5000
+        "connStr": "0.0.0.0:2181",
+        "opts": {
+            "sessionTimeout": 10000
+        }
     }
 }

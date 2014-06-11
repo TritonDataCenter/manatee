@@ -91,15 +91,12 @@
     "// ": "The path of this shard in ZK. This must be the same across all nodes of the same shard.",
     "shardPath": "/manatee/1",
     "ttl": 60,
-    "// ": "Zookeeper client config. See https://github.com/mcavage/node-zkplus",
+    "// ": "Zookeeper client config. See https://github.com/alexguan/node-zookeeper-client",
     "zkCfg": {
-        "servers": [
-        {
-            "host": "10.88.88.55",
-            "port": 2181
+        "connStr": "10.88.88.55:2181",
+        "opts": {
+            "sessionTimeout": 60000
         }
-        ],
-            "timeout": 60000
     },
     "// ": "The name of the zone this node is running in.",
     "zoneId": "f9e6661b-82e6-4c19-873c-eb869d689446"

@@ -25,7 +25,9 @@
         "carrier": "0.1.13",
         "iniparser": "1.0.5",
         "manta": "1.2.6",
+        "leader": "git://github.com/yunong/node-leader.git#dfbd759",
         "node-uuid": "1.4.1",
+        "node-zookeeper-client": "0.2.1",
         "once": "1.3.0",
         "optimist": "0.6.1",
         "pg": "3.0.3",
@@ -39,8 +41,7 @@
         "vargs": "0.1.0",
         "vasync": "1.4.3",
         "verror": "1.3.7",
-        "xtend": "1.0.3",
-        "zkplus": "git://github.com/mcavage/node-zkplus.git#9f65fc5"
+        "xtend": "1.0.3"
     },
     "devDependencies": {
         "byline": "4.1.1",

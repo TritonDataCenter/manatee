@@ -1,6 +1,6 @@
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
-var ManateeClient = require('../client/manatee.js');
+var ManateeClient = require('node-manatee');
 var ConfParser = require('../lib/confParser');
 var fs = require('fs');
 var exec = require('child_process').exec;

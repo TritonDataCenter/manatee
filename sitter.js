@@ -123,7 +123,6 @@ function readConfig(options) {
 
     // set loggers of the sub components
     _config.log = LOG;
-    _config.zkCfg.log = LOG;
     _config.postgresMgrCfg.log = LOG;
     _config.postgresMgrCfg.zfsClientCfg.log = LOG;
     _config.postgresMgrCfg.snapShotterCfg.log = LOG;
