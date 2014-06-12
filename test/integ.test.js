@@ -199,8 +199,7 @@ exports.before = function (t) {
                                  'unable to verify topology');
                         return _cb2(e);
                     }
-                }
-            ], arg: {}}, function (err, results) {
+                }            ], arg: {}}, function (err, results) {
                 if (err) {
                     LOG.info({err: err, results: results, topology: topology},
                              'still waiting for correct shard state');
@@ -262,6 +261,7 @@ exports.before = function (t) {
                     }
                 },
                 function _verifyTopology(_2, _cb2) {
+                    _2.topology = topology;
                     try {
                         /*
                          * here we only have to check the sync states of each
@@ -281,6 +281,26 @@ exports.before = function (t) {
                     } catch (e) {
                         LOG.info({err: e, topology: topology},
                                  'unable to verify topology');
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
                         return _cb2(e);
                     }
                 }
@@ -551,6 +571,26 @@ exports.primaryDeath = function (t) {
                         LOG.info({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
+                        return _cb2(e);
+                    }
                 }
             ], arg: {}}, function (err, results) {
                 if (err) {
@@ -629,6 +669,7 @@ exports.syncDeath = function (t) {
                     }
                 },
                 function _verifyTopology(_2, _cb2) {
+                    _2.topology = topology;
                     try {
                         /*
                          * here we only have to check the sync states of each
@@ -651,6 +692,23 @@ exports.syncDeath = function (t) {
                     } catch (e) {
                         LOG.info({err: e, topology: topology},
                                  'unable to verify topology');
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
                         return _cb2(e);
                     }
                 }
@@ -724,6 +782,26 @@ exports.syncDeath = function (t) {
                         return _cb2();
                     } catch (e) {
                         LOG.info({err: e, topology: _2.topology});
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
                         return _cb2(e);
                     }
                 }
@@ -805,6 +883,7 @@ exports.asyncDeath = function (t) {
                     }
                 },
                 function _verifyTopology(_2, _cb2) {
+                    _2.topology = topology;
                     try {
                         /*
                          * here we only have to check the sync states of each
@@ -827,6 +906,23 @@ exports.asyncDeath = function (t) {
                     } catch (e) {
                         LOG.info({err: e, topology: topology},
                                  'unable to verify topology');
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
                         return _cb2(e);
                     }
                 }
@@ -901,6 +997,26 @@ exports.asyncDeath = function (t) {
                     } catch (e) {
                         LOG.info({err: e, topology: _2.topology},
                                  'unable to verify topology');
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
                         return _cb2(e);
                     }
                 }
@@ -1100,6 +1216,26 @@ exports.everyoneDies = function (t) {
                                  'unable to verify topology');
                         return _cb2(e);
                     }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
+                        return _cb2(e);
+                    }
                 }
             ], arg: {}}, function (err, results) {
                 if (err) {
@@ -1297,6 +1433,26 @@ exports.primarySyncInstantaneousDeath = function (t) {
                                  'unable to verify topology');
                         return _cb2(e);
                     }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
+                        return _cb2(e);
+                    }
                 }
             ], arg: {}}, function (err, results) {
                 if (err) {
@@ -1492,6 +1648,26 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                                  'unable to verify topology');
                         return _cb2(e);
                     }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
+                        return _cb2(e);
+                    }
                 }
             ], arg: {}}, function (err, results) {
                 if (err) {
@@ -1681,6 +1857,26 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                                  'unable to verify topology');
                         return _cb2(e);
                     }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
+                        return _cb2(e);
+                    }
                 }
             ], arg: {}}, function (err, results) {
                 if (err) {
@@ -1758,6 +1954,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                     }
                 },
                 function _verifyTopology(_2, _cb2) {
+                    _2.topology = topology;
                     try {
                         /*
                          * here we only have to check the sync states of each
@@ -1778,6 +1975,23 @@ exports.primaryDeathThenSyncDeath = function (t) {
                     } catch (e) {
                         LOG.info({err: e, topology: topology},
                                  'unable to verify topology');
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
                         return _cb2(e);
                     }
                 }
@@ -1926,6 +2140,26 @@ exports.primaryDeathThenSyncDeath = function (t) {
                         LOG.info({err: e, topology: _2.topology});
                         return _cb2(e);
                     }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
+                        return _cb2(e);
+                    }
                 }
             ], arg: {}}, function (err, results) {
                 if (err) {
@@ -2003,6 +2237,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                     }
                 },
                 function _verifyTopology(_2, _cb2) {
+                    _2.topology = topology;
                     try {
                         /*
                          * here we only have to check the sync states of each
@@ -2023,6 +2258,23 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                     } catch (e) {
                         LOG.info({err: e, topology: topology},
                                  'unable to verify topology');
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
                         return _cb2(e);
                     }
                 }
@@ -2169,6 +2421,26 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                         return _cb2();
                     } catch (e) {
                         LOG.info({err: e, topology: _2.topology});
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.error({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
                         return _cb2(e);
                     }
                 }
