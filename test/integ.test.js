@@ -1129,6 +1129,7 @@ exports.everyoneDies = function (t) {
 
 exports.primarySyncInstantaneousDeath = function (t) {
 //function foo() {
+    var topo;
     vasync.pipeline({funcs: [
         function loadAndVerifyTopology(_, _cb) {
             getTopology(function (err, topology) {
@@ -1271,6 +1272,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
                 },
                 function _verifyTopology(_2, _cb2) {
                     _cb2 = once(_cb2);
+                    topo = _2.topology;
                     try {
                          /*
                           * here we only have to check the sync states of each
@@ -1308,6 +1310,10 @@ exports.primarySyncInstantaneousDeath = function (t) {
 
             setTimeout(function () {
                 clearInterval(intervalId);
+                if (!_cb.called) {
+                    LOG.fatal({topology: topo},
+                              'new peer did not join shard in time');
+                }
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
             }, TIMEOUT).unref();
@@ -1322,6 +1328,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
 };
 
 exports.primaryAsyncInstantaneousDeath = function (t) {
+    var topo;
     vasync.pipeline({funcs: [
         function loadAndVerifyTopology(_, _cb) {
             getTopology(function (err, topology) {
@@ -1393,6 +1400,10 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
 
             setTimeout(function () {
                 clearInterval(intervalId);
+                if (!_cb.called) {
+                    LOG.fatal({topology: topology},
+                              'shard did not flip in time');
+                }
                 return _cb(new verror.VError('shard did not flip in time'));
             }, TIMEOUT).unref();
         },
@@ -1456,6 +1467,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                 },
                 function _verifyTopology(_2, _cb2) {
                     _cb2 = once(_cb2);
+                    topo = _2.topology;
                     try {
                          /*
                           * here we only have to check the sync states of each
@@ -1493,6 +1505,10 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
 
             setTimeout(function () {
                 clearInterval(intervalId);
+                if (!_cb.called) {
+                    LOG.fatal({topology: topo},
+                              'new peer did not join shard in time');
+                }
                 return _cb(new verror.VError(
                     'new peer did not join shard in time'));
             }, TIMEOUT).unref();
