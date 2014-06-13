@@ -64,7 +64,6 @@ exports.before = function (t) {
     n1Opts = {
         zfsDataset: PARENT_ZFS_DS + '/' + n1,
         zfsPort: n1Port,
-        heartbeatServerPort: ++n1Port,
         mountPoint: FS_PATH_PREFIX + '/' + n1,
         backupPort: ++n1Port,
         postgresPort: ++n1Port,
@@ -79,7 +78,6 @@ exports.before = function (t) {
     n2Opts = {
         zfsDataset: PARENT_ZFS_DS + '/' + n2,
         zfsPort: n2Port,
-        heartbeatServerPort: ++n2Port,
         mountPoint: FS_PATH_PREFIX + '/' + n2,
         backupPort: ++n2Port,
         postgresPort: ++n2Port,
@@ -94,7 +92,6 @@ exports.before = function (t) {
     n3Opts = {
         zfsDataset: PARENT_ZFS_DS + '/' + n3,
         zfsPort: n3Port,
-        heartbeatServerPort: ++n3Port,
         mountPoint: FS_PATH_PREFIX + '/' + n3,
         backupPort: ++n3Port,
         postgresPort: ++n3Port,
@@ -129,7 +126,7 @@ exports.before = function (t) {
         function _startN1(_, _cb) {
             var manatee = new Manatee(n1Opts, function (err) {
                 if (err) {
-                    LOG.error({err: err}, 'could not start manatee');
+                    LOG.warn({err: err}, 'could not start manatee');
                     return (_cb);
                 }
 
@@ -140,7 +137,7 @@ exports.before = function (t) {
         function _startN2(_, _cb) {
             var manatee = new Manatee(n2Opts, function (err) {
                 if (err) {
-                    LOG.error({err: err}, 'could not start manatee');
+                    LOG.warn({err: err}, 'could not start manatee');
                     return (_cb);
                 }
 
@@ -219,7 +216,7 @@ exports.before = function (t) {
         function _startN3(_, _cb) {
             var manatee = new Manatee(n3Opts, function (err) {
                 if (err) {
-                    LOG.error({err: err}, 'could not start manatee');
+                    LOG.warn({err: err}, 'could not start manatee');
                     return (_cb);
                 }
 
@@ -419,7 +416,7 @@ exports.verifyShard = function (t) {
         }
     ], arg: {}}, function (err, results) {
         if (err) {
-            LOG.error({err: err, results: results},
+            LOG.warn({err: err, results: results},
                       'check shard status failed');
                       t.fail(err);
         }
@@ -587,7 +584,7 @@ exports.primaryDeath = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -707,7 +704,7 @@ exports.syncDeath = function (t) {
                         assert.equal('sync', JSON.parse(s).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -800,7 +797,7 @@ exports.syncDeath = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -921,7 +918,7 @@ exports.asyncDeath = function (t) {
                         assert.equal('sync', JSON.parse(s).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -1015,7 +1012,7 @@ exports.asyncDeath = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -1232,7 +1229,7 @@ exports.everyoneDies = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -1449,7 +1446,7 @@ exports.primarySyncInstantaneousDeath = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -1664,7 +1661,7 @@ exports.primaryAsyncInstantaneousDeath = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -1873,7 +1870,7 @@ exports.syncAsyncInstantaneousDeath = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -1990,7 +1987,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                         assert.equal('sync', JSON.parse(s).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -2156,7 +2153,7 @@ exports.primaryDeathThenSyncDeath = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -2273,7 +2270,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                         assert.equal('sync', JSON.parse(s).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -2439,7 +2436,7 @@ exports.primaryDeathThenAsyncDeath = function (t) {
                         assert.equal('async', JSON.parse(a).role);
                         return _cb2();
                     } catch (e) {
-                        LOG.error({err: e, topology: _2.topology},
+                        LOG.warn({err: e, topology: _2.topology},
                                  'unable to verify sync state');
                         return _cb2(e);
                     }
@@ -2609,7 +2606,7 @@ function getTopology(callback) {
     setTimeout(function () {
         if (!callback.called) {
             clearInterval(intervalId);
-            LOG.error({error: error, topology: _.topology},
+            LOG.warn({error: error, topology: _.topology},
                       'unable to veryify topology');
             return callback(error, _.topology);
         }

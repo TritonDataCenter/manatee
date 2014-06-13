@@ -127,8 +127,6 @@ function readConfig(options) {
     _config.postgresMgrCfg.zfsClientCfg.log = LOG;
     _config.postgresMgrCfg.snapShotterCfg.log = LOG;
     _config.postgresMgrCfg.syncStateCheckerCfg.log = LOG;
-    _config.heartbeatServerCfg.log = LOG;
-    _config.heartbeatClientCfg.log = LOG;
 
     LOG.info('starting manatee');
     Shard.start(_config);

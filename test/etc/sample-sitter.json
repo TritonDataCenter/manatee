@@ -5,22 +5,6 @@
   "ttl": 60,
   "ip": "127.0.0.1",
   "zoneId": "integ-test-zone",
-  "heartbeatServerPort": 10001,
-  "heartbeatClientCfg": {
-    "connectTimeout": 2000,
-    "heartbeatInterval": 1000,
-    "requestTimeout": 5000,
-    "url": "127.0.0.1",
-    "retry": {
-      "retry": 2
-    },
-    "pgUrl": "tcp://postgres@127.0.0.1:10003/postgres"
-  },
-  "heartbeatServerCfg": {
-    "expirationTime": 5000,
-    "pollInterval": 1000,
-    "port": 10001
-  },
   "postgresMgrCfg": {
     "dataDir": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf/data",
     "dbUser": "postgres",

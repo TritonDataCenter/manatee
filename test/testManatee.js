@@ -32,7 +32,6 @@ function Manatee(opts, cb) {
     assert.object(opts.log, 'options.log');
     assert.string(opts.zfsDataset, 'opts.zfsDataset');
     assert.number(opts.zfsPort, 'opts.zfsPort');
-    assert.number(opts.heartbeatServerPort, 'opts.heartbeatServerPort');
     assert.string(opts.mountPoint, 'opts.mountPoint');
     assert.number(opts.backupPort, 'opts.backupPort');
     assert.number(opts.postgresPort, 'opts.postgresPort');
@@ -133,14 +132,8 @@ function Manatee(opts, cb) {
             var cfg = JSON.parse(fs.readFileSync(SITTER_CFG));
             cfg.backupPort = opts.backupPort;
             cfg.postgresPort = opts.postgresPort;
-            cfg.heartbeatServerPort = opts.heartbeatServerPort;
             cfg.shardPath = self.shardPath;
             cfg.ip = MY_IP;
-
-            cfg.heartbeatClientCfg.url = MY_IP;
-            cfg.heartbeatClientCfg.pgUrl = self.pgUrl;
-
-            cfg.heartbeatServerCfg.port = opts.heartbeatServerPort;
 
             cfg.postgresMgrCfg.dataDir = opts.mountPoint + '/data';
             cfg.postgresMgrCfg.snapShotterCfg.dataset = opts.zfsDataset;

@@ -5,21 +5,6 @@
     "ttl": 60,
     "ip": "0.0.0.0",
     "zoneId": "integ-test-zone",
-    "heartbeatServerPort": null,
-    "heartbeatClientCfg": {
-        "connectTimeout": 2000,
-        "heartbeatInterval": 1000,
-        "requestTimeout": 5000,
-        "url": "0.0.0.0",
-        "retry": {
-            "retry": 2
-        }
-    },
-    "heartbeatServerCfg": {
-        "expirationTime": 5000,
-        "pollInterval": 1000,
-        "port": null
-    },
     "postgresMgrCfg": {
         "dataDir": null,
         "dbUser": "postgres",
