@@ -1,34 +1,6 @@
 {
     "// ": "Listen port used by the Manatee backupserver. Should be the same as the port in backupServer.json",
     "backupPort": 10002,
-    "// ": "Config for the sitter's internal heartbeat client",
-    "heartbeatClientCfg": {
-        "// ": "Client conneciton timeout in ms",
-        "connectTimeout": 2000,
-        "// ": "Heartbeat period in ms. This indicates how often the client will heartbeat to the server.",
-        "heartbeatInterval": 1000,
-        "// ": "Timeout a heartbeat request after this many ms.",
-        "requestTimeout": 5000,
-        "// ": "Restify retry object.",
-        "retry": {
-            "retry": 2
-        },
-        "// ": "URL of the client.",
-        "url": "10.88.88.52",
-        "// ": "URL of the PG instance.",
-        "pgUrl": "tcp://postgres@10.88.88.52:5432/postgres"
-    },
-    "// ": "Listen port of this heartbeat server.",
-    "heartbeatServerPort": 10000,
-    "// ": "Heartbeat server config.",
-    "heartbeatServerCfg": {
-        "// ": "Time in ms before a heartbeat from a client is expired. When a client heartbeat has expired, that client is marked as dead and removed as the standby to this node.",
-        "expirationTime": 60000,
-        "// ": "Period in ms used to check heartbeat expiration, i.e. check heartbeat expiration every x ms.",
-        "pollInterval": 1000,
-        "// ": "Listen port of this heartbeat server.",
-        "port":10000
-    },
     "// ": "The IP of this Manatee node.",
     "ip": "10.88.88.52",
     "// ": "The Postgres Manager config.",
