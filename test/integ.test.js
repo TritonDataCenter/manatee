@@ -2466,6 +2466,120 @@ exports.primaryDeathThenAsyncDeath = function (t) {
     });
 };
 
+exports.MANATEE_206_delete_prev_emphemeral_nodes = function (t) {
+    vasync.pipeline({funcs: [
+        function loadAndVerifyTopology(_, _cb) {
+            getTopology(function (err, topology) {
+                _.topology = topology;
+                _.primaryPgUrl = _.topology.primary.pgUrl;
+                _.syncPgUrl = _.topology.sync.pgUrl;
+                _.asyncPgUrl = _.topology.async.pgUrl;
+                return _cb(err);
+            });
+        },
+        function killAsync(_, _cb) {
+            MANATEES[_.asyncPgUrl].kill(_cb);
+        },
+        function restartAsync(_, _cb) {
+            _cb = once(_cb);
+            MANATEES[_.asyncPgUrl].start(function (err) {
+                return _cb(err);
+            });
+        },
+        function checkTopology2(_, _cb) {
+            _cb = once(_cb);
+            var intervalId = setInterval(function () {vasync.pipeline({funcs: [
+                function _getTopology(_2, _cb2) {
+                    manatee_common.loadTopology(ZK_CLIENT,
+                                                function (err, topology) {
+                        _2.topology = topology[SHARD_ID];
+                        if (err) {
+                            return _cb2(err);
+                        }
+                        LOG.info({topology: topology});
+                        return _cb2();
+                    });
+                },
+                function _getPgStatus(_2, _cb2) {
+                    try {
+                        manatee_common.pgStatus([_2.topology], _cb2);
+                    } catch (e) {
+                        LOG.info({err: e, topology: _2.topology});
+                        return _cb2(e);
+                    }
+                },
+                function _verifyTopology(_2, _cb2) {
+                    _cb2 = once(_cb2);
+                    /*
+                     * here we only have to check the sync states of each of
+                     * the nodes.  if the sync states are correct, then we know
+                     * replication is working.
+                     */
+                    try {
+                        assert.ok(_2.topology, 'shard topology DNE');
+                        assert.ok(_2.topology.primary, 'primary DNE');
+                        assert.ok(_2.topology.primary.repl,
+                                  'no sync repl state');
+                        assert.equal(_2.topology.primary.repl.sync_state,
+                                     'sync', 'no sync replication state.');
+                        assert.ok(_2.topology.sync, 'sync DNE');
+                        assert.equal(_2.topology.sync.repl.sync_state,
+                                     'async', 'no async replication state');
+                        assert.ok(_2.topology.async, 'async DNE');
+                        assert.notEqual(_2.topology.primary.pgUrl,
+                                        _2.primaryPgUrl,
+                                        'primary should not be killed primary');
+                        return _cb2();
+                    } catch (e) {
+                        LOG.info({err: e, topology: _2.topology});
+                        return _cb2(e);
+                    }
+                },
+                function _verifySyncState(_2, _cb2) {
+                    try {
+                        var p = fs.readFileSync(MANATEES[_2.
+                                                topology.primary.pgUrl].
+                                                cookieLocation, 'utf8');
+                        var s = fs.readFileSync(MANATEES[_2.topology.sync.
+                                                pgUrl].cookieLocation, 'utf8');
+                        var a = fs.readFileSync(MANATEES[_2.topology.async.
+                                                pgUrl].cookieLocation, 'utf8');
+
+                        assert.equal('primary', JSON.parse(p).role);
+                        assert.equal('sync', JSON.parse(s).role);
+                        assert.equal('async', JSON.parse(a).role);
+                        return _cb2();
+                    } catch (e) {
+                        LOG.warn({err: e, topology: _2.topology},
+                                 'unable to verify sync state');
+                        return _cb2(e);
+                    }
+                }
+            ], arg: {}}, function (err, results) {
+                if (err) {
+                    LOG.info({err: err, results: results},
+                             'topology not correct');
+                    return;
+                }
+                clearInterval(intervalId);
+                return _cb();
+            }); }, 3000);
+
+            setTimeout(function () {
+                clearInterval(intervalId);
+                return _cb(new verror.VError(
+                    'new peer did not join shard in time'));
+            }, TIMEOUT).unref();
+        }
+    ], arg: {}}, function (err, results) {
+        if (err) {
+            LOG.error({err: err, results: results});
+            t.fail(err);
+        }
+        t.done();
+    });
+};
+
 //exports.safeMode = function (t) {
     //vasync.pipeline({funcs: [
         //function _stopManatees(_, _cb) {
