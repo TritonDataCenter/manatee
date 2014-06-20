@@ -368,7 +368,7 @@ function clientTest(t) {
 
 exports.setupMoray = function (t) {
     /* JSSTYLED */
-    var createBucketConfig = 'sudo -u postgres psql -p 10003 -c "CREATE TABLE buckets_config ( name text PRIMARY KEY, index text NOT NULL, pre text NOT NULL, post text NOT NULL, options text, mtime timestamp without time zone DEFAULT now() NOT NULL);"';
+    var createBucketConfig = 'sudo -u postgres psql -p 10002 -c "CREATE TABLE buckets_config ( name text PRIMARY KEY, index text NOT NULL, pre text NOT NULL, post text NOT NULL, options text, mtime timestamp without time zone DEFAULT now() NOT NULL);"';
     exec(createBucketConfig, function (err) {
         if (err) {
             LOG.warn({err: err}, 'unable to create moray bucket config');
