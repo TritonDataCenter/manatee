@@ -1,3 +1,23 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Troubleshoot a Manatee Shard in Distress.](#troubleshoot-a-manatee-shard-in-distress)
+- [Healthy Manatee](#healthy-manatee)
+- [Symptoms](#symptoms)
+  - [manatee-stat Shows Only an Error Object.](#manatee-stat-shows-only-an-error-object)
+  - [manatee-stat Shows Only a Primary Node.](#manatee-stat-shows-only-a-primary-node)
+  - [manatee-stat Shows No Async Node. (Only Primary and Sync is Visible)](#manatee-stat-shows-no-async-node-only-primary-and-sync-is-visible)
+  - [manatee-stat Shows No Nodes.](#manatee-stat-shows-no-nodes)
+  - [manatee-stat Shows No Replication Information on the Sync.](#manatee-stat-shows-no-replication-information-on-the-sync)
+  - [Manatee Runs out of Space](#manatee-runs-out-of-space)
+    - [Solution](#solution)
+- [Useful Manatee Commands](#useful-manatee-commands)
+  - [Find the set of manatee peers in a DC](#find-the-set-of-manatee-peers-in-a-dc)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+**Table of Contents**
 # Troubleshoot a Manatee Shard in Distress.
 
 This guide will list the most common failure scenarios of Manatee and steps to
@@ -83,7 +103,7 @@ A manatee shard is healthy only if there are 3 peers in the shard,
 
 # Symptoms
 Here are some commonly seen outputs of `manatee-stat` when the shard is
-unhealthy.
+unhealthy. Before you start: click [here](http://calmingmanatee.com/).
 
 ## manatee-stat Shows Only an Error Object.
 ```json
@@ -100,13 +120,13 @@ unhealthy.
     }
 ```
 1. [Check that no manatee peers are out of disk
-space](#enospc).
+space](#manatee-runs-out-of-space).
 1. Take note of the primary and standby IPs.
 1. Disable manatee-sitter on all manatee-nodes. `# svcadm disable manatee-sitter`
 1. Run `# manatee-clear` on any manatee node.
 1. Enable manatee-sitter on the primary.
 1. On the standby, run `# manatee-rebuild`. Wait for this step to finish.
-1. [Find the async manatee peer](#find-peers).
+1. [Find the async manatee peer](#find-the-set-of-manatee-peers-in-a-dc).
 1. On the async, re-enable manatee-sitter.
 1. Check via manatee-stat that you see all 3 peers with replication
 information. Depending on the output of `# manatee-stat` at this point,
@@ -138,8 +158,8 @@ as COAL by default only come with 1 manatee node. In those cases, this is the
 expected output of `# manatee-stat`.
 
 1. [Check that no manatee peers are out of disk
-space](#enospc).
-1. [Find the set of manatee peers in the DC](#find-peers).
+space](#manatee-runs-out-of-space).
+1. [Find the set of manatee peers in the DC](#find-the-set-of-manatee-peers-in-a-dc).
 1. Log on to a non primary peer.
 1. Restart the manatee-sitter process. `# svcadm disable manatee-sitter; svcadm enable manatee-sitter`
 1. Check via `# manatee-stat` that you see 2 peers with replication information.
@@ -197,8 +217,8 @@ Then you'll need to rebuild this peer. `# manatee-rebuild`
 ```
 
 1. [Check that no manatee peers are out of disk
-space](#enospc).
-1. [Find the set of manatee peers in the DC](#find-peers) and verify that an async peer exists.
+space](#manatee-runs-out-of-space).
+1. [Find the set of manatee peers in the DC](#find-the-set-of-manatee-peers-in-a-dc) and verify that an async peer exists.
 You should see 3 instances -- the missing async is the instance that is missing from `# manatee-stat`
 1. Log on to the async peer.
 1. Restart the manatee-sitter process. `# svcadm disable manatee-sitter; svcadm enable manatee-sitter`
@@ -215,8 +235,8 @@ Then you'll need to rebuild this peer. `# manatee-rebuild`
 ```
 
 1. [Check that no manatee peers are out of disk
-space](#enospc).
-1. [Find the set of manatee peers in the DC](#find-peers).
+space](#manatee-runs-out-of-space).
+1. [Find the set of manatee peers in the DC](#find-the-set-of-manatee-peers-in-a-dc).
 If this returns nothing, then no manatee peers are deployed.
 1. Log on to any manatee peer.
 1. Check for the most recent primary of the shard.
@@ -308,14 +328,14 @@ the steps described in the other troubleshooting sections of this document.
 }
 ```
 1. [Check that no manatee peers are out of disk
-space](#enospc).
+space](#manatee-runs-out-of-space).
 1. Log on to the async.
 1. Rebuild via `# manatee-rebuild`
 1. Depending on the output of `@ manatee-stat` at this point, you'll want to
 follow the steps described in the other troubleshooting sections of this
 document.
 
-## <a name="enospc"></a>Manatee Runs out of Space
+## Manatee Runs out of Space
 Another really common scenario we've seen in the past is where the manatee
 zones runs out of space.
 
@@ -377,7 +397,7 @@ params.quota=500
 ```
 
 # Useful Manatee Commands
-## <a name="find-peers"></a>Find the set of manatee peers in a DC
+## Find the set of manatee peers in a DC
 This lists the manatee peers in each DC by `zone_uuid, alias, CN_uuid, zone_ip`.
 From the headnode, run:
 ```bash
