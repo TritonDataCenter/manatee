@@ -130,11 +130,11 @@ function readConfig(options) {
     _config.postgresMgrCfg.syncStateCheckerCfg.log = LOG;
 
     LOG.info('starting manatee');
-    Shard.start(_config);
+    var shard = Shard.start(_config);
     StatusServer.start({
         log: LOG,
         port: _config.postgresPort + 1,
-        shard: Shard
+        shard: shard
     });
     LOG.info('manatee started');
 })();
