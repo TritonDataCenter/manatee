@@ -16,6 +16,7 @@ var extend = require('xtend');
 var fs = require('fs');
 var getopt = require('posix-getopt');
 var Shard = require('./lib/shard');
+var StatusServer = require('./lib/statusServer');
 
 /*
  * globals
@@ -130,5 +131,10 @@ function readConfig(options) {
 
     LOG.info('starting manatee');
     Shard.start(_config);
+    StatusServer.start({
+        log: LOG,
+        port: _config.postgresPort + 1,
+        shard: Shard
+    });
     LOG.info('manatee started');
 })();
