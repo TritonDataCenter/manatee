@@ -9,9 +9,10 @@ make install
 cd ../..
 
 ./deps/javascriptlint/build/install/jsl --conf ./tools/jsl.node.conf \
-    ./*.js ./lib/*.js ./test/*.js
+    ./*.js ./lib/*.js ./bin/*.js ./test/*.js
 
-./deps/jsstyle/jsstyle -f ./tools/jsstyle.conf ./*.js ./lib/*.js ./test/*.js
+./deps/jsstyle/jsstyle -f ./tools/jsstyle.conf ./*.js ./lib/*.js ./bin/*.js \
+    ./test/*.js
 
 ./deps/json/lib/jsontool.js -f ./package.json 1>/dev/null
 for i in $(ls ./etc/*.json)
