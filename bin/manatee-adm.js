@@ -25,10 +25,13 @@ ManateeAdm.prototype.do_status = function do_status(subcmd, opts, args, cb) {
         self.do_help('help', {}, [subcmd], cb);
     }
 
+    if (!opts.zk) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
     adm.status(opts, function (err, status) {
         if (err) {
-            console.error(util.inspect(err));
-            throw err;
+            return cb(err);
         } else {
             console.log(JSON.stringify(status));
             return cb();
@@ -48,12 +51,7 @@ ManateeAdm.prototype.do_status.options = [ {
     names: ['zk', 'z'],
     type: 'string',
     helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: '127.0.0.1:2181'
-}, {
-    names: ['postgres', 'p'],
-    type: 'bool',
-    help: 'Show postgres replication information'
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181'
 }];
 ManateeAdm.prototype.do_status.help = (
     'Show status of a manatee shard. \n' +
