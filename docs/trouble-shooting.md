@@ -28,8 +28,13 @@ You should read the user guide first to ensure you understand
 how Manatee works. Some of the recovery steps could potentially be destructive
 and result in data loss if performed incorrectly.
 
+# Manatee-adm
+The primary way an operator should be interacting with manatee is via the
+`manatee-adm` CLI.
+
 # Healthy Manatee
-The output of `# manatee-stat` of a healthy manatee shard will look like this.
+The output of `# manatee-adm status` of a healthy manatee shard will look like
+this.
 ```json
 {
     "sdc": {
