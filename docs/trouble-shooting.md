@@ -4,13 +4,14 @@
 
 - [Troubleshoot a Manatee Shard in Distress.](#troubleshoot-a-manatee-shard-in-distress)
   - [Warning](#warning)
+- [Manatee-adm](#manatee-adm)
 - [Healthy Manatee](#healthy-manatee)
 - [Symptoms](#symptoms)
-  - [manatee-stat Shows Only an Error Object.](#manatee-stat-shows-only-an-error-object)
-  - [manatee-stat Shows Only a Primary peer.](#manatee-stat-shows-only-a-primary-peer)
-  - [manatee-stat Shows No Async peer. (Only Primary and Sync are Visible)](#manatee-stat-shows-no-async-peer-only-primary-and-sync-are-visible)
-  - [manatee-stat Shows No peers.](#manatee-stat-shows-no-peers)
-  - [manatee-stat Shows No Replication Information on the Sync.](#manatee-stat-shows-no-replication-information-on-the-sync)
+  - [manatee-adm status Shows Only an Error Object.](#manatee-adm-status-shows-only-an-error-object)
+  - [manatee-adm status Shows Only a Primary peer.](#manatee-adm-status-shows-only-a-primary-peer)
+  - [manatee-adm status Shows No Async peer. (Only Primary and Sync are Visible)](#manatee-adm-status-shows-no-async-peer-only-primary-and-sync-are-visible)
+  - [manatee-adm status Shows No peers.](#manatee-adm-status-shows-no-peers)
+  - [manatee-adm status Shows No Replication Information on the Sync.](#manatee-adm-status-shows-no-replication-information-on-the-sync)
   - [Manatee Runs out of Space](#manatee-runs-out-of-space)
     - [Solution](#solution)
 - [Useful Manatee Commands](#useful-manatee-commands)
@@ -113,10 +114,10 @@ A manatee shard is healthy only if there are 3 peers in the shard,
 `primary.repl.sync_state === 'sync'`, and `sync.repl.sync_state === 'async'`
 
 # Symptoms
-Here are some commonly seen outputs of `manatee-stat` when the shard is
+Here are some commonly seen outputs of `manatee-adm status` when the shard is
 unhealthy. Before you start: click [here](http://calmingmanatee.com/).
 
-## manatee-stat Shows Only an Error Object.
+## manatee-adm status Shows Only an Error Object.
 ```json
     {
         "sdc": {
@@ -134,17 +135,18 @@ unhealthy. Before you start: click [here](http://calmingmanatee.com/).
 space](#manatee-runs-out-of-space).
 1. Take note of the primary and standby IPs.
 1. Disable manatee-sitter on all manatee-peers. `# svcadm disable manatee-sitter`
-1. Run `# manatee-clear` on any manatee peer.
+1. Run `# manatee-adm clear` on any manatee peer.
 1. On the primary, enable manatee-sitter. `# svcadm enable manatee-sitter`
-1. On the standby, run `# manatee-rebuild`.
-1. [Find the async manatee peer](#find-the-set-of-manatee-peers-in-a-dc).
+1. On the standby, run `# manatee-adm rebuild`.
+1. [Find the async manatee peer](#find-the-set-of-manatee-peers-in-a-dc). The
+async will be the peer that is not in the results of `manatee-adm status`
 1. On the async, re-enable manatee-sitter. `# svcadm enable manatee-sitter`
-1. Check via manatee-stat that you see all 3 peers with replication
-information. Depending on the output of `# manatee-stat` at this point,
+1. Check via `manatee-adm status` that you see all 3 peers with replication
+information. Depending on the output of `# manatee-adm status` at this point,
 you'll want to follow the steps described in the other troubleshooting sections
 of this document.
 
-## manatee-stat Shows Only a Primary peer.
+## manatee-adm status Shows Only a Primary peer.
 ```json
 {
     "sdc": {
@@ -166,7 +168,7 @@ of this document.
 ```
 This assumes you have an HA manatee shard setup. Some installations of SDC such
 as COAL by default only come with 1 manatee peer. In those cases, this is the
-expected output of `# manatee-stat`.
+expected output of `# manatee-adm status`.
 
 1. [Check that no manatee peers are out of disk
 space](#manatee-runs-out-of-space).
@@ -175,13 +177,13 @@ DC](#find-the-set-of-manatee-peers-in-a-dc). If this returns only 1 peer, then
 you do not have an HA manatee setup.
 1. Log on to a non primary peer.
 1. Restart the manatee-sitter process. `# svcadm disable manatee-sitter; svcadm enable manatee-sitter`
-1. Check via `# manatee-stat` that you see 2 peers with replication information.
+1. Check via `# manatee-adm status` that you see 2 peers with replication information.
 If this peer is unable replicate e.g. the sitter service goes back into
 maintenance, postgres dumps core, or you still don't see replication state,
-Then you'll need to rebuild this peer via `# manatee-rebuild`
-1. Continue to [here](#manatee-stat-shows-no-async-peer-only-primary-and-sync-are-visible)
+Then you'll need to rebuild this peer via `# manatee-adm rebuild`
+1. Continue to [here](#manatee-adm-status-shows-no-async-peer-only-primary-and-sync-are-visible)
 
-## manatee-stat Shows No Async peer. (Only Primary and Sync are Visible)
+## manatee-adm status Shows No Async peer. (Only Primary and Sync are Visible)
 ```json
 {
     "sdc": {
@@ -227,15 +229,15 @@ Then you'll need to rebuild this peer via `# manatee-rebuild`
 1. [Check that no manatee peers are out of disk
 space](#manatee-runs-out-of-space).
 1. [Find the set of manatee peers in the DC](#find-the-set-of-manatee-peers-in-a-dc) and verify that an async peer exists.
-You should see 3 instances -- the missing async is the instance that is missing from `# manatee-stat`
+You should see 3 instances -- the missing async is the instance that is missing from `# manatee-adm status`
 1. Log on to the async peer.
 1. Restart the manatee-sitter process. `# svcadm disable manatee-sitter; svcadm enable manatee-sitter`
-1. Check via `# manatee-stat` that you see 3 peers with replication information.
+1. Check via `# manatee-adm status` that you see 3 peers with replication information.
 If this peer is unable replicate e.g. the sitter service goes back into
 maintenance, postgres dumps core, or you still don't see replication state,
-Then you'll need to rebuild this peer via `# manatee-rebuild`
+Then you'll need to rebuild this peer via `# manatee-adm rebuild`
 
-## manatee-stat Shows No peers.
+## manatee-adm status Shows No peers.
 ```json
 {
     "sdc": {}
@@ -256,7 +258,7 @@ The `ip` field is the the IP address of the primary peer.
 
 1. Log on to the mantaee zone identified by the IP address.
 1. Promote the zone to primary. `# manatee-primary`.
-1. Check `# manatee-stat` and ensure you see the primary field and that
+1. Check `# manatee-adm status` and ensure you see the primary field and that
 primary.zoneId corresponds to this zone. e.g.
 ```json
 {
@@ -281,11 +283,11 @@ Don't be alarmed by the empty repl field, since there are no other peers, the
 field should be empty. Often at this point though, the other peers will have
 recovered on their own.
 
-Depending on the output of `# manatee-stat` at this point, you'll want to follow
+Depending on the output of `# manatee-adm status` at this point, you'll want to follow
 the steps described in the other troubleshooting sections of this document.
 
 
-## manatee-stat Shows No Replication Information on the Sync.
+## manatee-adm status Shows No Replication Information on the Sync.
 ```
 {
     "sdc": {
@@ -339,8 +341,8 @@ the steps described in the other troubleshooting sections of this document.
 1. [Check that no manatee peers are out of disk
 space](#manatee-runs-out-of-space).
 1. Log on to the async.
-1. Rebuild via `# manatee-rebuild`
-1. Depending on the output of `@ manatee-stat` at this point, you'll want to
+1. Rebuild via `# manatee-adm rebuild`
+1. Depending on the output of `# manatee-adm status` at this point, you'll want to
 follow the steps described in the other troubleshooting sections of this
 document.
 
