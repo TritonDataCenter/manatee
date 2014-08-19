@@ -292,4 +292,4 @@ ManateeAdm.prototype.do_promote.help = (
     '{{options}}'
 );
 
-cmdln.main(ManateeAdm);
+cmdln.main(new ManateeAdm(), {showErrStack: true});

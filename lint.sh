@@ -12,7 +12,7 @@ cd ../..
     ./*.js ./lib/*.js ./bin/*.js ./test/*.js
 
 ./deps/jsstyle/jsstyle -f ./tools/jsstyle.conf ./*.js ./lib/*.js ./bin/*.js \
-    ./test/*.js
+    ./test/*.js ./bin/manatee-adm
 
 ./deps/json/lib/jsontool.js -f ./package.json 1>/dev/null
 for i in $(ls ./etc/*.json)
