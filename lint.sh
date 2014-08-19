@@ -9,9 +9,9 @@ make install
 cd ../..
 
 ./deps/javascriptlint/build/install/jsl --conf ./tools/jsl.node.conf \
-    ./*.js ./lib/*.js ./bin/*.js ./test/*.js
+    ./*.js ./lib/*.js ./test/*.js ./bin/manatee-adm
 
-./deps/jsstyle/jsstyle -f ./tools/jsstyle.conf ./*.js ./lib/*.js ./bin/*.js \
+./deps/jsstyle/jsstyle -f ./tools/jsstyle.conf ./*.js  \
     ./test/*.js ./bin/manatee-adm
 
 ./deps/json/lib/jsontool.js -f ./package.json 1>/dev/null
