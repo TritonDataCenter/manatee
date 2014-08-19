@@ -19,7 +19,7 @@ util.inherits(ManateeAdm, cmdln.Cmdln);
 /**
  * Display the current state of the manatee shard(s).
  */
-ManateeAdm.prototype.do_status = function do_status(subcmd, opts, args, cb) {
+ManateeAdm.prototype.do_status = function (subcmd, opts, args, cb) {
     var self = this;
     if (opts.help) {
         self.do_help('help', {}, [subcmd], cb);
@@ -64,7 +64,7 @@ ManateeAdm.prototype.do_status.help = (
 );
 
 /**
- * Clear a manatee shard out of safe mode.
+ * Check the status of a manatee lock
  */
 ManateeAdm.prototype.do_check_lock = function (subcmd, opts, args, cb) {
     var self = this;
@@ -105,7 +105,52 @@ ManateeAdm.prototype.do_check_lock.options = [ {
     default: process.env.ZK_IPS
 }];
 ManateeAdm.prototype.do_check_lock.help = (
-    'Clear a shard out of safe mode. \n' +
+    'Check the status of a manatee lock. \n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} status [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
+
+/**
+ * Clear the shard out of error mode.
+ */
+ManateeAdm.prototype.do_clear = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.path) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.zk) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    adm.clear(opts, cb);
+};
+ManateeAdm.prototype.do_clear.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}, {
+    names: ['shard', 's'],
+    type: 'string',
+    helpArg: 'SHARD',
+    help: 'The manatee shard',
+    default: process.env.SHARD
+}, {
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
+}];
+ManateeAdm.prototype.do_clear.help = (
+    'Clear the shard\'s error node. \n' +
     '\n' +
     'Usage:\n' +
     '    {{name}} status [OPTIONS]\n' +
@@ -116,7 +161,7 @@ ManateeAdm.prototype.do_check_lock.help = (
 /**
  * Get the state transition history of the shard.
  */
-ManateeAdm.prototype.do_history = function do_clear(subcmd, opts, args, cb) {
+ManateeAdm.prototype.do_history = function (subcmd, opts, args, cb) {
     var self = this;
     if (opts.help) {
         self.do_help('help', {}, [subcmd], cb);
@@ -166,7 +211,7 @@ ManateeAdm.prototype.do_history.help = (
 /**
  * Rebuild a manatee peer in a shard.
  */
-ManateeAdm.prototype.do_rebuild = function do_rebuild(subcmd, opts, args, cb) {
+ManateeAdm.prototype.do_rebuild = function (subcmd, opts, args, cb) {
     var self = this;
     if (opts.help) {
         self.do_help('help', {}, [subcmd], cb);
@@ -208,7 +253,7 @@ ManateeAdm.prototype.do_rebuild.help = (
 /**
  * Promote a manatee peer to the primary of the shard.
  */
-ManateeAdm.prototype.do_promote = function do_promote(subcmd, opts, args, cb) {
+ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
     var self = this;
     if (opts.help) {
         self.do_help('help', {}, [subcmd], cb);
