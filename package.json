@@ -27,7 +27,6 @@
         "iniparser": "1.0.5",
         "leader": "1.0.1",
         "manta": "1.2.6",
-        "marked-man": "0.1.3",
         "node-uuid": "1.4.1",
         "node-zookeeper-client": "0.2.1",
         "once": "1.3.0",

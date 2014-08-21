@@ -35,62 +35,63 @@ monotonically increasing integer starting at 1.
 The `repl` field contains postgresql replication information of the next peer
 in the shard. On the primary, this would be the `sync` peer, and on the `sync`
 this would be the `async` peer.
-```json
-  "1.moray.emy-10.joyent.us": {
-    "primary": {
-      "zoneId": "31f40985-9578-48b1-a92c-062d1329008b",
-      "ip": "172.27.10.242",
-      "pgUrl": "tcp://postgres@172.27.10.242:5432/postgres",
-      "repl": {
-        "pid": 41435,
-        "usesysid": 10,
-        "usename": "postgres",
-        "application_name": "tcp://postgres@172.27.10.238:5432/postgres",
-        "client_addr": "172.27.10.238",
-        "client_hostname": "",
-        "client_port": 62784,
-        "backend_start": "2014-08-20T00:22:07.802Z",
-        "state": "streaming",
-        "sent_location": "0/177D7C0",
-        "write_location": "0/177D7C0",
-        "flush_location": "0/177D7C0",
-        "replay_location": "0/177D7C0",
-        "sync_priority": 1,
-        "sync_state": "sync"
-      }
-    },
-    "sync": {
-      "zoneId": "5d5b386a-29ff-410b-80ae-a63f74ced656",
-      "ip": "172.27.10.238",
-      "pgUrl": "tcp://postgres@172.27.10.238:5432/postgres",
-      "repl": {
-        "pid": 41417,
-        "usesysid": 10,
-        "usename": "postgres",
-        "application_name": "tcp://postgres@172.27.10.254:5432/postgres",
-        "client_addr": "172.27.10.254",
-        "client_hostname": "",
-        "client_port": 36209,
-        "backend_start": "2014-08-20T00:22:02.350Z",
-        "state": "streaming",
-        "sent_location": "0/177D7C0",
-        "write_location": "0/177D7C0",
-        "flush_location": "0/177D7C0",
-        "replay_location": "0/177D7C0",
-        "sync_priority": 0,
-        "sync_state": "async"
-      }
-    },
-    "async": {
-      "zoneId": "c4f07ca7-7249-463e-b7e3-e9e8b49b4535",
-      "ip": "172.27.10.254",
-      "pgUrl": "tcp://postgres@172.27.10.254:5432/postgres",
-      "repl": {},
-      "lag": {
-        "time_lag": null
-      }
+
+```
+"1.moray.emy-10.joyent.us": {
+  "primary": {
+    "zoneId": "31f40985-9578-48b1-a92c-062d1329008b",
+    "ip": "172.27.10.242",
+    "pgUrl": "tcp://postgres@172.27.10.242:5432/postgres",
+    "repl": {
+      "pid": 41435,
+      "usesysid": 10,
+      "usename": "postgres",
+      "application_name": "tcp://postgres@172.27.10.238:5432/postgres",
+      "client_addr": "172.27.10.238",
+      "client_hostname": "",
+      "client_port": 62784,
+      "backend_start": "2014-08-20T00:22:07.802Z",
+      "state": "streaming",
+      "sent_location": "0/177D7C0",
+      "write_location": "0/177D7C0",
+      "flush_location": "0/177D7C0",
+      "replay_location": "0/177D7C0",
+      "sync_priority": 1,
+      "sync_state": "sync"
+    }
+  },
+  "sync": {
+    "zoneId": "5d5b386a-29ff-410b-80ae-a63f74ced656",
+    "ip": "172.27.10.238",
+    "pgUrl": "tcp://postgres@172.27.10.238:5432/postgres",
+    "repl": {
+      "pid": 41417,
+      "usesysid": 10,
+      "usename": "postgres",
+      "application_name": "tcp://postgres@172.27.10.254:5432/postgres",
+      "client_addr": "172.27.10.254",
+      "client_hostname": "",
+      "client_port": 36209,
+      "backend_start": "2014-08-20T00:22:02.350Z",
+      "state": "streaming",
+      "sent_location": "0/177D7C0",
+      "write_location": "0/177D7C0",
+      "flush_location": "0/177D7C0",
+      "replay_location": "0/177D7C0",
+      "sync_priority": 0,
+      "sync_state": "async"
+    }
+  },
+  "async": {
+    "zoneId": "c4f07ca7-7249-463e-b7e3-e9e8b49b4535",
+    "ip": "172.27.10.254",
+    "pgUrl": "tcp://postgres@172.27.10.254:5432/postgres",
+    "repl": {},
+    "lag": {
+      "time_lag": null
     }
   }
+}
 ```
 
 ### clear [-h] -sz
@@ -120,24 +121,9 @@ Display the history of Manatee flips.
     Zookeeper url (such as `10.0.1.1:2181`)
 
 The output is newline separated JSON where each line is a state transition in
-the shard, e.g. Leader flip, new peer in shard. Each line contains the
-following fields.
-- `time` MS since epoch of the transition event.
-- `date` Time in UTC of the transition event.
-- `ip` IP address of the peer.
-- `action` Transition event type, one of
-  -`AssumeLeader`, the peer has become the primary of this shard.
-  - `NewLeader`, the peer has a new leader it's replicating from.
-  - `NewStandby`, the peer has a new standby it's replicating to.
-  - `ExpiredStandby`, the peer's current standby has expired from the shard.
-- `role` Current role of the peer, one of `Leader` or `Standby`. The primary of
-the shard will be `Leader`, and all other peers will be `Standby`.
-- `master` Peer we are replicating from.
-- `slave` Peer we are replicating to.
-- `zkSeq` Internal tracker of the number of state transitions.
+the shard, e.g. Leader flip, new peer in shard.
 
-```json
-{"time":"1406081132892","date":"2014-07-23T02:05:32.892Z","ip":"10.1.0.139","action":"ExpiredStandby","role":"Standby","master":"10.1.0.144","slave":"10.1.0.140","zkSeq":"0000000065"}
+```
 {"time":"1406081535329","date":"2014-07-23T02:12:15.329Z","ip":"10.1.0.144:5432","action":"AssumeLeader","role":"Leader","master":"","slave":"","zkSeq":"0000000066"}
 {"time":"1406081648474","date":"2014-07-23T02:14:08.474Z","ip":"10.1.0.144:5432","action":"NewStandby","role":"leader","master":"","slave":"10.1.0.139:5432","zkSeq":"0000000067"}
 {"time":"1406081648908","date":"2014-07-23T02:14:08.908Z","ip":"10.1.0.139:5432","action":"NewLeader","role":"Standby","master":"10.1.0.144:5432","slave":"","zkSeq":"0000000068"}
@@ -154,6 +140,25 @@ the shard will be `Leader`, and all other peers will be `Standby`.
 {"time":"1406275024298","date":"2014-07-25T07:57:04.298Z","ip":"10.1.0.139:5432","action":"NewLeader","role":"Standby","master":"10.1.0.140:5432","slave":"","zkSeq":"0000000079"}
 {"time":"1406275032166","date":"2014-07-25T07:57:12.166Z","ip":"10.1.0.144:5432","action":"NewLeader","role":"Standby","master":"10.1.0.139:5432","slave":"","zkSeq":"0000000080"}
 ```
+
+Each line contains the following fields.
+
+
+* `time` MS since epoch of the transition event.
+* `date` Time in UTC of the transition event.
+* `ip` IP address of the peer.
+* `action` Transition event type, one of
+    * `AssumeLeader`, the peer has become the primary of this shard.
+    * `NewLeader`, the peer has a new leader it's replicating from.
+    * `NewStandby`, the peer has a new standby it's replicating to.
+    * `ExpiredStandby`, the peer's current standby has expired from the shard.
+* `role` Current role of the peer, one of `Leader` or `Standby`. The primary of
+the shard will be `Leader`, and all other peers will be `Standby`.
+* `master` Peer we are replicating from.
+* `slave` Peer we are replicating to.
+* `zkSeq` Internal tracker of the number of state transitions.
+
+
 
 ### promote [-h] -c
 
@@ -205,8 +210,7 @@ Check the existence of a lock path in Zookeeper. Returns 1 if the lock exists,
     In place of `-c, --config`
 
 `LOG_LEVEL`
-    Sets the node-bunyan logging level. By default only logs at the `FATAL`
-    level are logged to stdout in the node-bunyan logging format.
+    Sets the node-bunyan logging level. Defaults to fatal.
 
 
 ## COPYRIGHT
