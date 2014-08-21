@@ -13,7 +13,7 @@
     "directories": {
         "lib": "./lib",
         "bin": "./bin",
-        "man": "todo"
+        "man": "./man/man1"
     },
     "engines": {
         "node": ">=0.10"
