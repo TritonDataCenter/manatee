@@ -32,6 +32,11 @@ replicated upon introduction.
 
 # Quick Start
 
+## Trouble Shooting
+Looking for the [trouble
+shooting](https://github.com/joyent/manatee/blob/master/docs/trouble-shooting.md)
+page?
+
 ## Server
 Checkout the server
 [user-guide](https://github.com/joyent/manatee/blob/master/docs/user-guide.md)
