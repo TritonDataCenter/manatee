@@ -91,13 +91,6 @@ this.
             "lag": {
                 "time_lag": {}
             }
-        },
-        "registrar": {
-            "type": "database",
-            "database": {
-                "primary": "tcp://postgres@172.25.3.65:5432/postgres",
-                "ttl": 60
-            }
         }
     }
 }
@@ -155,13 +148,6 @@ of this document.
             "pgUrl": "tcp://postgres@10.99.99.16:5432/postgres",
             "zoneId": "ebe96dfb-2533-459b-964b-a5ad7fb3b566",
             "repl": {}
-        },
-        "registrar": {
-            "type": "database",
-            "database": {
-                "primary": "tcp://postgres@10.99.99.16:5432/postgres",
-                "ttl": 60
-            }
         }
     }
 }
@@ -214,13 +200,6 @@ Then you'll need to rebuild this peer via `# manatee-adm rebuild`
             "pgUrl": "tcp://postgres@10.1.0.144:5432/postgres",
             "zoneId": "72e76247-7e13-40e2-8c44-6f47a2b37829",
             "repl": {}
-        },
-        "registrar": {
-            "type": "database",
-            "database": {
-                "primary": "tcp://postgres@10.1.0.140:5432/postgres",
-                "ttl": 60
-            }
         }
     }
 }
@@ -268,13 +247,6 @@ primary.zoneId corresponds to this zone. e.g.
             "pgUrl": "tcp://postgres@10.99.99.16:5432/postgres",
             "zoneId": "ebe96dfb-2533-459b-964b-a5ad7fb3b566",
             "repl": {}
-        },
-        "registrar": {
-            "type": "database",
-            "database": {
-                "primary": "tcp://postgres@10.99.99.16:5432/postgres",
-                "ttl": 60
-            }
         }
     }
 }
@@ -326,13 +298,6 @@ the steps described in the other troubleshooting sections of this document.
             "repl": {},
             "lag": {
                 "time_lag": null
-            }
-        },
-        "registrar": {
-            "type": "database",
-            "database": {
-                "primary": "tcp://postgres@10.1.0.140:5432/postgres",
-                "ttl": 60
             }
         }
     }
