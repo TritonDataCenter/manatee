@@ -170,7 +170,7 @@ Promote the current peer to the primary of the shard.
     Path to Manatee sitter config. (such as
     `/opt/smartdc/manatee/etc/sitter.cfg`)
 
-### rebuild [-h] -c
+### rebuild [-hf] -c
 
 Rebuild the current peer. In the event of data corruption on the peer, this
 command will attempt to rebuild this peer. It will first rollback the current
@@ -182,6 +182,8 @@ rebuild will be performed by receiving the full zfs snapshot from its leader.
 -c, --config manatee sitter config
     Path to Manatee sitter config. (such as
     `/opt/smartdc/manatee/etc/sitter.cfg`)
+-f, --full
+    Skip rolling back to the snapshot and do a full rebuild.
 
 ### check-lock [-h] -pz
 
