@@ -35,6 +35,7 @@
         "posix": "1.0.3",
         "posix-getopt": "1.0.0",
         "progbar": "0.1.0",
+        "prompt": "0.2.13",
         "restify": "2.6.1",
         "shelljs": "0.0.5pre4",
         "sprintf": "0.1.0",

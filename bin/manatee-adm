@@ -108,7 +108,7 @@ ManateeAdm.prototype.do_check_lock.help = (
     'Check the status of a manatee lock. \n' +
     '\n' +
     'Usage:\n' +
-    '    {{name}} status [OPTIONS]\n' +
+    '    {{name}} check_lock [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
@@ -153,7 +153,7 @@ ManateeAdm.prototype.do_clear.help = (
     'Clear the shard\'s error node. \n' +
     '\n' +
     'Usage:\n' +
-    '    {{name}} status [OPTIONS]\n' +
+    '    {{name}} clear [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
@@ -203,7 +203,7 @@ ManateeAdm.prototype.do_history.help = (
     'Clear a shard out of safe mode. \n' +
     '\n' +
     'Usage:\n' +
-    '    {{name}} status [OPTIONS]\n' +
+    '    {{name}} history [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
@@ -240,12 +240,17 @@ ManateeAdm.prototype.do_rebuild.options = [ {
     helpArg: 'CONFIG',
     help: 'The path to the manatee sitter config to list',
     default: process.env.MANATEE_SITTER_CONFIG
+}, {
+    names: ['full', 'f'],
+    type: 'bool',
+    help: 'Try a full rebuild without rolling back the snapshot first',
+    default: false
 }];
 ManateeAdm.prototype.do_rebuild.help = (
     'Rebuild a manatee zone. \n' +
     '\n' +
     'Usage:\n' +
-    '    {{name}} status [OPTIONS]\n' +
+    '    {{name}} rebuild [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
@@ -287,7 +292,7 @@ ManateeAdm.prototype.do_promote.help = (
     'Promote a manatee peer to the primary of the shard. \n' +
     '\n' +
     'Usage:\n' +
-    '    {{name}} status [OPTIONS]\n' +
+    '    {{name}} promote [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
