@@ -8,7 +8,7 @@
                                (_/
 
 # Overview
-Mantee is an automated fault monitoring and leader-election system for
+Manatee is an automated fault monitoring and leader-election system for
 strongly-consistent, highly-available writes to PostgreSQL.  It can tolerate
 network partitions up to the loss of an entire node without loss of write (nor
 read) capability.  Client configuration changes are minimal and failover is
