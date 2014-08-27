@@ -1,3 +1,14 @@
+/**
+ * @overview A fully encapsulated instance of a Manatee used for testing.
+ *
+ *                   _.---.._
+ *      _        _.-' \  \    ''-.
+ *    .'  '-,_.-'   /  /  /       '''.
+ *   (       _                     o  :
+ *    '._ .-'  '-._         \  \-  ---]
+ *                  '-.___.-')  )..-'
+ *                           (_/
+ */
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
 var ConfParser = require('../lib/confParser');

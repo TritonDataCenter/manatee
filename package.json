@@ -56,5 +56,6 @@
     "scripts": {
         "pretest": "./lint.sh",
         "test": "cd ./test && ./integ-test.sh"
-    }
+    },
+    "license": "MPL-2.0"
 }

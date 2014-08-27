@@ -1,4 +1,13 @@
-// Copyright (c) 2012, Joyent, Inc. All rights reserved.
+/*
+ *
+ *                   _.---.._
+ *      _        _.-' \  \    ''-.
+ *    .'  '-,_.-'   /  /  /       '''.
+ *   (       _                     o  :
+ *    '._ .-'  '-._         \  \-  ---]
+ *                  '-.___.-')  )..-'
+ *                           (_/
+ */
 var Logger = require('bunyan');
 var fs = require('fs');
 var byline = require('byline');

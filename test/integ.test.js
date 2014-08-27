@@ -1,3 +1,13 @@
+/*
+ *
+ *                   _.---.._
+ *      _        _.-' \  \    ''-.
+ *    .'  '-,_.-'   /  /  /       '''.
+ *   (       _                     o  :
+ *    '._ .-'  '-._         \  \-  ---]
+ *                  '-.___.-')  )..-'
+ *                           (_/
+ */
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
 var leader = require('leader');
