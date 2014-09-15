@@ -110,10 +110,6 @@ responsible for:
   depending on its current role in the shard. (1)
 * Managing leadership status with ZK. Each sitter participates in a ZK
   election, and is notified when its leader node has changed. (7)
-* Managing standby heartbeats from its standby if it exists. When a standby
-  expires, the sitter will remove the standby from its replication list. (6)
-* Heartbeating to its leader. This is the process by which the node in front is
-  made aware of its standby. This doesn't occur if the node has no leader. (5)
 * ZFS is used by PG to persist data (4). The use of ZFS will be elaborated on
   in a later section.
 
@@ -255,11 +251,11 @@ and then removing the node you wanted to move/upgrade.
 Additional nodes past the initial 3 will just be asynchronous standbys and will
 not impact the shard's performance or availability.
 
-## Shard Status
-The node-manatee client provides the `manatee-stat` utility which gives
-visibility into the status of the Manatee shard.
+## Shard Administration
+Manatee provides the `manatee-adm` utility which gives visibility into the
+status of the Manatee shard. One of the key subcommands is the `status` command.
 ``` bash
-[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-stat -p <zk_ip>
+[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-adm status -z <zk_ip>
 {
 "1": {
     "primary": {
@@ -338,9 +334,9 @@ is no repl field, it indicatees there is a problem with replication between the
 two nodes.
 
 ## Shard History
-You can query any past topology changes by using the `manatee-history` tool.
+You can query any past topology changes by using the `history` subcommand.
 ```bash
-[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-history '1' <zk_ips>
+[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-adm history -s '1' -z <zk_ips>
 {"time":"1394597418025","date":"2014-03-12T04:10:18.025Z","ip":"172.27.3.8","action":"AssumeLeader","role":"Leader","master":"","slave":"","zkSeq":"0000000000"}
 {"time":"1394597438430","date":"2014-03-12T04:10:38.430Z","ip":"172.27.4.13","action":"NewLeader","role":"Standby","master":"172.27.3.8","slave":"","zkSeq":"0000000001"}
 {"time":"1394597451091","date":"2014-03-12T04:10:51.091Z","ip":"172.27.3.8","action":"NewStandby","role":"Leader","master":"","slave":"5432","zkSeq":"0000000002"}
@@ -378,7 +374,7 @@ This tool is invaluable when attempting to reconstruct the timeline of flips in
 a Manatee shard, especially when the shard is in safe mode.
 
 ## Safe Mode
-You can check that the shard is in safe mode via `manatee-stat`.
+You can check that the shard is in safe mode via `manatee-adm status`.
 ```bash
 [root@host ~/manatee]# ./node_modules/manatee/bin/manatee-stat -p <zk_ip>
 {
@@ -424,44 +420,5 @@ However, due to some limitations in PG itself, this is sometimes not
 sufficient. In this case, the shard will detect that it can no longer take
 writes and put itself into safe mode.
 
-### Clearing a Shard from Safe Mode
-In order to clear a shard, you must first figure out who the last primary is.
-The correct potential primary is the node with the largest PG current xlog
-location. Follow these steps to figure out who has the largest current xlog
-location. On each node:
-
-* Shutdown the manatee-sitter process. `svcadm disable manatee-sitter`
-* Remove `recovery.conf` from the postgres data directory. `rm
-  <path_to_data_dir>/recovery.conf`. You can't query the current xlog location
-  if a node is in standby mode.
-* Start up PG manually `sudo -u postgres postgres -D <path_to_data_dir>`
-* Query the latset xlog location
-
-```
-[root@host ~/manatee]# sudo -u postgres psql
-postgres=# select * from pg_current_xlog_location();
- pg_current_xlog_location
---------------------------
- 6F/E3C53568
-(1 row)
-```
-* Stop PG. `kill -2 <postgres pid>`
-
-Once you've figured out the node that has the largest xlog location, then that
-node will become the new primary of the shard. Follow these steps:
-
-* Delete the file pointed to by the config key
-  `SyncStateCheckerCfg.cookielocation` that's in the sitter config on disk
-  first.
-* Ensure that all other Manatee nodes in the shard are down. You should have
-  done this as part of querying for the latest xlog location.
-* Clear the shard from error node by running the `manatee-clear` tool. This
-  removes the `error` node from ZK.
-* Restart Manatee on this node. `svcadm enable manatee-sitter`.
-* Verify this node is up and running. Check via `manatee-stat` to see if you
-  see a `primary` entry. And by attempting to login to the database via `sudo
-  -u postgres psql`.
-* Enable the manatee-siter on the other two nodes via `svcadm enable
-  manatee-sitter`
-* Check via `manatee-stat` and `psql` as before to verify the shard is up and
-  running.
+For information on how to recover from Safe mode, check out the [trouble
+shooting guide](https://github.com/joyent/manatee/blob/master/docs/trouble-shooting.md)
