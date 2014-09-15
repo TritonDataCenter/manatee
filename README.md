@@ -1,4 +1,4 @@
-<!--
+z!--
     This Source Code Form is subject to the terms of the Mozilla Public
     License, v. 2.0. If a copy of the MPL was not distributed with this
     file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -51,12 +51,6 @@ page?
 Checkout the server
 [user-guide](https://github.com/joyent/manatee/blob/master/docs/user-guide.md)
 for details on server setup.
-
-There is a sample Manatee [vm](http://mantalinktovm) with a provisioned Manatee
-shard.
-
-There are also [screen-casts](http://seacow.io/screencasts.htm) on Manatee
-installation, setup, and administration.
 
 ## Client
 Detailed client docs are [here](https://github.com/joyent/node-manatee).
