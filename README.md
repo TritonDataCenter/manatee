@@ -17,6 +17,10 @@ z!--
                       '-.___.-')  )..-'
                                (_/
 
+This repository is part of the Joyent SmartDataCenter project (SDC).  For
+contribution guidelines, issues, and general documentation, visit the main
+[SDC](http://github.com/joyent/sdc) project page.
+
 # Overview
 Manatee is an automated fault monitoring and leader-election system for
 strongly-consistent, highly-available writes to PostgreSQL.  It can tolerate
