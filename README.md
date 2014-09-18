@@ -1,4 +1,4 @@
-z!--
+<!--
     This Source Code Form is subject to the terms of the Mozilla Public
     License, v. 2.0. If a copy of the MPL was not distributed with this
     file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -29,6 +29,13 @@ read) capability.  Client configuration changes are minimal and failover is
 completely free of operator intervention.  New shard members are automatically
 replicated upon introduction.
 
+Check out the
+[user-guide](https://github.com/joyent/manatee/blob/master/docs/user-guide.md)
+for details on server internals and setup.
+
+Problems? Check out the [Troubleshooting
+guide](https://github.com/joyent/manatee/blob/master/docs/trouble-shooting.md).
+
 # Features
 
 * Automated liveliness detection, failover, and recovery. Reads are always
@@ -45,16 +52,6 @@ replicated upon introduction.
   storage.
 
 # Quick Start
-
-## Trouble Shooting
-Looking for the [trouble
-shooting](https://github.com/joyent/manatee/blob/master/docs/trouble-shooting.md)
-page?
-
-## Server
-Checkout the server
-[user-guide](https://github.com/joyent/manatee/blob/master/docs/user-guide.md)
-for details on server setup.
 
 ## Client
 Detailed client docs are [here](https://github.com/joyent/node-manatee).
