@@ -25,12 +25,6 @@ instance, and are familiar with general Unix concepts. For background
 information on HA PostgreSQL, look
 [here](http://www.postgresql.org/docs/9.2/static/high-availability.html).
 
-You can also download a sample [Manatee](http://todo) vmware appliance
-with Manatee already setup.
-
-Additionally there are [screen casts](http://todo) that walks you through the
-various setup and administration processes.
-
 ## What is Manatee?
 Manatee is an automated failover, fault monitoring and leader-election system
 built for managing a set of replicated PG servers. It is written completely in
