@@ -310,13 +310,6 @@ status of the Manatee shard. One of the key subcommands is the `status` command.
         "lag": {
             "time_lag": {}
         }
-    },
-    "registrar": {
-        "type": "database",
-        "database": {
-            "primary": "tcp://postgres@172.27.4.12:5432/postgres",
-            "ttl": 60
-        }
     }
 }
 }
