@@ -56,7 +56,7 @@ This is the component diagram of a fully setup Manatee shard. Much of the
 details of each Manatee node itself has been simplified, with detailed
 descriptions in later sections.
 
-![Manatee Architecture](http://us-east.manta.joyent.com/yunong/public/manatee/docs/Manatee-Shard.jpg "Manatee Shard")
+![Manatee Architecture](http://us-east.manta.joyent.com/poseidon/public/manatee/docs/Manatee-Shard.jpg "Manatee Shard")
 
 Each shard consists of 3 Manatee nodes, a primary(A), synchronous standby(B)
 and asynchronous standby(C) setup in a daisy chain. Nodes only gossip to other
@@ -91,7 +91,7 @@ peer, it's PG replication type is also changed from async to sync.
 ### Manatee Node Detail
 Here are the components encapsulated within a single Manatee node.
 
-![Manatee Node](http://us-east.manta.joyent.com/yunong/public/manatee/docs/Manatee-Node.jpg "Manatee Node")
+![Manatee Node](http://us-east.manta.joyent.com/poseidon/public/manatee/docs/Manatee-Node.jpg "Manatee Node")
 
 #### Manatee Sitter
 The sitter is the main process in within Manatee. The PG process runs as the
