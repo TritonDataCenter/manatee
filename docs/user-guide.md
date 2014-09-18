@@ -103,7 +103,7 @@ responsible for:
   Additionally, the sitter initializes, restores, and configures the PG instance
   depending on its current role in the shard. (1)
 * Managing leadership status with ZK. Each sitter participates in a ZK
-  election, and is notified when its leader node has changed. (7)
+  election, and is notified when its leader node has changed. (5)
 * ZFS is used by PG to persist data (4). The use of ZFS will be elaborated on
   in a later section.
 
@@ -115,7 +115,7 @@ shard.
 ### Manatee Backup Server
 The snapshots taken by the snapshotter are made available to other nodes by the
 REST backupserver. The backupserver, upon receiving a backup request, will send
-the snapshots to another node. (3) (8)
+the snapshots to another node. (3) (6)
 
 ### ZFS
 Manatee relies on the [ZFS](http://en.wikipedia.org/wiki/ZFS) file system.
