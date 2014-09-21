@@ -239,7 +239,7 @@ its PG data from its leader. You do not need to manually build the new node.
 ## Moving Manatee Nodes
 In the normal course of maintenance, you may need to move or upgrade the
 Manatee nodes in the shard. You can do this by adding a new node to the shard,
-waiting for it to catch up (using tools descriped in the following sectons),
+waiting for it to catch up (using tools described in the following sectons),
 and then removing the node you wanted to move/upgrade.
 
 Additional nodes past the initial 3 will just be asynchronous standbys and will
