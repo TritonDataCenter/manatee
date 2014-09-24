@@ -7,7 +7,7 @@
     "description": "H/A Postgres Minder",
     "repository": {
         "type": "git",
-        "url": "git@git.joyent.com:manatee.git"
+        "url": "git@github.com:joyent/manatee.git"
     },
     "main": "client/manatee.js",
     "directories": {
