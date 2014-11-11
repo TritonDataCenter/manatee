@@ -396,7 +396,7 @@ From the headnode, run:
 cce218f8-6ad9-45c6-bd98-d9d0b840b56a manatee1 aac3c402-3047-11e3-b451-002590c57864 172.25.3.59
 ```
 ## Find the set of manatee peers in a Manta deployment
-This lises the manatee peers in each DC in Manta.  If you have a multi-dc
+This lists the manatee peers in each DC in Manta.  If you have a multi-dc
 deployment, this will not find x-dc peers.  From the headnode, run:
 ```
 [root@headnode (staging-1) ~]# manta-adm show postgres
