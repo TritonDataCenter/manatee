@@ -145,11 +145,11 @@ function teardown(_, cb) {
 
 function readHistory(zk, p, cb) {
     function parseSeq(a) {
-        return (parseInt(a.substring(a.lastIndexOf('-')), 10));
+        return (parseInt(a.substring(a.lastIndexOf('-') + 1), 10));
     }
     zk.getChildren(p, function (err, children) {
         children.sort(function (a, b) {
-            return (parseSeq(b) - parseSeq(a));
+            return (parseSeq(a) - parseSeq(b));
         });
         if (err) {
             return (cb(err));
