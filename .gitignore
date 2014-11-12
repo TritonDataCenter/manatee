@@ -10,3 +10,4 @@ smf/manifests/*.xml
 *.swp
 *.*~
 *.un~
+test/etc/zookeeperMgr.test.cfg
