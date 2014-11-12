@@ -78,6 +78,7 @@ function getZkManager(testName, id, onActive, onState, cb) {
     zk.on('clusterStateChange', onState);
 }
 
+
 function setupZkClient(_, cb) {
     var zk = zkClient.createClient(CONN_STR, ZK_OPTS);
     zk.once('connected', function () {
@@ -86,6 +87,7 @@ function setupZkClient(_, cb) {
     });
     zk.connect();
 }
+
 
 function setupManagers(_, cb) {
     vasync.forEachParallel({
@@ -109,11 +111,15 @@ function setupManagers(_, cb) {
     });
 }
 
+
 function rmrfTestData(_, p, cb) {
     if (p === null) {
         p = PATH_PREFIX + '/' + _.test;
     }
     _.zk.getChildren(p, function (err, children) {
+        if (err && err.name === 'NO_NODE') {
+            return (cb());
+        }
         vasync.forEachPipeline({
             'inputs': children,
             'func': function (c, subcb) {
@@ -125,6 +131,7 @@ function rmrfTestData(_, p, cb) {
     });
 }
 
+
 function teardown(_, cb) {
     rmrfTestData(_, null, function (err) {
         _.zk.close();
@@ -134,6 +141,34 @@ function teardown(_, cb) {
         return (cb());
     });
 }
+
+
+function readHistory(zk, p, cb) {
+    function parseSeq(a) {
+        return (parseInt(a.substring(a.lastIndexOf('-')), 10));
+    }
+    zk.getChildren(p, function (err, children) {
+        children.sort(function (a, b) {
+            return (parseSeq(b) - parseSeq(a));
+        });
+        if (err) {
+            return (cb(err));
+        }
+        vasync.forEachParallel({
+            'inputs': children,
+            'func': function (c, subcb) {
+                zk.getData(p + '/' + c, subcb);
+            }
+        }, function (err2, res) {
+            var ret = [];
+            res.operations.forEach(function (o) {
+                ret.push(JSON.parse(o.result.toString('utf8')));
+            });
+            return (cb(null, ret));
+        });
+    });
+}
+
 
 
 //Tests
@@ -537,6 +572,141 @@ exports.testOrdering = function (t) {
             function removeActiveCb(_, subcb) {
                 ord2ActiveCb = function () {};
                 return (subcb());
+            },
+            teardown
+        ]
+    }, function (err) {
+        if (err) {
+            t.fail(err);
+        }
+        t.done();
+    });
+};
+
+
+exports.testWriteHistoryNode = function (t) {
+    var opts = {
+        'test': 'testWriteHistoryNode',
+        'managerCfgs': [ {
+            id: 'wrih'
+        } ]
+    };
+    var p = PATH_PREFIX + '/testWriteHistoryNode/history';
+    var s = {
+        'generation': 0,
+        'foo': 'bar',
+        'toString': function toString() {
+            return JSON.stringify({
+                'generation': this.generation,
+                'foo': this.foo
+            }, null, 0);
+        }
+    };
+    var eq0 = JSON.parse(s.toString());
+    vasync.pipeline({
+        'arg': opts,
+        'funcs': [
+            setupZkClient,
+            function clearPreviousTestData(_, subcb) {
+                rmrfTestData(_, p, function (err) {
+                    return (subcb());
+                });
+            },
+            setupManagers,
+            function putState(_, subcb) {
+                _.managers['wrih'].putClusterState(s, function (err) {
+                    if (err) {
+                        t.fail(err);
+                    }
+                    return (subcb(err));
+                });
+            },
+            function checkHistory(_, subcb) {
+                readHistory(_.zk, p, function (err, hist) {
+                    if (err) {
+                        return (subcb(err));
+                    }
+                    t.ok(hist, 'no history');
+                    t.equal(1, hist.length, 'history has more than one entry');
+                    t.deepEqual(eq0, hist[0],
+                                'history wasnt recorded properly');
+                    return (subcb());
+                });
+            },
+            function writeAnother(_, subcb) {
+                s.generation = 1;
+                s.foo = 'baz';
+                _.managers['wrih'].putClusterState(s, function (err) {
+                    if (err) {
+                        t.fail(err);
+                    }
+                    return (subcb(err));
+                });
+            },
+            function checkHistory2(_, subcb) {
+                readHistory(_.zk, p, function (err, hist) {
+                    if (err) {
+                        return (subcb(err));
+                    }
+                    t.ok(hist, 'no history');
+                    t.equal(2, hist.length, 'history must have 2 entries');
+                    t.deepEqual(eq0, hist[0],
+                                'history wasnt recorded properly');
+                    var eq1 = JSON.parse(s.toString());
+                    t.deepEqual(eq1, hist[1],
+                                'history wasnt recorded properly');
+                    return (subcb());
+                });
+            },
+            teardown
+        ]
+    }, function (err) {
+        if (err) {
+            t.fail(err);
+        }
+        t.done();
+    });
+};
+
+
+exports.testFailWriteClusterState = function (t) {
+    var opts = {
+        'test': 'testFailWriteClusterState',
+        'managerCfgs': [ {
+            id: 'faiw'
+        } ]
+    };
+    var s = {
+        'generation': 0,
+        'foo': 'bar',
+        'toString': function toString() {
+            return JSON.stringify({
+                'generation': this.generation,
+                'foo': this.foo
+            }, null, 0);
+        }
+    };
+    vasync.pipeline({
+        'arg': opts,
+        'funcs': [
+            setupZkClient,
+            setupManagers,
+            function putState(_, subcb) {
+                _.managers['faiw'].putClusterState(s, function (err) {
+                    if (err) {
+                        t.fail(err);
+                    }
+                    return (subcb(err));
+                });
+            },
+            function failPut(_, subcb) {
+                //Dirty to reach in like this... but it works.
+                _.managers['faiw']._clusterStateVersion = 19;
+                _.managers['faiw'].putClusterState(s, function (err) {
+                    t.ok(err, 'should have returned error');
+                    t.equal('BAD_VERSION', err.name, 'Expected BAD_VERSION');
+                    return (subcb());
+                });
             },
             teardown
         ]
