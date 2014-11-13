@@ -686,6 +686,7 @@ exports.testFailWriteClusterState = function (t) {
             }, null, 0);
         }
     };
+    var p = PATH_PREFIX + '/testFailWriteClusterState/history';
     vasync.pipeline({
         'arg': opts,
         'funcs': [
@@ -705,6 +706,19 @@ exports.testFailWriteClusterState = function (t) {
                 _.managers['faiw'].putClusterState(s, function (err) {
                     t.ok(err, 'should have returned error');
                     t.equal('BAD_VERSION', err.name, 'Expected BAD_VERSION');
+                    return (subcb());
+                });
+            },
+            function checkHistory(_, subcb) {
+                readHistory(_.zk, p, function (err, hist) {
+                    if (err) {
+                        return (subcb(err));
+                    }
+                    t.ok(hist, 'no history');
+                    t.equal(1, hist.length, 'history must have 1 entry');
+                    var eq0 = JSON.parse(s.toString());
+                    t.deepEqual(eq0, hist[0],
+                                'history wasnt recorded properly');
                     return (subcb());
                 });
             },
