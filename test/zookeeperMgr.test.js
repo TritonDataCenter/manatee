@@ -62,8 +62,11 @@ var ZK_OPTS = {
 function getZkManager(testName, id, onActive, onState, cb) {
     var zopts = {
         'id': id,
-        'zonename': 'localhost',
-        'ip': '127.0.0.1',
+        'data': {
+            'zonename': 'localhost',
+            'ip': '127.0.0.1',
+            'port': 1234
+        },
         'path': PATH_PREFIX + '/' + testName,
         'connStr': CONN_STR,
         'opts': ZK_OPTS,
@@ -220,7 +223,8 @@ exports.testSetup = function (t) {
                     t.ok(data, 'no data');
                     t.deepEqual(JSON.parse(data.toString('utf8')), {
                         'zonename': 'localhost',
-                        'ip': '127.0.0.1'
+                        'ip': '127.0.0.1',
+                        'port': 1234
                     });
                     return (subcb());
                 });
