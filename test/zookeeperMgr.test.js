@@ -63,9 +63,8 @@ function getZkManager(testName, id, onActive, onState, cb) {
     var zopts = {
         'id': id,
         'data': {
-            'zonename': 'localhost',
-            'ip': '127.0.0.1',
-            'port': 1234
+            'zoneId': 'localhost',
+            'ip': '127.0.0.1'
         },
         'path': PATH_PREFIX + '/' + testName,
         'connStr': CONN_STR,
@@ -222,9 +221,8 @@ exports.testSetup = function (t) {
                     }
                     t.ok(data, 'no data');
                     t.deepEqual(JSON.parse(data.toString('utf8')), {
-                        'zonename': 'localhost',
-                        'ip': '127.0.0.1',
-                        'port': 1234
+                        'zoneId': 'localhost',
+                        'ip': '127.0.0.1'
                     });
                     return (subcb());
                 });

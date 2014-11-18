@@ -73,6 +73,114 @@ ManateeAdm.prototype.do_status.help = (
 );
 
 /**
+ * Display the current cluster state.
+ */
+ManateeAdm.prototype.do_state = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.zk) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    adm.state(opts, function (err, state) {
+        if (err) {
+            return cb(err);
+        } else {
+            console.log(JSON.stringify(state));
+            return cb();
+        }
+    });
+};
+ManateeAdm.prototype.do_state.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}, {
+    names: ['shard', 's'],
+    type: 'string',
+    helpArg: 'SHARD',
+    help: 'Get the state for this manatee shard.',
+    default: process.env.SHARD
+}, {
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
+}];
+ManateeAdm.prototype.do_state.help = (
+    'Show the cluster state stored in ZK for this shard. \n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} state [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
+
+/**
+ * Display the current cluster state.
+ */
+ManateeAdm.prototype.do_state_backfill = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.zk) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    adm.stateBackfill(opts, function (err, state) {
+        if (err) {
+            return cb(err);
+        } else {
+            console.log('Ok.');
+            return cb();
+        }
+    });
+};
+ManateeAdm.prototype.do_state_backfill.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}, {
+    names: ['shard', 's'],
+    type: 'string',
+    helpArg: 'SHARD',
+    help: 'Backfill the state for this manatee shard.',
+    default: process.env.SHARD
+}, {
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
+}];
+ManateeAdm.prototype.do_state_backfill.help = (
+    'Backfill the cluster state for the shard, only if no state exists. \n' +
+    '\n' +
+    '!!! WARNING !!! \n' +
+    'This will only work when no cluster state has been written. \n' +
+    'It is only to be used when moving to Manatee using the persistent \n' +
+    'cluster state in ZK. \n' +
+    '\n' +
+    'This tool may backfill the cluster state in a surprising order: \n' +
+    'Primary -> Primary, Async -> Sync, Sync -> Async' +
+    'The reason for this is so that when the Async is deployed first, it \n' +
+    'will set itself up as a sync, then when the sync is deployed it will \n' +
+    'set itself up as async.  This facilitates the migration to using \n' +
+    'cluster state rather than election order to decide topology. \n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} state [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
+
+/**
  * Check the status of a manatee lock
  */
 ManateeAdm.prototype.do_check_lock = function (subcmd, opts, args, cb) {
