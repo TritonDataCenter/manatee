@@ -610,17 +610,14 @@ exports.testWriteHistoryNode = function (t) {
         } ]
     };
     var p = PATH_PREFIX + '/testWriteHistoryNode/history';
-    var s = {
+    var s1 = {
         'generation': 0,
-        'foo': 'bar',
-        'toString': function toString() {
-            return JSON.stringify({
-                'generation': this.generation,
-                'foo': this.foo
-            }, null, 0);
-        }
+        'foo': 'bar'
     };
-    var eq0 = JSON.parse(s.toString());
+    var s2 = {
+        'generation': 1,
+        'foo': 'baz'
+    };
     vasync.pipeline({
         'arg': opts,
         'funcs': [
@@ -632,7 +629,7 @@ exports.testWriteHistoryNode = function (t) {
             },
             setupManagers,
             function putState(_, subcb) {
-                _.managers['wrih'].putClusterState(s, function (err) {
+                _.managers['wrih'].putClusterState(s1, function (err) {
                     if (err) {
                         t.fail(err);
                     }
@@ -646,15 +643,13 @@ exports.testWriteHistoryNode = function (t) {
                     }
                     t.ok(hist, 'no history');
                     t.equal(1, hist.length, 'history has more than one entry');
-                    t.deepEqual(eq0, hist[0],
+                    t.deepEqual(s1, hist[0],
                                 'history wasnt recorded properly');
                     return (subcb());
                 });
             },
             function writeAnother(_, subcb) {
-                s.generation = 1;
-                s.foo = 'baz';
-                _.managers['wrih'].putClusterState(s, function (err) {
+                _.managers['wrih'].putClusterState(s2, function (err) {
                     if (err) {
                         t.fail(err);
                     }
@@ -668,10 +663,9 @@ exports.testWriteHistoryNode = function (t) {
                     }
                     t.ok(hist, 'no history');
                     t.equal(2, hist.length, 'history must have 2 entries');
-                    t.deepEqual(eq0, hist[0],
+                    t.deepEqual(s1, hist[0],
                                 'history wasnt recorded properly');
-                    var eq1 = JSON.parse(s.toString());
-                    t.deepEqual(eq1, hist[1],
+                    t.deepEqual(s2, hist[1],
                                 'history wasnt recorded properly');
                     return (subcb());
                 });
@@ -696,13 +690,7 @@ exports.testFailWriteClusterState = function (t) {
     };
     var s = {
         'generation': 0,
-        'foo': 'bar',
-        'toString': function toString() {
-            return JSON.stringify({
-                'generation': this.generation,
-                'foo': this.foo
-            }, null, 0);
-        }
+        'foo': 'bar'
     };
     var p = PATH_PREFIX + '/testFailWriteClusterState/history';
     vasync.pipeline({
@@ -734,8 +722,7 @@ exports.testFailWriteClusterState = function (t) {
                     }
                     t.ok(hist, 'no history');
                     t.equal(1, hist.length, 'history must have 1 entry');
-                    var eq0 = JSON.parse(s.toString());
-                    t.deepEqual(eq0, hist[0],
+                    t.deepEqual(s, hist[0],
                                 'history wasnt recorded properly');
                     return (subcb());
                 });
