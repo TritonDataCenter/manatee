@@ -80,6 +80,15 @@ function getZkManager(testName, id, onActive, onState, cb) {
     zk.on('clusterStateChange', onState);
 }
 
+function activeFromArray(a) {
+    return (a.map(function (id) {
+        return ({
+            'id': id,
+            'zoneId': 'localhost',
+            'ip': '127.0.0.1'
+        });
+    }));
+}
 
 function setupZkClient(_, cb) {
     var zk = zkClient.createClient(CONN_STR, ZK_OPTS);
@@ -264,7 +273,8 @@ exports.testCreateUpdateState = function (t) {
                     if (error || (emitted && cbed)) {
                         t.deepEqual(newState, _.managers['crea'].clusterState,
                                     'new state doesnt match manager state');
-                        t.deepEqual(['crea'], _.managers['crea'].active,
+                        t.deepEqual(activeFromArray(['crea']),
+                                    _.managers['crea'].active,
                                     'active doesnt match manager');
                         return (subcb());
                     }
@@ -296,7 +306,8 @@ exports.testCreateUpdateState = function (t) {
                     if (error || (emitted && cbed)) {
                         t.deepEqual(newState, _.managers['crea'].clusterState,
                                     'new state doesnt match manager state');
-                        t.deepEqual(['crea'], _.managers['crea'].active,
+                        t.deepEqual(activeFromArray(['crea']),
+                                    _.managers['crea'].active,
                                     'active doesnt match manager');
                         return (subcb());
                     }
@@ -328,7 +339,8 @@ exports.testCreateUpdateState = function (t) {
                     if (error || (emitted && cbed)) {
                         t.deepEqual(newState, _.managers['crea'].clusterState,
                                     'new state doesnt match manager state');
-                        t.deepEqual(['crea'], _.managers['crea'].active,
+                        t.deepEqual(activeFromArray(['crea']),
+                                    _.managers['crea'].active,
                                     'active doesnt match manager');
                         return (subcb());
                     }
@@ -388,7 +400,8 @@ exports.testAddRemoveAnother = function (t) {
                             t.fail(error);
                             return (subcb(error));
                         }
-                        t.deepEqual(['addr', 'newr'], _.managers['addr'].active,
+                        t.deepEqual(activeFromArray(['addr', 'newr']),
+                                    _.managers['addr'].active,
                                     'active doesnt match manager');
                         return (subcb());
                     }
@@ -396,7 +409,7 @@ exports.testAddRemoveAnother = function (t) {
                 activeCb = function (active) {
                     emitted = true;
                     t.ok(active, 'active');
-                    t.deepEqual(['addr', 'newr'], active,
+                    t.deepEqual(activeFromArray(['addr', 'newr']), active,
                                 'unexpected list of actives');
                     return (tryEnd());
                 };
@@ -410,7 +423,7 @@ exports.testAddRemoveAnother = function (t) {
             },
             function closeNewMgr(_, subcb) {
                 activeCb = function (active) {
-                    t.deepEqual(['addr'], active,
+                    t.deepEqual(activeFromArray(['addr']), active,
                                 'unexpected list of actives');
                     return (subcb());
                 };
@@ -458,7 +471,8 @@ exports.testDebounce = function (t) {
                             t.fail(error);
                             return (subcb(error));
                         }
-                        t.deepEqual(['debo'], _.managers['debo'].active,
+                        t.deepEqual(activeFromArray(['debo']),
+                                    _.managers['debo'].active,
                                     'active doesnt match manager');
                         return (subcb());
                     }
@@ -468,10 +482,10 @@ exports.testDebounce = function (t) {
                     ++called;
                     t.ok(active, 'active');
                     if (called === 1) {
-                        t.deepEqual(['debo', 'newr'], active,
+                        t.deepEqual(activeFromArray(['debo', 'newr']), active,
                                     'unexpected list of actives');
                     } else if (called === 2) {
-                        t.deepEqual(['debo'], active,
+                        t.deepEqual(activeFromArray(['debo']), active,
                                     'unexpected list of actives');
                     } else {
                         t.fail('Called more than twice');
@@ -531,7 +545,7 @@ exports.testOrdering = function (t) {
             setupManagers,
             function killAndReplaceFirst(_, subcb) {
                 ord2ActiveCb = function onClose(active) {
-                    t.deepEqual(['ord2'], active,
+                    t.deepEqual(activeFromArray(['ord2']), active,
                                 'unexpected list of actives');
 
                     var cbed = false;
@@ -545,7 +559,7 @@ exports.testOrdering = function (t) {
 
                     ord2ActiveCb = function onEmit(active2) {
                         emitted = true;
-                        t.deepEqual(['ord1', 'ord2'], active2,
+                        t.deepEqual(activeFromArray(['ord1', 'ord2']), active2,
                                     'unexpected list of actives');
                         return (tryEnd());
                     };
@@ -565,9 +579,11 @@ exports.testOrdering = function (t) {
                 _.managers['ord1'].close();
             },
             function checkMgrs(_, subcb) {
-                t.deepEqual(['ord1', 'ord2'], _.managers['ord1'].active,
+                t.deepEqual(activeFromArray(['ord1', 'ord2']),
+                            _.managers['ord1'].active,
                             'unexpected list of actives');
-                t.deepEqual(['ord1', 'ord2'], _.managers['ord2'].active,
+                t.deepEqual(activeFromArray(['ord1', 'ord2']),
+                            _.managers['ord2'].active,
                             'unexpected list of actives');
                 return (subcb());
             },
