@@ -31,6 +31,8 @@ var pgm = new PostgresMgr(cfg);
 function finish() {
     pgm.close(function () {
         console.log('Done.');
+        //TODO: Figure out why this doesn't always exit.
+        process.exit(0);
     });
 }
 
@@ -97,7 +99,7 @@ function execute(command, cb) {
         'prop': prop
     };
     if (!funcs[c]) {
-        console.log('command ' + c + 'unknown');
+        console.log('command ' + c + ' unknown');
         return (setImmediate(cb));
     }
     funcs[c].call(null, cs, cb);
