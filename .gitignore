@@ -11,3 +11,4 @@ smf/manifests/*.xml
 *.*~
 *.un~
 test/etc/zookeeperMgr.test.cfg
+abandoned
