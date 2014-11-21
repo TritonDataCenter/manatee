@@ -10,11 +10,14 @@ var cfgFilename = '/opt/smartdc/manatee/etc/sitter.json';
 var cfg = JSON.parse(fs.readFileSync(cfgFilename, 'utf8')).postgresMgrCfg;
 
 var LOG = bunyan.createLogger({
-    level: (process.env.LOG_LEVEL || 'fatal'),
     name: 'postgresMgr.js',
     serializers: {
         err: bunyan.stdSerializers.err
     },
+    streams: [{
+        level: 'debug',
+        path: '/var/tmp/postgresMgrRepl.log'
+    }],
     src: true
 });
 
@@ -125,7 +128,8 @@ function repl() {
     doNext();
 }
 
-pgm.on('init', function () {
-    console.log('Postgres Manager Inited.');
+pgm.on('init', function (online) {
+    console.log('Postgres Manager Inited, Postgres is ' +
+                (online ? 'online': 'offline'));
     repl();
 });
