@@ -85,7 +85,9 @@ function activeFromArray(a) {
         return ({
             'id': id,
             'zoneId': 'localhost',
-            'ip': '127.0.0.1'
+            'ip': '127.0.0.1',
+            'pgUrl': 'tcp://postgres@' + id + ':5432/postgres',
+            'backupUrl': 'http://' + id + ':12345'
         });
     }));
 }
