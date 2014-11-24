@@ -64,16 +64,19 @@ function reconfigure(args, cb) {
     if (args.length < 2) {
         return (cb(new Error(usage)));
     }
-    function ip(i) {
+    function id(i) {
         if (!i || i === 'null') {
             return (undefined);
         }
-        return ('tcp://postgres@' + i + ':5432/postgres');
+        return ({
+            'pgUrl': 'tcp://postgres@' + i + ':5432/postgres',
+            'backupUrl': 'http://' + i + ':12345'
+        });
     }
     var pgConfig = {
         'role': args[0],
-        'upstream': ip(args[1]),
-        'downstream': ip(args[2])
+        'upstream': id(args[1]),
+        'downstream': id(args[2])
     };
     console.log(pgConfig);
     pgm.reconfigure(pgConfig, cb);
