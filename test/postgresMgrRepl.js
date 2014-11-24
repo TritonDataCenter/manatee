@@ -14,10 +14,10 @@ var LOG = bunyan.createLogger({
     serializers: {
         err: bunyan.stdSerializers.err
     },
-    streams: [{
+    streams: [ {
         level: 'debug',
         path: '/var/tmp/postgresMgrRepl.log'
-    }],
+    } ],
     src: true
 });
 

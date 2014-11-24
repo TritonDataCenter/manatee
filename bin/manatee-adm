@@ -317,7 +317,7 @@ ManateeAdm.prototype.do_history.options = [ {
     default: process.env.ZK_IPS
 }];
 ManateeAdm.prototype.do_history.help = (
-    'Clear a shard out of safe mode. \n' +
+    'Displays histories for this shard. \n' +
     '\n' +
     'Usage:\n' +
     '    {{name}} history [OPTIONS]\n' +
@@ -368,48 +368,6 @@ ManateeAdm.prototype.do_rebuild.help = (
     '\n' +
     'Usage:\n' +
     '    {{name}} rebuild [OPTIONS]\n' +
-    '\n' +
-    '{{options}}'
-);
-
-/**
- * Promote a manatee peer to the primary of the shard.
- */
-ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
-    var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
-    if (!opts.config) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
-
-    var cfg;
-
-    try {
-        cfg = JSON.parse(fs.readFileSync(opts.config, 'utf8'));
-        opts.config = cfg;
-    } catch (e) {
-        return cb(e);
-    }
-    adm.promote(opts, cb);
-};
-ManateeAdm.prototype.do_promote.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['config', 'c'],
-    type: 'string',
-    helpArg: 'CONFIG',
-    help: 'The path to the manatee sitter config to list',
-    default: process.env.MANATEE_SITTER_CONFIG
-}];
-ManateeAdm.prototype.do_promote.help = (
-    'Promote a manatee peer to the primary of the shard. \n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} promote [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
