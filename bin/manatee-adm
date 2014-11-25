@@ -52,6 +52,13 @@ ManateeAdm.prototype.do_status.options = [ {
     type: 'bool',
     help: 'Show this help'
 }, {
+    names: ['legacyOrderMode', 'l'],
+    type: 'bool',
+    helpArg: 'LEGACY_ORDER_MODE',
+    help: 'Show what the status is based on what is in the ZK election path ' +
+        'rather than what is in the cluster state object.',
+    default: false
+}, {
     names: ['shard', 's'],
     type: 'string',
     helpArg: 'SHARD',
