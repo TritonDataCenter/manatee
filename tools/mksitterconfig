@@ -1,0 +1,158 @@
+#!/usr/bin/env node
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+/*
+ * Copyright (c) 2014, Joyent, Inc.
+ */
+
+/*
+ * mksitterconfig SELF_IP ZK_CONNECTION_STRING: generate a manatee-sitter
+ * configuration for a development host.
+ */
+
+var child_process = require('child_process');
+var net = require('net');
+var path = require('path');
+var util = require('util');
+
+var arg0 = path.basename(process.argv[1]);
+
+/* default config: nulls will be filled-in dynamically */
+/*
+ * XXX It would be nice if we could run multiple instances of manatee in the
+ * same zone with databases and other unique data in separate paths.  To do
+ * that, many of the fields embedded here should be generalized.
+ */
+var configTemplate = {
+    'backupPort': 10002,
+    'ip': null,
+    'postgresMgrCfg': {
+        'dataDir': '/var/manatee/data',
+        'dbUser': 'postgres',
+        'hbaConf': './etc/pg_hba.conf',
+        'healthChkInterval': 1000,
+        'healthChkTimeout': 5000,
+        'oneNodeWriteMode': false,
+        'opsTimeout': 60000,
+        'pgInitDbPath': '/opt/local/bin/initdb',
+        'postgresConf': './etc/postgresql.conf',
+        'postgresPath': '/opt/local/bin/postgres',
+        'recoveryConf': './etc/recovery.conf',
+        'replicationTimeout': 60000,
+        'snapShotterCfg': {
+            'dataset': null
+        },
+        'syncStateCheckerCfg': {
+            'cookieLocation': '/var/tmp/manatee_sync_cookie',
+            'interval': 1000
+        },
+        'url': null,
+        'zfsClientCfg': {
+            'dataset': null,
+            'mountpoint': '/var/manatee',
+            'pollInterval': 1000,
+            'zfsHost': null,
+            'zfsPath': '/usr/sbin/zfs',
+            'zfsPort': 10001
+        }
+    },
+    'postgresPort': 5432,
+    'shardPath': null,
+    'ttl': 60,
+    'zkCfg': {
+        'connStr': null,
+        'opts': {
+            'sessionTimeout': 60000
+        }
+    },
+    'zoneId': null
+};
+
+function usage(message)
+{
+    if (message)
+        console.error('%s: %s', arg0, message);
+    console.error('usage: %s SELF_IP ZK_IP:ZK_PORT[...]', arg0);
+    process.exit(2);
+}
+
+function fatal(message)
+{
+    console.error('%s: %s', arg0, message);
+    process.exit(1);
+}
+
+function main()
+{
+    var ip, shardpath, zkconnstr;
+
+    if (process.argv.length < 4)
+        usage();
+
+    /*
+     * The IP comes in as an argument because many development hosts have
+     * several IP addresses but only one of them is suitable for our purposes.
+     */
+    ip = process.argv[2];
+    if (!net.isIPv4(ip))
+        usage('peer IP does not appear valid');
+
+    /*
+     * This check isn't precise, but it will catch very obviously wrong input.
+     */
+    zkconnstr = process.argv[3];
+    if (!/(^\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}:\d{1,5},?)+/.test(zkconnstr))
+        usage('zk connection string does not appear valid');
+
+    shardpath = '/manatee_test/1';
+
+    child_process.exec('zonename', function (err, stdout, stderr) {
+        var config, reason;
+
+        if (err) {
+            reason = err.code ? ('exited with status ' + err.code) :
+                ('killed by signal ' + err.signal);
+            fatal('failed to determine zonename: child process ' + reason);
+        }
+
+        config = mkconfig(configTemplate, {
+            'ip': ip,
+            'zkconnstr': zkconnstr,
+            'zonename': stdout.trim(),
+            'shardpath': shardpath
+        });
+
+        console.log(JSON.stringify(config, false, '\t'));
+    });
+}
+
+function mkconfig(template, params)
+{
+    var rv, key;
+    var dataset, pgurl;
+
+    /* XXX should be a deep copy */
+    rv = {};
+    for (key in template)
+        rv[key] = template[key];
+
+    dataset = util.format('zones/%s/data/manatee', params.zonename);
+    pgurl = util.format('tcp://%s@%s:%s/postgres',
+        template.postgresMgrCfg.dbUser, params.ip, template.postgresPort);
+
+    rv.ip = params.ip;
+    rv.postgresMgrCfg.snapShotterCfg.dataset = dataset;
+    rv.postgresMgrCfg.url = pgurl;
+    rv.postgresMgrCfg.zfsClientCfg.dataset = dataset;
+    rv.postgresMgrCfg.zfsClientCfg.zfsHost = params.ip;
+    rv.zkCfg.connStr = params.zkconnstr;
+    rv.shardPath = params.shardpath;
+    rv.zoneId = params.zonename;
+    return (rv);
+}
+
+main();
