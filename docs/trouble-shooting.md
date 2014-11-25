@@ -240,13 +240,13 @@ If this returns nothing, then no manatee peers are deployed.
 1. Log on to any manatee peer.
 1. Check for the most recent primary of the shard.
 ```
-[root@8372b732-007c-400c-9642-9eb63d169cf2 (staging-1:manatee0) ~]# manatee-history  | grep AssumeLeader | tail -1
+[root@8372b732-007c-400c-9642-9eb63d169cf2 (staging-1:manatee0) ~]# manatee-adm history  | grep AssumeLeader | tail -1
 {"time":"1406317072941","date":"2014-07-25T19:37:52.941Z","ip":"172.25.3.65:5432","action":"AssumeLeader","role":"Leader","master":"","slave":"172.25.3.16:5432","zkSeq":"0000000219
 ```
 The `ip` field is the the IP address of the primary peer.
 
 1. Log on to the mantaee zone identified by the IP address.
-1. Promote the zone to primary. `# manatee-primary`.
+1. Promote the zone to primary. `# manatee-adm promote`.
 1. Check `# manatee-adm status` and ensure you see the primary field and that
 primary.zoneId corresponds to this zone. e.g.
 ```json
@@ -396,7 +396,7 @@ From the headnode, run:
 cce218f8-6ad9-45c6-bd98-d9d0b840b56a manatee1 aac3c402-3047-11e3-b451-002590c57864 172.25.3.59
 ```
 ## Find the set of manatee peers in a Manta deployment
-This lises the manatee peers in each DC in Manta.  If you have a multi-dc
+This lists the manatee peers in each DC in Manta.  If you have a multi-dc
 deployment, this will not find x-dc peers.  From the headnode, run:
 ```
 [root@headnode (staging-1) ~]# manta-adm show postgres
