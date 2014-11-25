@@ -26,7 +26,7 @@ function ManateeAdm() {
 util.inherits(ManateeAdm, cmdln.Cmdln);
 
 /**
- * Display the current state of the manatee shard(s).
+ * Display the current status of the manatee shard(s).
  */
 ManateeAdm.prototype.do_status = function (subcmd, opts, args, cb) {
     var self = this;
@@ -128,7 +128,57 @@ ManateeAdm.prototype.do_state.help = (
 );
 
 /**
- * Display the current cluster state.
+ * Display the current (raw) active nodes for a shard.
+ */
+ManateeAdm.prototype.do_active = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.zk) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    adm.active(opts, function (err, active) {
+        if (err) {
+            return cb(err);
+        } else {
+            console.log(JSON.stringify(active));
+            return cb();
+        }
+    });
+};
+ManateeAdm.prototype.do_active.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}, {
+    names: ['shard', 's'],
+    type: 'string',
+    helpArg: 'SHARD',
+    help: 'Get the active for this manatee shard.',
+    default: process.env.SHARD
+}, {
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
+}];
+ManateeAdm.prototype.do_active.help = (
+    'Display the current active peers for a shard. \n' +
+    'Since this displays exactly what is in zookeeper, this may show\n' +
+    'multiple entries for the same manatee.\n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} active [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
+
+/**
+ * Backfill the cluster state.
  */
 ManateeAdm.prototype.do_state_backfill = function (subcmd, opts, args, cb) {
     var self = this;
