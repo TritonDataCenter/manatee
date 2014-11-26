@@ -133,8 +133,10 @@ function repl() {
     doNext();
 }
 
-pgm.on('init', function (online) {
-    console.log('Postgres Manager Inited, Postgres is ' +
-                (online ? 'online': 'offline'));
+pgm.on('init', function (stat) {
+    console.log('Postgres Manager Inited, Postgres has ' +
+                (stat.setup ? '': 'not ') +
+                'previously been configured and is ' +
+                (stat.online ? 'online': 'offline'));
     repl();
 });
