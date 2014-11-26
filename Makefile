@@ -8,22 +8,22 @@
 # Copyright (c) 2014, Joyent, Inc.
 #
 
-JSL		 = jsl
+JSL		 = ./deps/javascriptlint/build/install/jsl
 JSL_CONF_NODE	 = ./tools/jsl.node.conf
-JSSTYLE		 = jsstyle
+JSSTYLE		 = ./deps/jsstyle/jsstyle
 JSSTYLE_FLAGS	 = -f ./tools/jsstyle.conf
 NPM		 = npm
 
 JS_FILES	:= \
 	$(wildcard ./*.js ./lib/*.js ./test/*.js) \
 	bin/manatee-adm \
-	tools/mksitterconfig 
+	tools/mksitterconfig
 JSL_FILES_NODE	 = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
 
 JSON_FILES	 = \
     $(wildcard ./etc/*.json ./test/etc/*.json) \
-    package.json 
+    package.json
 
 include Makefile.defs
 

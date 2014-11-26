@@ -429,4 +429,101 @@ ManateeAdm.prototype.do_rebuild.help = (
     '{{options}}'
 );
 
+/**
+ * Freezes a manatee's cluster state so that it won't make any state
+ * transitions.
+ */
+ManateeAdm.prototype.do_freeze = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.shard) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    adm.freeze(opts, function (err) {
+        if (err) {
+            return cb(err);
+        }
+
+        console.log('Frozen.');
+        return cb();
+    });
+};
+ManateeAdm.prototype.do_freeze.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}, {
+    names: ['shard', 's'],
+    type: 'string',
+    helpArg: 'SHARD',
+    help: 'The manatee shard',
+    default: process.env.SHARD
+}, {
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
+}];
+ManateeAdm.prototype.do_freeze.help = (
+    'Freeze a shard\'s topology. \n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} freeze [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
+
+/**
+ * Unfreezes a manatee's cluster state so that it will make state transitions.
+ */
+ManateeAdm.prototype.do_unfreeze = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.shard) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    adm.unfreeze(opts, function (err) {
+        if (err) {
+            return cb(err);
+        }
+
+        console.log('Unfrozen.');
+        return cb();
+    });
+};
+ManateeAdm.prototype.do_unfreeze.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}, {
+    names: ['shard', 's'],
+    type: 'string',
+    helpArg: 'SHARD',
+    help: 'The manatee shard',
+    default: process.env.SHARD
+}, {
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
+}];
+ManateeAdm.prototype.do_unfreeze.help = (
+    'Unfreeze a shard\'s topology. \n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} unfreeze [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
+
 cmdln.main(new ManateeAdm(), {showErrStack: true});
