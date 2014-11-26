@@ -30,4 +30,5 @@ include Makefile.defs
 all:
 	$(NPM) install
 
+include Makefile.deps
 include Makefile.targ
