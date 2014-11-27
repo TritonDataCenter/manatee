@@ -26,10 +26,6 @@
       "snapshotNumber": 5,
       "pgUrl": "tcp://postgres@127.0.0.1:10003/postgres"
     },
-    "syncStateCheckerCfg": {
-      "interval": 1000,
-      "cookieLocation": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf_metadata/sync_cookie"
-    },
     "url": "tcp://postgres@127.0.0.1:10003/postgres",
     "zfsClientCfg": {
       "dataset": "zones/e9b121cd-4915-64ba-cb80-cfcb385ae7c1/data/manatee_integ_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf",

@@ -46,10 +46,6 @@ var configTemplate = {
         'snapShotterCfg': {
             'dataset': null
         },
-        'syncStateCheckerCfg': {
-            'cookieLocation': '/var/tmp/manatee_sync_cookie',
-            'interval': 1000
-        },
         'url': null,
         'zfsClientCfg': {
             'dataset': null,

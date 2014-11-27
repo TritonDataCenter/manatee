@@ -136,7 +136,6 @@ function readConfig(options) {
     _config.postgresMgrCfg.log = LOG;
     _config.postgresMgrCfg.zfsClientCfg.log = LOG;
     _config.postgresMgrCfg.snapShotterCfg.log = LOG;
-    _config.postgresMgrCfg.syncStateCheckerCfg.log = LOG;
 
     LOG.info('starting manatee');
     var shard = Shard.start(_config);

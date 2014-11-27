@@ -22,10 +22,6 @@
         "snapShotterCfg": {
             "dataset": null
         },
-        "syncStateCheckerCfg": {
-            "interval": 1000,
-            "cookieLocation": null
-        },
         "url": null,
         "zfsClientCfg": {
             "dataset": null,

@@ -33,13 +33,6 @@
             "// ": "The manatee ZFS datset.",
             "dataset": "zones/f9e6661b-82e6-4c19-873c-eb869d689446/data/manatee"
         },
-        "// ": "Config used to check the current replication state.",
-        "syncStateCheckerCfg": {
-            "// ": "File on disk where the replication state is persisted.",
-            "cookieLocation": "/var/tmp/manatee_sync_cookie",
-            "// ": "Check stated period in ms.",
-            "interval": 1000
-        },
         "// ": "The PG url.",
         "url": "tcp://postgres@10.88.88.52:5432/postgres",
         "// ": "ZFS client config.",

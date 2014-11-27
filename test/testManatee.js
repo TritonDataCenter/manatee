@@ -158,8 +158,6 @@ function Manatee(opts, cb) {
 
             cfg.postgresMgrCfg.dataDir = opts.mountPoint + '/data';
             cfg.postgresMgrCfg.snapShotterCfg.dataset = opts.zfsDataset;
-            cfg.postgresMgrCfg.syncStateCheckerCfg.cookieLocation =
-                self.cookieLocation;
             cfg.postgresMgrCfg.url = self.pgUrl;
             cfg.postgresMgrCfg.postgresConf = self.postgresConf;
             cfg.postgresMgrCfg.zfsClientCfg.dataset = opts.zfsDataset;
