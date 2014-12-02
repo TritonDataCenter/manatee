@@ -114,22 +114,6 @@ function readConfig(options) {
         }
     }
 
-    // MANATEE-188 don't do this until we fix PG.
-    // gracefully shutdown this node on SIGINT
-    //process.on('SIGINT', function () {
-        //LOG.info('Sitter.main: got SIGINT');
-        //if (!node) {
-            //process.exit();
-        //}
-
-        //node.shutdown(function (err) {
-            //LOG.info({err: err}, 'Sitter.main: done shutdown procedures');
-            //if (err) {
-                //process.abort();
-            //}
-            //process.exit();
-        //});
-    //});
 
     // set loggers of the sub components
     _config.log = LOG;
@@ -145,4 +129,32 @@ function readConfig(options) {
         shard: shard
     });
     LOG.info('manatee started');
+
+    // The smf manifest indicates sending a SIGINT (2) on disable
+    /**
+     * The idea here was to only remove the ZK node before shutdown.  I was
+     * trying to do that via an SMF signal, but, unfortunately, I realized too
+     * late (ie during testing) that since postgres is a child process of this,
+     * it is part of the same contract and will get the SIGINT directly from
+     * SMF.  So this will have to wait until the postgres process management
+     * portions of Manatee are reworked.
+     *
+     * Also note MANATEE-188 which says that postgres *must* be killed without
+     * writing a shutdown checkpoint, so it currently needs a SIGKILL
+     * independent of this SIGINT.
+     *
+    process.on('SIGINT', function () {
+        LOG.info('Sitter.main: got SIGINT');
+        if (!shard) {
+            process.exit();
+        }
+        shard.shutdown(function (err) {
+            LOG.info({err: err}, 'Sitter.main: done shutdown procedures');
+            if (err) {
+                process.abort();
+            }
+            process.exit();
+        });
+    });
+    */
 })();

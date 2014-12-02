@@ -5,9 +5,11 @@ var vasync = require('vasync');
 var zkClient = require('node-zookeeper-client');
 
 var connStr = process.argv[2];
+var timeout = process.argv[3] ? parseInt(process.argv[3], 10) : 0;
 
 if (!connStr) {
-    console.error('usage: ' + process.argv.join(' ') + ' <zk conn string>');
+    console.error('usage: ' + process.argv.join(' ') + ' <zk conn string> ' +
+                  '[shutdown in seconds]');
     process.exit(1);
 }
 
@@ -24,7 +26,7 @@ var zk = zkClient.createClient(connStr, opts);
 //Creator says this is "Java Style"
 zk.on('state', function (s) {
     //Just log it.  The other events are called.
-    console.log(s, 'zk: new state');
+    console.log(s, 'zk: new state (' + zk.getState().getName() + ')');
 });
 
 //Client is connected and ready. This fires whenever the client is
@@ -59,3 +61,11 @@ zk.on('error', function (err) {
 });
 
 zk.connect();
+
+if (timeout !== 0) {
+    console.log('zk: closing zk in ' + timeout + ' seconds');
+    setTimeout(function () {
+        console.log('zk: closing zk');
+        zk.close();
+    }, timeout * 1000);
+}
