@@ -443,6 +443,11 @@ ManateeAdm.prototype.do_freeze = function (subcmd, opts, args, cb) {
         self.do_help('help', {}, [subcmd], cb);
     }
 
+    if (!opts.reason) {
+        console.log('!!! -r [reason] is required !!!');
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
     adm.freeze(opts, function (err) {
         if (err) {
             return cb(err);
@@ -456,6 +461,11 @@ ManateeAdm.prototype.do_freeze.options = [ {
     names: ['help', 'h'],
     type: 'bool',
     help: 'Show this help'
+}, {
+    names: ['reason', 'r'],
+    type: 'string',
+    helpArg: 'REASON',
+    help: 'The reason this shard is being frozen'
 }, {
     names: ['shard', 's'],
     type: 'string',
