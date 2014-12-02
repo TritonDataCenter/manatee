@@ -21,6 +21,7 @@
     "dependencies": {
         "assert-plus": "0.1.5",
         "backoff": "1.2.0",
+        "bignum": "0.6.2",
         "bunyan": "0.22.1",
         "cmdln": "2.0.0",
         "iniparser": "1.0.5",
