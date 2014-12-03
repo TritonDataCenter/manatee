@@ -14,6 +14,7 @@ JSSTYLE		 = ./deps/jsstyle/jsstyle
 JSSTYLE_FLAGS	 = -f ./tools/jsstyle.conf
 NPM		 = npm
 
+BASH_FILES	 = tools/mkdevsitters
 JS_FILES	:= \
 	$(wildcard ./*.js ./lib/*.js ./test/*.js) \
 	bin/manatee-adm \
