@@ -143,18 +143,18 @@ function readConfig(options) {
      * writing a shutdown checkpoint, so it currently needs a SIGKILL
      * independent of this SIGINT.
      *
-    process.on('SIGINT', function () {
-        LOG.info('Sitter.main: got SIGINT');
-        if (!shard) {
-            process.exit();
-        }
-        shard.shutdown(function (err) {
-            LOG.info({err: err}, 'Sitter.main: done shutdown procedures');
-            if (err) {
-                process.abort();
-            }
-            process.exit();
-        });
-    });
-    */
+     * process.on('SIGINT', function () {
+     *     LOG.info('Sitter.main: got SIGINT');
+     *     if (!shard) {
+     *         process.exit();
+     *     }
+     *     shard.shutdown(function (err) {
+     *         LOG.info({err: err}, 'Sitter.main: done shutdown procedures');
+     *         if (err) {
+     *             process.abort();
+     *         }
+     *         process.exit();
+     *     });
+     * });
+     */
 })();
