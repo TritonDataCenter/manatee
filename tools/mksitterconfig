@@ -10,8 +10,8 @@
  */
 
 /*
- * mksitterconfig SELF_IP ZK_CONNECTION_STRING: generate a manatee-sitter
- * configuration for a development host.
+ * mksitterconfig ROOT SELF_IP ZK_CONNECTION_STRING WHICH: generate a
+ * manatee-sitter configuration for a development host.
  */
 
 var child_process = require('child_process');
@@ -22,16 +22,11 @@ var util = require('util');
 var arg0 = path.basename(process.argv[1]);
 
 /* default config: nulls will be filled-in dynamically */
-/*
- * XXX It would be nice if we could run multiple instances of manatee in the
- * same zone with databases and other unique data in separate paths.  To do
- * that, many of the fields embedded here should be generalized.
- */
 var configTemplate = {
     'backupPort': 10002,
     'ip': null,
     'postgresMgrCfg': {
-        'dataDir': '/var/manatee/data',
+        'dataDir': null,
         'dbUser': 'postgres',
         'hbaConf': './etc/pg_hba.conf',
         'healthChkInterval': 1000,
@@ -39,17 +34,21 @@ var configTemplate = {
         'oneNodeWriteMode': false,
         'opsTimeout': 60000,
         'pgInitDbPath': '/opt/local/bin/initdb',
-        'postgresConf': './etc/postgresql.conf',
+        'postgresConf': null,
         'postgresPath': '/opt/local/bin/postgres',
         'recoveryConf': './etc/recovery.conf',
         'replicationTimeout': 60000,
         'snapShotterCfg': {
             'dataset': null
         },
+        'syncStateCheckerCfg': {
+            'cookieLocation': null,
+            'interval': 1000
+        },
         'url': null,
         'zfsClientCfg': {
             'dataset': null,
-            'mountpoint': '/var/manatee',
+            'mountpoint': null,
             'pollInterval': 1000,
             'zfsHost': null,
             'zfsPath': '/usr/sbin/zfs',
@@ -72,7 +71,7 @@ function usage(message)
 {
     if (message)
         console.error('%s: %s', arg0, message);
-    console.error('usage: %s SELF_IP ZK_IP:ZK_PORT[...]', arg0);
+    console.error('usage: %s SELF_IP ZK_IP:ZK_PORT[...] WHICH', arg0);
     process.exit(2);
 }
 
@@ -84,26 +83,31 @@ function fatal(message)
 
 function main()
 {
-    var ip, shardpath, zkconnstr;
+    var root, ip, shardpath, zkconnstr, which;
 
-    if (process.argv.length < 4)
+    if (process.argv.length < 6)
         usage();
+
+    root = process.argv[2];
 
     /*
      * The IP comes in as an argument because many development hosts have
      * several IP addresses but only one of them is suitable for our purposes.
      */
-    ip = process.argv[2];
+    ip = process.argv[3];
     if (!net.isIPv4(ip))
         usage('peer IP does not appear valid');
 
     /*
      * This check isn't precise, but it will catch very obviously wrong input.
      */
-    zkconnstr = process.argv[3];
+    zkconnstr = process.argv[4];
     if (!/(^\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}:\d{1,5},?)+/.test(zkconnstr))
         usage('zk connection string does not appear valid');
 
+    which = parseInt(process.argv[5], 10);
+    if (isNaN(which) || which <= 0)
+        usage('WHICH argument should be a positive integer');
     shardpath = '/manatee_test/1';
 
     child_process.exec('zonename', function (err, stdout, stderr) {
@@ -116,9 +120,11 @@ function main()
         }
 
         config = mkconfig(configTemplate, {
+            'root': root,
             'ip': ip,
             'zkconnstr': zkconnstr,
             'zonename': stdout.trim(),
+            'which': which,
             'shardpath': shardpath
         });
 
@@ -128,22 +134,47 @@ function main()
 
 function mkconfig(template, params)
 {
-    var rv, key;
-    var dataset, pgurl;
+    var rv, key, which, portdelta;
+    var dataset, mountpoint, datadir, cookie, pgurl, pgconf;
 
     /* XXX should be a deep copy */
     rv = {};
     for (key in template)
         rv[key] = template[key];
 
-    dataset = util.format('zones/%s/data/manatee', params.zonename);
-    pgurl = util.format('tcp://%s@%s:%s/postgres',
-        template.postgresMgrCfg.dbUser, params.ip, template.postgresPort);
+    /*
+     * Update the fields that depend on which of N peers' configs we're writing
+     * out.
+     */
+    which = params.which;
+    portdelta = (which - 1) * 10;
 
+    rv.backupPort += portdelta;
+    rv.postgresMgrCfg.zfsClientCfg.zfsPort += portdelta;
+    rv.postgresPort += portdelta;
+
+    /*
+     * Construct the dynamic fields.
+     */
+    dataset = util.format('zones/%s/data/peer%s', params.zonename, which);
+    pgurl = util.format('tcp://%s@%s:%s/postgres',
+        rv.postgresMgrCfg.dbUser, params.ip, rv.postgresPort);
+    mountpoint = util.format('%s/datasets/manatee%s', params.root, which);
+    datadir = util.format('%s/data', mountpoint);
+    cookie = util.format('/var/tmp/manatee%s_sync_cookie', which);
+    pgconf = util.format('%s/sitter%s/postgres.conf', params.root, which);
+
+    /*
+     * Construct the final configuration and return it.
+     */
     rv.ip = params.ip;
+    rv.postgresMgrCfg.dataDir = datadir;
+    rv.postgresMgrCfg.postgresConf = pgconf;
+    rv.postgresMgrCfg.syncStateCheckerCfg.cookieLocation = cookie;
     rv.postgresMgrCfg.snapShotterCfg.dataset = dataset;
     rv.postgresMgrCfg.url = pgurl;
     rv.postgresMgrCfg.zfsClientCfg.dataset = dataset;
+    rv.postgresMgrCfg.zfsClientCfg.mountpoint = mountpoint;
     rv.postgresMgrCfg.zfsClientCfg.zfsHost = params.ip;
     rv.zkCfg.connStr = params.zkconnstr;
     rv.shardPath = params.shardpath;

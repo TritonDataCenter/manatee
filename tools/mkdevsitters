@@ -1,0 +1,110 @@
+#!/bin/bash
+
+#
+# mkdevsitters: creates ZFS datasets and configuration files each of three
+# manatee sitters.  See ./mksitterconfig.
+#
+
+mds_arg0="$(basename ${BASH_SOURCE[0]})"
+mds_zonename=
+mds_basedir="$(dirname ${BASH_SOURCE[0]})/.."
+mds_mksitterconfig="$mds_basedir/tools/mksitterconfig"
+mds_ip="$1"
+mds_zkconnstr="$2"
+
+function fail
+{
+	echo "$mds_arg0: $@" >&2
+	exit 1
+}
+
+function mksitter
+{
+	local which ip zkconnstr
+	local dataset mountpoint
+	local port sitterdir script
+
+	which="$1"
+	ip="$2"
+	zkconnstr="$3"
+	dataset="zones/$mds_zonename/data/peer$which"
+	sitterdir="$PWD/devconfs/sitter$which"
+	mountpoint="$PWD/devconfs/datasets/manatee$which"
+
+	echo -n "peer $which: creating ZFS dataset ... "
+	if ! zfs create -o mountpoint=$mountpoint -o canmount=noauto \
+	    -o snapdir=visible $dataset; then
+		fail "failed to create dataset \"$dataset\""
+	fi
+
+	if ! mkdir -p $mountpoint ||
+	   ! chown postgres $mountpoint ||
+	   ! chmod 700 $mountpoint ||
+	   ! zfs mount $dataset; then
+		fail "failed to create, chown, chmod, or mount \"$mountpoint\""
+	fi
+
+	if ! mkdir -p $mountpoint/data ||
+	   ! chown postgres $mountpoint/data ||
+	   ! chmod 700 $mountpoint/data; then
+		fail "failed to create, chown, or chmod \"$mountpoint\""
+	fi
+
+	echo "done."
+
+	#
+	# We need to create three configuration files for each peer:
+	#
+	#    o the template postgres configuration file
+	#    o the manatee-sitter configuration file.
+	#    o the backup server configuration file
+	#
+	mkdir -p $sitterdir
+	mkdir -p $sitterdir/log
+	chown postgres:postgres $sitterdir/log || \
+	    fail "failed to chown postgres log directory"
+
+	echo -n "peer $which: creating configuration ... "
+	$mds_mksitterconfig "$PWD/devconfs" "$ip" "$zkconnstr" "$which" \
+	    > "$sitterdir/sitter.json" || fail "failed"
+	echo "done."
+
+	echo -n "peer $which: fetching port from generated config ... "
+	port="$(json postgresPort < "$sitterdir/sitter.json")"
+	[[ -n "$port" ]] || fail "no postgres port found in generated config"
+	echo "$port."
+
+	echo -n "peer $which: creating template postgresql.conf ... "
+	egrep -v '^\s*port\s*=' $mds_basedir/etc/postgresql.conf |
+	    egrep -v '^\s*log_directory\s*=' > "$sitterdir/postgres.conf"
+	echo "port = $port # (change requires restart)" >> \
+	    "$sitterdir/postgres.conf"
+	echo "log_directory = '$sitterdir/log'" >> "$sitterdir/postgres.conf"
+	echo "done."
+
+	echo -n "peer $which: creating backupserver config ... "
+	port="$(json backupServerCfg.port < etc/backupserver.json)"
+	[[ -n "$port" ]] || fail "failed to get default backupserver port"
+	port=$(( port + 10 * (which - 1) ))
+	script="this.backupSenderCfg = {};"
+	script="$script this.backupSenderCfg.dataset = '$dataset';"
+	script="$script this.backupSenderCfg.zfsPath = '/usr/sbin/zfs';"
+	script="$script this.backupServerCfg = {};"
+	script="$script this.backupServerCfg.port = $port;"
+	echo "{}" | json -e "$script" > "$sitterdir/backupserver.json"
+	echo "done."
+}
+
+if ! type zonename > /dev/null 2>&1; then
+	fail "cannot determine dataset root: zonename(1M) command not found"
+fi
+
+if [[ $# -ne 2 ]]; then
+	echo "usage: $mds_arg0 LOCAL_IP ZK_IP:ZK_PORT" >&2
+	exit 2
+fi
+
+mds_zonename="$(zonename)"
+for (( i = 1; i <= 3; i++ )) {
+	mksitter $i "$mds_ip" "$mds_zkconnstr"
+}
