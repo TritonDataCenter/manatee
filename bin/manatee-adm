@@ -287,50 +287,6 @@ ManateeAdm.prototype.do_check_lock.help = (
     '{{options}}'
 );
 
-/**
- * Clear the shard out of error mode.
- */
-ManateeAdm.prototype.do_clear = function (subcmd, opts, args, cb) {
-    var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
-
-    if (!opts.shard) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
-
-    if (!opts.zk) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
-
-    adm.clear(opts, cb);
-};
-ManateeAdm.prototype.do_clear.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'The manatee shard',
-    default: process.env.SHARD
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_clear.help = (
-    'Clear the shard\'s error node. \n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} clear [OPTIONS]\n' +
-    '\n' +
-    '{{options}}'
-);
 
 /**
  * Get the state transition history of the shard.
@@ -532,6 +488,76 @@ ManateeAdm.prototype.do_unfreeze.help = (
     '\n' +
     'Usage:\n' +
     '    {{name}} unfreeze [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
+
+/**
+ * Sets one node write mode.
+ */
+ManateeAdm.prototype.do_set_onwm = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.shard) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    opts.mode = opts.mode.toLowerCase();
+    if (['on', 'off'].indexOf(opts.mode) === -1) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    adm.setOnwm(opts, function (err) {
+        if (err) {
+            return cb(err);
+        }
+
+        console.log('One Node Write Mode set to: ' + opts.mode);
+        return cb();
+    });
+};
+ManateeAdm.prototype.do_set_onwm.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}, {
+    names: ['shard', 's'],
+    type: 'string',
+    helpArg: 'SHARD',
+    help: 'The manatee shard',
+    default: process.env.SHARD
+}, {
+    names: ['mode', 'm'],
+    type: 'string',
+    helpArg: 'MODE',
+    help: 'Must be either "on" or "off"'
+}, {
+    names: ['ignorePrompts', 'y'],
+    type: 'bool',
+    helpArg: 'IGNORE_PROMPTS',
+    help: 'Set this to skip prompts (is dangerous) ',
+    default: false
+}, {
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
+}];
+ManateeAdm.prototype.do_set_onwm.help = (
+    'Set one node write mode. \n' +
+    '\n' +
+    '!!! WARNING !!!\n' +
+    'Do not set or disable one node write mode unless you are sure you\n' +
+    'know what you\'re doing.  In order for one node write mode to be\n' +
+    'setd, the state must match what is in your configuration files for\n' +
+    'Manatee.\n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} set_onwm [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
