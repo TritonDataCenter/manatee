@@ -28,15 +28,15 @@ var zkClient = require('node-zookeeper-client');
 var ZkMgr = require('../lib/zookeeperMgr');
 
 /**
- * Testing the ZK Manager.  To run this test you'll need to provide the
- * connection string to a zookeeper.  It will do all work under the
- * "/manatee_test" directory in that zookeeper.  For example:
+ * Testing the ZK Manager.  To run this test you'll need a running zookeeper
+ * cluster.  By default this test assumes a zookeeper is running on localhost.
+ * To override set the ZK_CONN_STR environment variable.  For example:
  *
- *     $ ./node_modules/.bin/nodeunit ./test/zookeeperMgr.test.js
+ * export ZK_CONN_STR="127.0.0.1:2181"
+ * export ZK_CONN_STR="10.99.99.80:2181,10.99.99.81:2181,10.99.99.82:2181"
  *
- * Configuration is located in ./test/etc/zookeeperMgr.test.cfg which doesn't
- * exist by default.  You should copy the template file and replace fields with
- * valid data.
+ * Then run the tests:
+ * ./node_modules/.bin/nodeunit ./test/zookeeperMgr.test.js
  */
 var LOG = bunyan.createLogger({
         level: (process.env.LOG_LEVEL || 'fatal'),
@@ -48,9 +48,7 @@ var LOG = bunyan.createLogger({
 });
 
 var PATH_PREFIX = '/manateeTest';
-var CFG_FILE = __dirname + '/etc/zookeeperMgr.test.cfg';
-var CFG = JSON.parse(fs.readFileSync(CFG_FILE));
-var CONN_STR = CFG.connStr;
+var CONN_STR = process.env.ZK_CONN_STR || '127.0.0.1';
 var ZK_OPTS = {
         sessionTimeout: 2000,
         spinDelay: 1000,
