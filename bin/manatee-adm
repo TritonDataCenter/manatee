@@ -562,4 +562,68 @@ ManateeAdm.prototype.do_set_onwm.help = (
     '{{options}}'
 );
 
+/**
+ * Removes deposed nodes.
+ */
+ManateeAdm.prototype.do_remove_deposed = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    if (!opts.shard) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    adm.removeDeposed(opts, function (err) {
+        if (err) {
+            return cb(err);
+        }
+
+        console.log('Ok.');
+        return cb();
+    });
+};
+ManateeAdm.prototype.do_remove_deposed.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}, {
+    names: ['ip', 'i'],
+    type: 'string',
+    helpArg: 'IP',
+    help: 'The ip of the node to remove'
+}, {
+    names: ['zonename', 'n'],
+    type: 'string',
+    helpArg: 'ZONENAME',
+    help: 'The zonename of the node to remove'
+}, {
+    names: ['shard', 's'],
+    type: 'string',
+    helpArg: 'SHARD',
+    help: 'The manatee shard',
+    default: process.env.SHARD
+}, {
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
+}];
+ManateeAdm.prototype.do_remove_deposed.help = (
+    'Moves a node out of the list of deposed manatees. \n' +
+    '\n' +
+    'After a primary has been deposed by a sync, the primary enters into a\n' +
+    'deposed state.  Remove it from the deposed list after it has been\n' +
+    'rebuilt.  You can either use the ip or the zonename to identify the\n' +
+    'node to remove.  If zonename or ip isn\'t specified, this zonename\n' +
+    'will be used.\n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} remove_deposed [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
+
 cmdln.main(new ManateeAdm(), {showErrStack: true});

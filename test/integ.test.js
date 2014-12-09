@@ -26,6 +26,7 @@ var ConfParser = require('../lib/confParser');
 var fs = require('fs');
 var exec = require('child_process').exec;
 var path = require('path');
+// What is this?!  bin/manatee_common?!
 var manatee_common = require('../node_modules/node-manatee/bin/manatee_common');
 var Manatee = require('./testManatee');
 var once = require('once');
@@ -37,9 +38,8 @@ var verror = require('verror');
 var zk = require('node-zookeeper-client');
 
 var FS_PATH_PREFIX = process.env.FS_PATH_PREFIX || '/var/tmp/manatee_tests';
-var ZK_URL = process.env.ZK_URL || 'localhost:2181';
+var ZK_URL = process.env.ZK_CONN_STR || 'localhost:2181';
 var PARENT_ZFS_DS = process.env.PARENT_ZFS_DS;
-//var SHARD_ID = '8dbdcef3-a82b-4403-bab0-a5c4053bb40f';
 var SHARD_ID = uuid.v4();
 var SHARD_PATH = '/manatee/' + SHARD_ID;
 console.error('shard path', SHARD_PATH + '/election');
