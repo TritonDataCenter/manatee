@@ -575,6 +575,18 @@ ManateeAdm.prototype.do_remove_deposed = function (subcmd, opts, args, cb) {
         self.do_help('help', {}, [subcmd], cb);
     }
 
+    if (!opts.ip && !opts.zonename) {
+        if (!opts.config) {
+            self.do_help('help', {}, [subcmd], cb);
+        }
+        try {
+            var cfg = JSON.parse(fs.readFileSync(opts.config, 'utf8'));
+            opts.zonename = cfg.zoneId;
+        } catch (e) {
+            return cb(e);
+        }
+    }
+
     adm.removeDeposed(opts, function (err) {
         if (err) {
             return cb(err);
@@ -588,6 +600,12 @@ ManateeAdm.prototype.do_remove_deposed.options = [ {
     names: ['help', 'h'],
     type: 'bool',
     help: 'Show this help'
+}, {
+    names: ['config', 'c'],
+    type: 'string',
+    helpArg: 'CONFIG',
+    help: 'The path to the manatee sitter config',
+    default: process.env.MANATEE_SITTER_CONFIG
 }, {
     names: ['ip', 'i'],
     type: 'string',
