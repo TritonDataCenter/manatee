@@ -350,10 +350,8 @@ ManateeAdm.prototype.do_rebuild = function (subcmd, opts, args, cb) {
         self.do_help('help', {}, [subcmd], cb);
     }
 
-    var cfg;
-
     try {
-        cfg = JSON.parse(fs.readFileSync(opts.config, 'utf8'));
+        var cfg = JSON.parse(fs.readFileSync(opts.config, 'utf8'));
         opts.config = cfg;
     } catch (e) {
         return cb(e);
@@ -371,10 +369,11 @@ ManateeAdm.prototype.do_rebuild.options = [ {
     help: 'The path to the manatee sitter config to list',
     default: process.env.MANATEE_SITTER_CONFIG
 }, {
-    names: ['full', 'f'],
-    type: 'bool',
-    help: 'Try a full rebuild without rolling back the snapshot first',
-    default: false
+    names: ['zk', 'z'],
+    type: 'string',
+    helpArg: 'ZOOKEEPER_URL',
+    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
+    default: process.env.ZK_IPS
 }];
 ManateeAdm.prototype.do_rebuild.help = (
     'Rebuild a manatee zone. \n' +
