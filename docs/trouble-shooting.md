@@ -32,7 +32,7 @@
 **Table of Contents**
 # Troubleshoot a Manatee Shard in Distress.
 This guide will list the most common failure scenarios of Manatee and steps to
-resucscitate the Shard.
+resuscitate the Shard.
 
 ## Warning
 You should read the user guide first to ensure you understand
