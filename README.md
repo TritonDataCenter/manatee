@@ -36,7 +36,7 @@ and setup.
 Problems? Check out the [Troubleshooting guide](docs/trouble-shooting.md).
 
 Migrating from Manatee 1.0 to 2.0?  Check out the [migration
-guide](docs/migrate_1_to_2.md).
+guide](docs/migrate-1-to-2.md).
 
 # Features
 
