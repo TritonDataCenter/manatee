@@ -332,15 +332,51 @@ You can query any past topology changes by using the `history` subcommand.
 
 This will return a list of every single cluster state change sorted by time.
 
+## Getting the Mantee version
+
+```
+[root@b35e12da (postgres) ~]$ manatee-adm version
+2.0.0
+```
+
+## Freezing and Unfreezing Clusters
+
+As an operator, there may be times when you want to "freeze" the topoplogy to
+keep Manatee from failing over the Postgres sync to Primary.  For example, this
+could be due to expected operational maintenance or because the cluster is in
+the middle of a migration.  To freeze the cluster state so that it will perform
+no transitions, use the `manatee-adm freeze -r [reason]` command.  The reason is
+free-form and required.  The reason is meant for operators to consult before
+unfreezing the cluster.  When the cluster is frozen, it is prominently displayed
+in the output for `manatee-adm status`:
+
+```
+[root@b35e12da (postgres) ~]$ manatee-adm freeze -r 'By nate for CM-129'
+Frozen.
+[root@b35e12da (postgres) ~]$ manatee-adm status | json | head -5
+{
+  "1.moray.coal.joyent.us": {
+    "__FROZEN__": "2014-12-10T18:20:35.758Z: By nate for CM-129",
+    "primary": {
+      "id": "10.77.77.8:5432:12345",
+[root@b35e12da (postgres) ~]$
+```
+
+To unfreeze the cluster, use the `manatee-adm unfreeze` command.
+
 ## Deposed manatees
 
 When a sync takes over becoming the primray, there is a chance that the previous
 primary's Postgres transaction logs have diverged.  There are many reasons this
 can happen, the reasons we know about are documented in the [transaction log
 divergence](xlog_diverge.md) doc.  Deposed manatees have the "deposed" tag when
-viewing at manatee-status:
+viewing `manatee-adm status`:
 
 ***TODO***
+
+To rebuild a deposed node, log onto the host, run `manatee-adm rebuild`, and
+follow the prompts.  If your dataset is particularly large, this can take
+a "long time".  You should consider running the rebuild in a `screen` session.
 
 To be on the safe side, any deposed primary should be rebuilt in order to rejoin
 the cluster.  This may not be necessary in some cases, but is suggested unless

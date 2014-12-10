@@ -35,6 +35,9 @@ and setup.
 
 Problems? Check out the [Troubleshooting guide](docs/trouble-shooting.md).
 
+Migrating from Manatee 1.0 to 2.0?  Check out the [migration
+guide](docs/migrate_1_to_2.md).
+
 # Features
 
 * Automated liveliness detection, failover, and recovery. Reads are always
