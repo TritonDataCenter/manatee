@@ -42,8 +42,8 @@ so that neither durability nor availability are compromised.  The loss of one
 node in a Manatee shard will not impact system read/write availability, even if
 it was the primary node in the shard. Reads are still available as long as
 there is _at least one_ active node left in the shard.  Data integrity is never
-compromised -- Manatee has built in data divergence detection and will prevent
-data on the nodes from forking from each other.
+compromised -- Manatee only allows save cluster transitions so that the primary
+will always have the complete set of data.
 
 Manatee also simplifies backups, restores and rebuilds. New nodes in the shard
 are automatically bootstrapped from existing nodes. If a node becomes
@@ -59,10 +59,7 @@ descriptions in later sections.
 ![Manatee Architecture](http://us-east.manta.joyent.com/poseidon/public/manatee/docs/Manatee-Shard.jpg "Manatee Shard")
 
 Each shard consists of 3 Manatee nodes, a primary(A), synchronous standby(B)
-and asynchronous standby(C) setup in a daisy chain. Nodes only gossip to other
-nodes that are immediately adjacent in the graph. Using node A as an example,
-it is only aware of the node directly in front of it (none) and the node
-directly behind it, B.
+and asynchronous standby(C) setup in a daisy chain.
 
 [PostgreSQL Cascading
 replication](http://www.postgresql.org/docs/9.2/static/warm-standby.html#CASCADING-REPLICATION)
@@ -78,15 +75,11 @@ will be persisted to at least the primary and sync standby. Without this,
 failovers of a node in the shard can cause data inconsistency between nodes.
 The synchronous standby uses asynchronous replication to the async standby.
 
-The topology of the shard is maintained by (1) and (2). Leaders of each node,
-(i.e. the node directly in front of self) are determined by (2) via
-Zookeeper(ZK).  Standbys are determined by the standby node itself, the standby
-in this case B, determines via (2) that its leader is A, and communicates its
-standby status to A via (1).
-
-When a node dies, the node that's directly behind it is promoted in the
-topology. If the promoted node was an async peer and is promoted to the sync
-peer, it's PG replication type is also changed from async to sync.
+The topology of the shard is maintained in Zookeeper.  The primary (A) is
+responsible for monitoring the manatee peers that join the cluster and adjusting
+the topology to add them as sync or async peers.  The sync (B) is responsible
+for adjusting the topology only if it detects via (2) that the primary has
+failed.
 
 ### Manatee Node Detail
 Here are the components encapsulated within a single Manatee node.
@@ -102,8 +95,7 @@ responsible for:
   of the sitter. This means that PG doesn't run unless the sitter is running.
   Additionally, the sitter initializes, restores, and configures the PG instance
   depending on its current role in the shard. (1)
-* Managing leadership status with ZK. Each sitter participates in a ZK
-  election, and is notified when its leader node has changed. (5)
+* Managing cluster topology in ZK if it is the primary or the sync (5).
 * ZFS is used by PG to persist data (4). The use of ZFS will be elaborated on
   in a later section.
 
@@ -178,8 +170,8 @@ sure of the consequences.
 
 Manatee comes with a default set of PG
 [configs](https://github.com/joyent/manatee/tree/master/etc). You'll want to
-tune your `postgresql.conf` with parameters that suit your workload. Refer to the
-[PostgreSQL documentation](www.postgres.com).
+tune your `postgresql.conf` with parameters that suit your workload. Refer to
+the [PostgreSQL documentation](www.postgres.com).
 
 ## SMF
 The illumos [Service Management Facility](http://www.illumos.org/man/5/smf) can
@@ -253,9 +245,12 @@ status of the Manatee shard. One of the key subcommands is the `status` command.
 {
 "1": {
     "primary": {
+        "id": "172.27.4.12:5432:12345",
         "ip": "172.27.4.12",
         "pgUrl": "tcp://postgres@172.27.4.12:5432/postgres",
         "zoneId": "b515b611-3b6e-4cc9-8d1f-3cf78e27bf24",
+        "backupUrl": "http://172.27.4.12:12345",
+        "online": true,
         "repl": {
             "pid": 23047,
             "usesysid": 10,
@@ -275,9 +270,12 @@ status of the Manatee shard. One of the key subcommands is the `status` command.
         }
     },
     "sync": {
+        "id": "172.27.5.8:5432:12345",
         "ip": "172.27.5.8",
         "pgUrl": "tcp://postgres@172.27.5.8:5432/postgres",
         "zoneId": "d2de0030-986e-4dae-991d-7d85f2e333d9",
+        "backupUrl": "http://172.27.5.8:12345",
+        "online": true,
         "repl": {
             "pid": 95136,
             "usesysid": 10,
@@ -297,9 +295,12 @@ status of the Manatee shard. One of the key subcommands is the `status` command.
         }
     },
     "async": {
+        "id": "172.27.3.7:5432:12345",
         "ip": "172.27.3.7",
         "pgUrl": "tcp://postgres@172.27.3.7:5432/postgres",
         "zoneId": "70d44638-f4fb-4cbd-8611-0f7c83d8502f",
+        "backupUrl": "http://172.27.3.7:12345",
+        "online": true,
         "repl": {},
         "lag": {
             "time_lag": {}
@@ -308,13 +309,16 @@ status of the Manatee shard. One of the key subcommands is the `status` command.
 }
 }
 ```
-This prints out the current topology of the shard. The "repl" field shows the
-standby that's currently connected to the node. It's the same set of fields
-that is returned by the PG query ```select * from pg_stat_replication```. The
-repl field is helpful in verifying the status of the PostgreSQL instances. If
-the repl field exists, it means that the node's standby is caught up and
-streaming. If there is no repl field, it means that there is no PG instance
-replication from this node. This is expected with the last node in the shard.
+This prints out the current topology of the shard.  The "online" filed indicates
+that postgres is online.
+
+The "repl" field shows the standby that's currently connected to the node. It's
+the same set of fields that is returned by the PG query ```select * from
+pg_stat_replication```. The repl field is helpful in verifying the status of the
+PostgreSQL instances. If the repl field exists, it means that the node's standby
+is caught up and streaming. If there is no repl field, it means that there is no
+PG instance replication from this node. This is expected with the last node in
+the shard.
 
 However, if there is another node after the current one in the shard, and there
 is no repl field, it indicatees there is a problem with replication between the
@@ -324,88 +328,28 @@ two nodes.
 You can query any past topology changes by using the `history` subcommand.
 ```bash
 [root@host ~/manatee]# ./node_modules/manatee/bin/manatee-adm history -s '1' -z <zk_ips>
-{"time":"1394597418025","date":"2014-03-12T04:10:18.025Z","ip":"172.27.3.8","action":"AssumeLeader","role":"Leader","master":"","slave":"","zkSeq":"0000000000"}
-{"time":"1394597438430","date":"2014-03-12T04:10:38.430Z","ip":"172.27.4.13","action":"NewLeader","role":"Standby","master":"172.27.3.8","slave":"","zkSeq":"0000000001"}
-{"time":"1394597451091","date":"2014-03-12T04:10:51.091Z","ip":"172.27.3.8","action":"NewStandby","role":"Leader","master":"","slave":"5432","zkSeq":"0000000002"}
-{"time":"1394597477394","date":"2014-03-12T04:11:17.394Z","ip":"172.27.5.9","action":"NewLeader","role":"Standby","master":"172.27.4.13","slave":"","zkSeq":"0000000003"}
-{"time":"1394597473513","date":"2014-03-12T04:11:13.513Z","ip":"172.27.4.13","action":"NewStandby","role":"Standby","master":"172.27.3.8","slave":"5432","zkSeq":"0000000004"}
-{"time":"1395446372034","date":"2014-03-21T23:59:32.034Z","ip":"172.27.5.9","action":"NewLeader","role":"Standby","master":"172.27.3.8","slave":"","zkSeq":"0000000005"}
-{"time":"1395446374071","date":"2014-03-21T23:59:34.071Z","ip":"172.27.3.8","action":"NewStandby","role":"Leader","master":"","slave":"5432","zkSeq":"0000000006"}
-{"time":"1395449937712","date":"2014-03-22T00:58:57.712Z","ip":"172.27.4.13","action":"NewLeader","role":"Standby","master":"172.27.5.9","slave":"","zkSeq":"0000000007"}
-{"time":"1395449938742","date":"2014-03-22T00:58:58.742Z","ip":"172.27.5.9","action":"NewStandby","role":"Standby","master":"172.27.3.8","slave":"5432","zkSeq":"0000000008"}
-{"time":"1395450121000","date":"2014-03-22T01:02:01.000Z","ip":"172.27.5.9","action":"NewLeader","role":"Standby","master":"172.27.4.13","slave":"","zkSeq":"0000000009"}
-{"time":"1395450121005","date":"2014-03-22T01:02:01.005Z","ip":"172.27.5.9","action":"NewStandby","role":"Standby","master":"172.27.4.13","slave":"5432","zkSeq":"0000000010"}
-{"time":"1395450121580","date":"2014-03-22T01:02:01.580Z","ip":"172.27.4.13","action":"NewLeader","role":"Standby","master":"172.27.3.8","slave":"","zkSeq":"0000000011"}
-{"time":"1395450122033","date":"2014-03-22T01:02:02.033Z","ip":"172.27.4.13","action":"NewStandby","role":"Standby","master":"172.27.3.8","slave":"5432","zkSeq":"0000000012"}
 ```
 
-This will return a list of every single Manatee flip sorted by time. The node
-is identified by the "ip" field. The type of transition is identified by the
-"action" field. The current role of the node is identified by the "role" field.
-Only the first element of the daisy chain, i.e. the Primary node, will ever
-have the role of Leader. All other nodes will be standbys.
+This will return a list of every single cluster state change sorted by time.
 
-There are 3 different types of Manatee flips:
+## Deposed manatees
 
-* `AssumeLeader`. This means the node has become the primary of the shard. This
-  might mean that the primary has changed. Verify against the last AssumeLeader
-  event to see if the primary has changed.
-* `NewLeader`. This means the current node's leader may have changed. the
-  "master" field represents its new leader. Note that its leader may not
-  neccessarily be the primary of the shard, it only represents the node directly
-  in front of the current node.
-* `NewStandby`. This means the current node's standby may have changed. The
-  "slave" field represents the new standby node.
+When a sync takes over becoming the primray, there is a chance that the previous
+primary's Postgres transaction logs have diverged.  There are many reasons this
+can happen, the reasons we know about are documented in the [transaction log
+divergence](xlog_diverge.md) doc.  Deposed manatees have the "deposed" tag when
+viewing at manatee-status:
 
-This tool is invaluable when attempting to reconstruct the timeline of flips in
-a Manatee shard, especially when the shard is in safe mode.
+***TODO***
 
-## Safe Mode
-You can check that the shard is in safe mode via `manatee-adm status`.
-```bash
-[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-stat -p <zk_ip>
-{
-    "1": {
-        "error": {
-            "primary": "172.27.4.12",
-            "zoneId": "8372b732-007c-400c-9642-9eb63d169cf2"
-        }
-    }
-}
-```
+To be on the safe side, any deposed primary should be rebuilt in order to rejoin
+the cluster.  This may not be necessary in some cases, but is suggested unless
+you can determine manually that the Postgres transaction logs (xlogs) haven't
+diverged.  **Warning:** If you do not rebuild, the logs have diverged, and you
+add the node back into the cluster (which will get picked up as an async), your
+cluster is at risk of becoming wedged!  This is because the previously deposed
+and diverged primary can be promoted to sync.  If that happens, your cluster
+will not be able to accept writes.
 
-The `error` field indicates that the shard is in safe mode.
-
-When in safe mode, Manatee will be only available for reads but you will not be
-able to write to it until it is manually cleared by an operator.
-
-Before we run through how to bring a Manatee back up from safe mode, it's
-important to discuss why safe mode exists.
-
-There are situations through a series of Manatee flips where the shard's data
-could potentially become inconsistent. Consider the following scenario: We have
-a Manatee shard at rest with nodes A, B, and C. Refer to the _Shard Overview_
-section for the diagram of this topology.
-
-Now, imagine that all 3 nodes restart at around the same time. If C enters the
-shard first, it becomes the primary of the shard. Because it was previously the
-async, its PG xlog may not be completely up to date. If C starts taking writes
-at this point then the data between C, and A/B will become forked and the
-shard has become inconsistent.
-
-Manatee will not allow this to happen. The shard will enter safe mode if
-detects a mismatch between the primary and its standby's xlogs.
-
-In practice this situation could occur frequently, e.g. in the face of network
-partitions. Instead of taking a 33% chance each time this happens that the
-shard will enter safe mode (if the async gets promoted to primary), Manatee
-proactively tries to avoid this by persisting information about the previous
-topological state. Only the previous primary or sync can be promoted to the
-primary.
-
-However, due to some limitations in PG itself, this is sometimes not
-sufficient. In this case, the shard will detect that it can no longer take
-writes and put itself into safe mode.
-
-For information on how to recover from Safe mode, check out the [trouble
-shooting guide](https://github.com/joyent/manatee/blob/master/docs/trouble-shooting.md)
+For more detailed information on how to recover deposed nodes, check out the
+[trouble shooting guide](trouble-shooting.md)
