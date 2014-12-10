@@ -369,7 +369,7 @@ To unfreeze the cluster, use the `manatee-adm unfreeze` command.
 When a sync takes over becoming the primray, there is a chance that the previous
 primary's Postgres transaction logs have diverged.  There are many reasons this
 can happen, the reasons we know about are documented in the [transaction log
-divergence](xlog_diverge.md) doc.  Deposed manatees have the "deposed" tag when
+divergence](xlog-diverge.md) doc.  Deposed manatees have the "deposed" tag when
 viewing `manatee-adm status`:
 
 ***TODO***
