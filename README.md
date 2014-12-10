@@ -30,12 +30,10 @@ read) capability.  Client configuration changes are minimal and failover is
 completely free of operator intervention.  New shard members are automatically
 replicated upon introduction.
 
-Check out the
-[user-guide](https://github.com/joyent/manatee/blob/master/docs/user-guide.md)
-for details on server internals and setup.
+Check out the [user-guide](docs/user-guide.md) for details on server internals
+and setup.
 
-Problems? Check out the [Troubleshooting
-guide](https://github.com/joyent/manatee/blob/master/docs/trouble-shooting.md).
+Problems? Check out the [Troubleshooting guide](docs/trouble-shooting.md).
 
 # Features
 
