@@ -297,9 +297,12 @@ If this returns nothing, then no manatee peers are deployed.
 {
     "sdc": {
         "primary": {
+            "id": "10.1.0.140:5432:12345",
             "ip": "10.1.0.140",
             "pgUrl": "tcp://postgres@10.1.0.140:5432/postgres",
             "zoneId": "45d023a7-116e-44c9-ae4e-28c7b10202ce",
+            "backupUrl": "http://10.1.0.140:12345",
+            "online": true,
             "repl": {
                 "pid": 97110,
                 "usesysid": 10,
@@ -319,15 +322,21 @@ If this returns nothing, then no manatee peers are deployed.
             }
         },
         "sync": {
+            "id": "10.1.0.144:5432:12345",
             "ip": "10.1.0.144",
             "pgUrl": "tcp://postgres@10.1.0.144:5432/postgres",
             "zoneId": "72e76247-7e13-40e2-8c44-6f47a2b37829",
+            "backupUrl": "http://10.1.0.144:12345",
+            "online": true,
             "repl": {}
         },
         "async": {
+            "id": "10.1.0.139:5432:12345",
             "ip": "10.1.0.139",
             "pgUrl": "tcp://postgres@10.1.0.139:5432/postgres",
             "zoneId": "852a2e33-93f0-4052-b2e4-c61ea6c8b0fd",
+            "backupUrl": "http://10.1.0.139:12345",
+            "online": true,
             "repl": {},
             "lag": {
                 "time_lag": null
@@ -343,6 +352,62 @@ space](#manatee-runs-out-of-space).
 1. Depending on the output of `# manatee-adm status` at this point, you'll want to
 follow the steps described in the other troubleshooting sections of this
 document.
+
+## manatee-adm status Shows A peer is deposed
+```
+{
+    "sdc": {
+        "primary": {
+            "id": "10.1.0.140:5432:12345",
+            "ip": "10.1.0.140",
+            "pgUrl": "tcp://postgres@10.1.0.140:5432/postgres",
+            "zoneId": "45d023a7-116e-44c9-ae4e-28c7b10202ce",
+            "backupUrl": "http://10.1.0.140:12345",
+            "online": true,
+            "repl": {
+                "pid": 97110,
+                "usesysid": 10,
+                "usename": "postgres",
+                "application_name": "tcp://postgres@10.1.0.144:5432/postgres",
+                "client_addr": "10.1.0.144",
+                "client_hostname": "",
+                "client_port": 57443,
+                "backend_start": "2014-07-24T17:49:05.149Z",
+                "state": "streaming",
+                "sent_location": "F2/B4489EB8",
+                "write_location": "F2/B4489EB8",
+                "flush_location": "F2/B4489EB8",
+                "replay_location": "F2/B4488B78",
+                "sync_priority": 1,
+                "sync_state": "sync"
+            }
+        },
+        "sync": {
+            "id": "10.1.0.144:5432:12345",
+            "ip": "10.1.0.144",
+            "pgUrl": "tcp://postgres@10.1.0.144:5432/postgres",
+            "zoneId": "72e76247-7e13-40e2-8c44-6f47a2b37829",
+            "backupUrl": "http://10.1.0.144:12345",
+            "online": true,
+            "repl": {}
+        },
+        "deposed": {
+            "id": "10.1.0.139:5432:12345",
+            "ip": "10.1.0.139",
+            "pgUrl": "tcp://postgres@10.1.0.139:5432/postgres",
+            "zoneId": "852a2e33-93f0-4052-b2e4-c61ea6c8b0fd",
+            "backupUrl": "http://10.1.0.139:12345",
+            "online": true,
+            "repl": {},
+            "lag": {
+                "time_lag": null
+            }
+        }
+    }
+}
+```
+1. Log on to the deposed peer.
+1. Rebuild via `# manatee-adm rebuild`, follow the prompts.
 
 ## Manatee Runs out of Space
 Another really common scenario we've seen in the past is where the manatee zones

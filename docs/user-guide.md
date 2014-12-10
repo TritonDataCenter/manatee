@@ -389,5 +389,24 @@ cluster is at risk of becoming wedged!  This is because the previously deposed
 and diverged primary can be promoted to sync.  If that happens, your cluster
 will not be able to accept writes.
 
-For more detailed information on how to recover deposed nodes, check out the
-[trouble shooting guide](trouble-shooting.md)
+## One Node Write Mode
+
+One node write mode (ONWM) is a "special" mode for manatee clusters that have no
+important data.  It allows a primary to accept writes without synchronously
+replicating those trasactions to a sync.  In fact, with ONWM, any peers that
+attempt to join the cluster will shut down if they detect another peer is
+already the primary by looking at the cluster state in zookeeper.
+
+ONWM is usually enabled when setting up larger systems that will me moved to
+"High Availability" (HA) configurations later.  To move from ONWM to HA requires
+downtime.  An operator would:
+
+1. Provision a new manatee peer and configure it as part of the primary's
+   cluster.
+2. Stop the primary manatee sitter process.
+3. Edit configuration for the primary to remove one node write mode.
+4. Run `# manatee-adm onwm -m off`
+5. Start the primary manatee sitter process.
+
+It is generally not supported or advised to go from an HA manatee cluster to
+ONWM.
