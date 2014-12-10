@@ -9,13 +9,11 @@
 /*
  * Copyright (c) 2014, Joyent, Inc.
  */
-
-var fs = require('fs');
-var util = require('util');
-
 var adm = require('../lib/adm');
 var cmdln = require('cmdln');
-
+var fs = require('fs');
+var util = require('util');
+var path = require('path');
 
 function ManateeAdm() {
     cmdln.Cmdln.call(this, {
@@ -24,6 +22,41 @@ function ManateeAdm() {
     });
 }
 util.inherits(ManateeAdm, cmdln.Cmdln);
+
+/**
+ * Prints the version for this manatee-adm (and, hence, manatee itself).  Taken
+ * directly from the package.json.
+ */
+ManateeAdm.prototype.do_version = function (subcmd, opts, args, cb) {
+    var self = this;
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+    }
+
+    var file = path.resolve(path.dirname(__dirname), 'package.json');
+    var error;
+    try {
+        var s = fs.readFileSync(file);
+        var j = JSON.parse(s);
+        console.log(j.version);
+    } catch (err) {
+        error = err;
+    }
+    return (cb(error));
+};
+ManateeAdm.prototype.do_version.options = [ {
+    names: ['help', 'h'],
+    type: 'bool',
+    help: 'Show this help'
+}];
+ManateeAdm.prototype.do_version.help = (
+    'Shows the version of manatee, taken from the package.json. \n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} version [OPTIONS]\n' +
+    '\n' +
+    '{{options}}'
+);
 
 /**
  * Display the current status of the manatee shard(s).
