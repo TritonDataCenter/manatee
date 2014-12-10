@@ -381,7 +381,9 @@ a "long time".  You should consider running the rebuild in a `screen` session.
 To be on the safe side, any deposed primary should be rebuilt in order to rejoin
 the cluster.  This may not be necessary in some cases, but is suggested unless
 you can determine manually that the Postgres transaction logs (xlogs) haven't
-diverged.  **Warning:** If you do not rebuild, the logs have diverged, and you
+diverged.
+
+***WARNING:*** If you do not rebuild, the logs have diverged, and you
 add the node back into the cluster (which will get picked up as an async), your
 cluster is at risk of becoming wedged!  This is because the previously deposed
 and diverged primary can be promoted to sync.  If that happens, your cluster

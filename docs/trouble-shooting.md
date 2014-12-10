@@ -50,9 +50,12 @@ this.
 {
     "sdc": {
         "primary": {
+            "id": "172.25.3.65:5432:12345",
             "ip": "172.25.3.65",
             "pgUrl": "tcp://postgres@172.25.3.65:5432/postgres",
             "zoneId": "4243db81-4453-42b3-a241-f26395712d19",
+            "backupUrl": "http://172.25.3.65:12345",
+            "online": true,
             "repl": {
                 "pid": 15324,
                 "usesysid": 10,
@@ -72,9 +75,12 @@ this.
             }
         },
         "sync": {
+            "id": "172.25.3.16:5432:12345",
             "ip": "172.25.3.16",
             "pgUrl": "tcp://postgres@172.25.3.16:5432/postgres",
             "zoneId": "8372b732-007c-400c-9642-9eb63d169cf2",
+            "backupUrl": "http://172.25.3.16:12345",
+            "online": true,
             "repl": {
                 "pid": 18377,
                 "usesysid": 10,
@@ -94,9 +100,12 @@ this.
             }
         },
         "async": {
+            "id": "172.25.3.59:5432:12345",
             "ip": "172.25.3.59",
             "pgUrl": "tcp://postgres@172.25.3.59:5432/postgres",
             "zoneId": "cce218f8-6ad9-45c6-bd98-d9d0b840b56a",
+            "backupUrl": "http://172.25.3.59:12345",
+            "online": true,
             "repl": {},
             "lag": {
                 "time_lag": {}
@@ -105,58 +114,35 @@ this.
     }
 }
 ```
-There are 3 peers in this shard, a `primary`, `sync`, and `async`. Pay close
-attention to ther `repl` field of each peer. The repl field represents the
-replication state of its immediate standby. For example, the `primary.repl` field
-represents the replication state of the synchronous peer. A primary peer with
-an empty `repl` field means replication is offline between the primary and the
-sync. A sync peer with an empty `repl` field means that replication is offline
-between the sync and the async.
+There are 3 peers in this shard, a `primary`, `sync`, and `async`.  The "online"
+field indicates that Postgres is online.
 
-A manatee shard is healthy only if there are 3 peers in the shard,
-`primary.repl.sync_state === 'sync'`, and `sync.repl.sync_state === 'async'`
+Pay close attention to ther `repl` field of each peer. The repl field represents
+the replication state of its immediate standby. For example, the `primary.repl`
+field represents the replication state of the synchronous peer. A primary peer
+with an empty `repl` field means replication is offline between the primary and
+the sync. A sync peer with an empty `repl` field means that replication is
+offline between the sync and the async.
+
+A 3-node manatee shard is healthy only if there are 3 peers in the shard, all
+three peers are marked `"online": true` and `primary.repl.sync_state ===
+'sync'`, and `sync.repl.sync_state === 'async'`
 
 # Symptoms
 Here are some commonly seen outputs of `manatee-adm status` when the shard is
 unhealthy. Before you start: click [here](http://calmingmanatee.com/).
-
-## manatee-adm status Shows Only an Error Object.
-```json
-    {
-        "sdc": {
-            "error": {
-                "object": {
-                    "primary": "10.99.99.39",
-                    "zoneId": "9f8483e6-572f-422b-8af7-a8d3db6a7d81",
-                    "standby": "10.99.99.16"
-                }
-            }
-        }
-    }
-```
-1. [Check that no manatee peers are out of disk
-space](#manatee-runs-out-of-space).
-1. Take note of the primary and standby IPs.
-1. Disable manatee-sitter on all manatee-peers. `# svcadm disable manatee-sitter`
-1. Run `# manatee-adm clear` on any manatee peer.
-1. On the primary, enable manatee-sitter. `# svcadm enable manatee-sitter`
-1. On the standby, run `# manatee-adm rebuild`.
-1. [Find the async manatee peer](#find-the-set-of-manatee-peers-in-a-dc). The
-async will be the peer that is not in the results of `manatee-adm status`
-1. On the async, re-enable manatee-sitter. `# svcadm enable manatee-sitter`
-1. Check via `manatee-adm status` that you see all 3 peers with replication
-information. Depending on the output of `# manatee-adm status` at this point,
-you'll want to follow the steps described in the other troubleshooting sections
-of this document.
 
 ## manatee-adm status Shows Only a Primary peer.
 ```json
 {
     "sdc": {
         "primary": {
+            "id": "10.99.99.16:5432:12345",
             "ip": "10.99.99.16",
             "pgUrl": "tcp://postgres@10.99.99.16:5432/postgres",
             "zoneId": "ebe96dfb-2533-459b-964b-a5ad7fb3b566",
+            "backupUrl": "http://10.99.99.16:12345",
+            "online": true,
             "repl": {}
         }
     }
@@ -184,9 +170,12 @@ Then you'll need to rebuild this peer via `# manatee-adm rebuild`
 {
     "sdc": {
         "primary": {
+            "id": "10.1.0.140:5432:12345",
             "ip": "10.1.0.140",
             "pgUrl": "tcp://postgres@10.1.0.140:5432/postgres",
             "zoneId": "45d023a7-116e-44c9-ae4e-28c7b10202ce",
+            "backupUrl": "http://10.1.0.140:12345",
+            "online": true,
             "repl": {
                 "pid": 97110,
                 "usesysid": 10,
@@ -206,9 +195,12 @@ Then you'll need to rebuild this peer via `# manatee-adm rebuild`
             }
         },
         "sync": {
+            "id": "10.1.0.144:5432:12345",
             "ip": "10.1.0.144",
             "pgUrl": "tcp://postgres@10.1.0.144:5432/postgres",
             "zoneId": "72e76247-7e13-40e2-8c44-6f47a2b37829",
+            "backupUrl": "http://10.1.0.144:12345",
+            "online": true,
             "repl": {}
         }
     }
@@ -238,36 +230,67 @@ space](#manatee-runs-out-of-space).
 1. [Find the set of manatee peers in the DC](#find-the-set-of-manatee-peers-in-a-dc).
 If this returns nothing, then no manatee peers are deployed.
 1. Log on to any manatee peer.
-1. Check for the most recent primary of the shard.
+1. Check the manatee state:
 ```
-[root@8372b732-007c-400c-9642-9eb63d169cf2 (staging-1:manatee0) ~]# manatee-adm history  | grep AssumeLeader | tail -1
-{"time":"1406317072941","date":"2014-07-25T19:37:52.941Z","ip":"172.25.3.65:5432","action":"AssumeLeader","role":"Leader","master":"","slave":"172.25.3.16:5432","zkSeq":"0000000219
-```
-The `ip` field is the the IP address of the primary peer.
-
-1. Log on to the mantaee zone identified by the IP address.
-1. Promote the zone to primary. `# manatee-adm promote`.
-1. Check `# manatee-adm status` and ensure you see the primary field and that
-primary.zoneId corresponds to this zone. e.g.
-```json
+[root@b35e12da (postgres) ~]$ manatee-adm state | json
 {
-    "sdc": {
-        "primary": {
-            "ip": "10.99.99.16",
-            "pgUrl": "tcp://postgres@10.99.99.16:5432/postgres",
-            "zoneId": "ebe96dfb-2533-459b-964b-a5ad7fb3b566",
-            "repl": {}
-        }
+  "generation": 1,
+  "primary": {
+    "id": "10.77.77.8:5432:12345",
+    "ip": "10.77.77.8",
+    "pgUrl": "tcp://postgres@10.77.77.8:5432/postgres",
+    "zoneId": "b35e12da-7359-4799-a3f7-8d3906f9160f",
+    "backupUrl": "http://10.77.77.8:12345"
+  },
+  "sync": {
+    "id": "10.77.77.20:5432:12345",
+    "zoneId": "8433685b-a1c0-4b19-8cad-c2f2e65dad1f",
+    "ip": "10.77.77.20",
+    "pgUrl": "tcp://postgres@10.77.77.20:5432/postgres",
+    "backupUrl": "http://10.77.77.20:12345"
+  },
+  "async": [
+    {
+      "id": "10.77.77.7:5432:12345",
+      "zoneId": "3dc65ac3-2977-40da-a948-3c72b9359884",
+      "ip": "10.77.77.7",
+      "pgUrl": "tcp://postgres@10.77.77.7:5432/postgres",
+      "backupUrl": "http://10.77.77.7:12345"
     }
+  ],
+  "initWal": "0/4405D30"
 }
 ```
-Don't be alarmed by the empty repl field, since there are no other peers, the
-field should be empty. Often at this point though, the other peers will have
-recovered on their own.
-
-Depending on the output of `# manatee-adm status` at this point, you'll want to follow
-the steps described in the other troubleshooting sections of this document.
-
+1. Log on to the mantaee primary.
+1. Make sure that the `manatee-sitter` process is running.  If not, start it.
+1. Check `# manatee-adm status` and ensure that the primary is online.
+1. Log on to the mantaee sync and make sure it is running.
+1. Log on to asyncs and make sure they are running.
+1. You can check the set of manatee peers that are connected to zk with the
+   `# manatee-adm active` command:
+```
+[root@b35e12da (postgres) ~]$ manatee-adm active | json
+{
+  "10.77.77.7:5432:12345-0000000164": {
+    "zoneId": "3dc65ac3-2977-40da-a948-3c72b9359884",
+    "ip": "10.77.77.7",
+    "pgUrl": "tcp://postgres@10.77.77.7:5432/postgres",
+    "backupUrl": "http://10.77.77.7:12345"
+  },
+  "10.77.77.20:5432:12345-0000000162": {
+    "zoneId": "8433685b-a1c0-4b19-8cad-c2f2e65dad1f",
+    "ip": "10.77.77.20",
+    "pgUrl": "tcp://postgres@10.77.77.20:5432/postgres",
+    "backupUrl": "http://10.77.77.20:12345"
+  },
+  "10.77.77.8:5432:12345-0000000163": {
+    "zoneId": "b35e12da-7359-4799-a3f7-8d3906f9160f",
+    "ip": "10.77.77.8",
+    "pgUrl": "tcp://postgres@10.77.77.8:5432/postgres",
+    "backupUrl": "http://10.77.77.8:12345"
+  }
+}
+```
 
 ## manatee-adm status Shows No Replication Information on the Sync.
 ```
@@ -322,8 +345,8 @@ follow the steps described in the other troubleshooting sections of this
 document.
 
 ## Manatee Runs out of Space
-Another really common scenario we've seen in the past is where the manatee
-zones runs out of space.
+Another really common scenario we've seen in the past is where the manatee zones
+runs out of space.
 
 The symptoms are usually:
 
