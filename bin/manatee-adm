@@ -389,7 +389,12 @@ ManateeAdm.prototype.do_rebuild = function (subcmd, opts, args, cb) {
     } catch (e) {
         return cb(e);
     }
-    adm.rebuild(opts, cb);
+    adm.rebuild(opts, function (err) {
+        if (!err) {
+            console.log('Rebuild successful');
+        }
+        return (cb(err));
+    });
 };
 ManateeAdm.prototype.do_rebuild.options = [ {
     names: ['help', 'h'],
