@@ -372,7 +372,54 @@ can happen, the reasons we know about are documented in the [transaction log
 divergence](xlog-diverge.md) doc.  Deposed manatees have the "deposed" tag when
 viewing `manatee-adm status`:
 
-***TODO***
+```
+[root@27b94bd8 (postgres) ~]$ manatee-adm status | json
+{
+  "1.moray.coal.joyent.us": {
+    "primary": {
+      "id": "10.77.77.21:5432:12345",
+      "ip": "10.77.77.21",
+      "pgUrl": "tcp://postgres@10.77.77.21:5432/postgres",
+      "zoneId": "8c591b3b-402f-4522-9820-df9911859499",
+      "backupUrl": "http://10.77.77.21:12345",
+      "online": true,
+      "repl": {
+        "pid": 37735,
+        "usesysid": 10,
+        "usename": "postgres",
+        "application_name": "tcp://postgres@10.77.77.23:5432/postgres",
+        "client_addr": "10.77.77.23",
+        "client_hostname": "",
+        "client_port": 51517,
+        "backend_start": "2014-12-12T22:57:23.742Z",
+        "state": "streaming",
+        "sent_location": "0/176CD78",
+        "write_location": "0/176CD78",
+        "flush_location": "0/176CD78",
+        "replay_location": "0/176CD18",
+        "sync_priority": 1,
+        "sync_state": "sync"
+      }
+    },
+    "sync": {
+      "id": "10.77.77.23:5432:12345",
+      "zoneId": "a9dbf8ba-5daf-42d8-800e-7cefebb10361",
+      "ip": "10.77.77.23",
+      "pgUrl": "tcp://postgres@10.77.77.23:5432/postgres",
+      "backupUrl": "http://10.77.77.23:12345",
+      "online": true,
+      "repl": {}
+    },
+    "deposed": {
+      "id": "10.77.77.22:5432:12345",
+      "ip": "10.77.77.22",
+      "pgUrl": "tcp://postgres@10.77.77.22:5432/postgres",
+      "zoneId": "27b94bd8-98e2-4aa7-a741-bbc9c83f63ae",
+      "backupUrl": "http://10.77.77.22:12345"
+    }
+  }
+}
+```
 
 To rebuild a deposed node, log onto the host, run `manatee-adm rebuild`, and
 follow the prompts.  If your dataset is particularly large, this can take

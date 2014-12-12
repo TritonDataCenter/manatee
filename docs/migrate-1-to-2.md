@@ -17,6 +17,7 @@ topology are as follows:
 1. Reprovision Sync
 1. Unfreeze Cluster State (`async$ manatee-adm unfreeze`)
 1. Reprovision Primary
+1. Rebuild Deposed Primary
 
 Details for each step are below, specifically things you can check to make sure
 your migration is running smoothly.  It is assumed that:
@@ -380,7 +381,8 @@ In this case you can see that the cluster state has declared a new generation
     "backupUrl": "http://10.77.77.48:12345",
     "id": "10.77.77.48:5432:12345"
   },
-  "async": [
+  "async":[],
+  "deposed": [
     {
       "id": "10.77.77.47:5432:12345",
       "zoneId": "f29499ea-b50c-431e-9975-e4bf760fb5e1",
@@ -393,7 +395,18 @@ In this case you can see that the cluster state has declared a new generation
 }
 ```
 
-You can also see that `manatee-adm history` reflects the progression of changes:
+## Rebuild Deposed Primary
+
+This step is optional depending on whether the sync took over as primary or not.
+If the sync did take over as primary (as in the previous step), you should
+see a manatee peer tagged with "deposed" when running `manatee-adm status`.
+
+This deposed peer will need to be rebuilt.  To do so, log onto the host, run
+`manatee-adm rebuild` and follow the prompts.  Once the rebuild is complete,
+you should see the deposed peer become an async.
+
+Your cluster should now look "healthy".  You can also see that `manatee-adm
+history` reflects the progression of changes:
 
 ```
 [root@d0c715ab (postgres) ~]$ manatee-adm history
@@ -404,7 +417,8 @@ You can also see that `manatee-adm history` reflects the progression of changes:
 {"time":"1417545337553","date":"2014-12-02T18:35:37.553Z","state":{"primary":{"zoneId":"f29499ea-b50c-431e-9975-e4bf760fb5e1","ip":"10.77.77.47","pgUrl":"tcp://postgres@10.77.77.47:5432/postgres","backupUrl":"http://10.77.77.47:12345","id":"10.77.77.47:5432:12345"},"sync":{"zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","backupUrl":"http://10.77.77.49:12345","id":"10.77.77.49:5432:12345"},"async":[{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"}],"generation":0,"initWal":"0/0000000","freeze":{"date":"2014-12-02T18:31:35.394Z","reason":"manatee-adm state-backfill"}},"zkSeq":"0000000004"}
 {"time":"1417546098034","date":"2014-12-02T18:48:18.034Z","ip":"10.77.77.47:5432","action":"NewStandby","role":"leader","master":"","slave":"10.77.77.49:5432","zkSeq":"0000000005"}
 {"time":"1417546912449","date":"2014-12-02T19:01:52.449Z","state":{"generation":1,"primary":{"id":"10.77.77.49:5432:12345","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","backupUrl":"http://10.77.77.49:12345"},"sync":{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"},"async":[],"initWal":"0/174A4D0"},"zkSeq":"0000000006"}
-{"time":"1417547498986","date":"2014-12-02T19:11:38.986Z","state":{"generation":1,"primary":{"id":"10.77.77.49:5432:12345","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","backupUrl":"http://10.77.77.49:12345"},"sync":{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"},"async":[{"id":"10.77.77.47:5432:12345","zoneId":"f29499ea-b50c-431e-9975-e4bf760fb5e1","ip":"10.77.77.47","pgUrl":"tcp://postgres@10.77.77.47:5432/postgres","backupUrl":"http://10.77.77.47:12345"}],"initWal":"0/174A4D0"},"zkSeq":"0000000007"}
+{"time":"1417547498986","date":"2014-12-02T19:11:38.986Z","state":{"generation":1,"primary":{"id":"10.77.77.49:5432:12345","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","backupUrl":"http://10.77.77.49:12345"},"sync":{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"},"async":[],"deposed":[{"id":"10.77.77.47:5432:12345","zoneId":"f29499ea-b50c-431e-9975-e4bf760fb5e1","ip":"10.77.77.47","pgUrl":"tcp://postgres@10.77.77.47:5432/postgres","backupUrl":"http://10.77.77.47:12345"}],"initWal":"0/174A4D0"},"zkSeq":"0000000007"}
+{"time":"1417547623781","date":"2014-12-02T19:13:43.781Z","state":{"generation":1,"primary":{"id":"10.77.77.49:5432:12345","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","backupUrl":"http://10.77.77.49:12345"},"sync":{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"},"async":[{"id":"10.77.77.47:5432:12345","zoneId":"f29499ea-b50c-431e-9975-e4bf760fb5e1","ip":"10.77.77.47","pgUrl":"tcp://postgres@10.77.77.47:5432/postgres","backupUrl":"http://10.77.77.47:12345"}],"initWal":"0/174A4D0"},"zkSeq":"0000000008"}
 ```
 
 At this point your cluster is upgraded.  Notes below on two node and single-node
