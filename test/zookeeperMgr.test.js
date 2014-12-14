@@ -464,9 +464,11 @@ exports.testDebounce = function (t) {
             function addRemoveMany(_, subcb) {
                 var error;
                 var called = 0;
-                var outstanding = 0;
+                var finished = 0;
+                var inited = 0;
+                var toInit = 10;
                 function tryEnd() {
-                    if (error || (outstanding === 0 && called >= 2)) {
+                    if (error || (finished === toInit && inited === toInit)) {
                         if (error) {
                             t.fail(error);
                             return (subcb(error));
@@ -494,15 +496,20 @@ exports.testDebounce = function (t) {
                 };
                 var i = 0;
                 function createNext() {
-                    if (++i === 10) {
+                    if (i++ === toInit) {
                         return;
                     }
                     function onGet(err, newMgr) {
-                        --outstanding;
-                        newMgr.close();
-                        return (tryEnd());
+                        ++inited;
+                        createNext();
+                        setTimeout(function () {
+                            newMgr.close();
+                            setTimeout(function () {
+                                ++finished;
+                                return (tryEnd());
+                            }, 1000);
+                        }, 1000);
                     }
-                    ++outstanding;
                     getZkManager('testDebounce', 'newr',
                                  function () {}, function () {}, onGet);
                 }
