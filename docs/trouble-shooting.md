@@ -17,15 +17,16 @@
 - [Manatee-adm](#manatee-adm)
 - [Healthy Manatee](#healthy-manatee)
 - [Symptoms](#symptoms)
-  - [manatee-adm status Shows Only an Error Object.](#manatee-adm-status-shows-only-an-error-object)
   - [manatee-adm status Shows Only a Primary peer.](#manatee-adm-status-shows-only-a-primary-peer)
   - [manatee-adm status Shows No Async peer. (Only Primary and Sync are Visible)](#manatee-adm-status-shows-no-async-peer-only-primary-and-sync-are-visible)
   - [manatee-adm status Shows No peers.](#manatee-adm-status-shows-no-peers)
   - [manatee-adm status Shows No Replication Information on the Sync.](#manatee-adm-status-shows-no-replication-information-on-the-sync)
+  - [manatee-adm status Shows A peer is deposed](#manatee-adm-status-shows-a-peer-is-deposed)
   - [Manatee Runs out of Space](#manatee-runs-out-of-space)
     - [Solution](#solution)
 - [Useful Manatee Commands](#useful-manatee-commands)
-  - [Find the set of manatee peers in a DC](#find-the-set-of-manatee-peers-in-a-dc)
+  - [Find the set of manatee peers in an SDC deployment](#find-the-set-of-manatee-peers-in-an-sdc-deployment)
+  - [Find the set of manatee peers in a Manta deployment](#find-the-set-of-manatee-peers-in-a-manta-deployment)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -396,12 +397,7 @@ document.
             "ip": "10.1.0.139",
             "pgUrl": "tcp://postgres@10.1.0.139:5432/postgres",
             "zoneId": "852a2e33-93f0-4052-b2e4-c61ea6c8b0fd",
-            "backupUrl": "http://10.1.0.139:12345",
-            "online": true,
-            "repl": {},
-            "lag": {
-                "time_lag": null
-            }
+            "backupUrl": "http://10.1.0.139:12345"
         }
     }
 }

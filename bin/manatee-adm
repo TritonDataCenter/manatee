@@ -243,6 +243,12 @@ ManateeAdm.prototype.do_state_backfill.options = [ {
     help: 'Backfill the state for this manatee shard.',
     default: process.env.SHARD
 }, {
+    names: ['ignorePrompts', 'y'],
+    type: 'bool',
+    helpArg: 'IGNORE_PROMPTS',
+    help: 'Set this to skip prompts (is dangerous) ',
+    default: false
+}, {
     names: ['zk', 'z'],
     type: 'string',
     helpArg: 'ZOOKEEPER_URL',
@@ -406,6 +412,12 @@ ManateeAdm.prototype.do_rebuild.options = [ {
     helpArg: 'CONFIG',
     help: 'The path to the manatee sitter config to list',
     default: process.env.MANATEE_SITTER_CONFIG
+}, {
+    names: ['ignorePrompts', 'y'],
+    type: 'bool',
+    helpArg: 'IGNORE_PROMPTS',
+    help: 'Set this to skip prompts (is dangerous) ',
+    default: false
 }, {
     names: ['zk', 'z'],
     type: 'string',
