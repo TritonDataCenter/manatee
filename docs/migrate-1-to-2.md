@@ -461,6 +461,8 @@ After the primary is reprovisioned:
 
 1. Reprovision the primary
 2. Backfill the cluster state: `primary$ manatee-adm state-backfill`
+3. Restore One Node Write Mode: `primary$ manatee-adm set-onwm -m on`
+4. Unfreeze Cluster State: `primary$ manatee-adm unfreeze`
 
 ## Two-node shard upgrade
 
