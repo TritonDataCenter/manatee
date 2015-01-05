@@ -452,7 +452,7 @@ downtime.  An operator would:
    cluster.
 2. Stop the primary manatee sitter process.
 3. Edit configuration for the primary to remove one node write mode.
-4. Run `# manatee-adm onwm -m off`
+4. Run `# manatee-adm unfreeze`.
 5. Start the primary manatee sitter process.
 
 It is generally not supported or advised to go from an HA manatee cluster to
