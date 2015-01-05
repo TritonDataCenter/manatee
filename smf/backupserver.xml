@@ -12,7 +12,7 @@
 
 <service_bundle type='manifest' name='export'>
   <service name='manatee-backupserver' type='service' version='0'>
-    <create_default_instance enabled='disabled'/>
+    <create_default_instance enabled='false'/>
     <dependency name='network' grouping='require_all' restart_on='error' type='service'>
       <service_fmri value='svc:/network/physical'/>
     </dependency>

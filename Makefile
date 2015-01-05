@@ -21,15 +21,21 @@ JS_FILES	:= \
 	tools/mksitterconfig
 JSL_FILES_NODE	 = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
+SMF_MANIFESTS    = \
+	smf/backupserver.xml \
+	smf/sitter.xml \
+	smf/snapshotter.xml
 
 JSON_FILES	 = \
     $(wildcard ./etc/*.json ./test/etc/*.json) \
     package.json
 
 include Makefile.defs
+include Makefile.smf.defs
 
 all:
 	$(NPM) install
 
 include Makefile.deps
 include Makefile.targ
+include Makefile.smf.targ
