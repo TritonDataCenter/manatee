@@ -462,7 +462,17 @@ After the primary is reprovisioned:
 1. Reprovision the primary
 2. Backfill the cluster state: `primary$ manatee-adm state-backfill`
 3. Restore One Node Write Mode: `primary$ manatee-adm set-onwm -m on`
-4. Unfreeze Cluster State: `primary$ manatee-adm unfreeze`
+
+Note that if you check shard state and it is frozen, you shouldn't unfreeze. This is the
+desired shard mode while it remains in one node write mode.
+
+Alternatively to the process mentioned above, you can also update using sdcadm as follows:
+
+```
+sdcadm self-update --allow-major-update
+sdcadm update -y moray
+sdcadm update -y manatee
+```
 
 ## Two-node shard upgrade
 
