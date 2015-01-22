@@ -12,12 +12,13 @@ The overall steps to migrating a manatee cluster from 1.0 to 2.0 is as the
 topology are as follows:
 
 1. Upgrade Morays
+1. (Recommended) Disable Morays
 1. Reprovision Async
 1. Backfill Cluster State (`async$ manatee-adm state-backfill`)
 1. Reprovision Sync
-1. Unfreeze Cluster State (`async$ manatee-adm unfreeze`)
 1. Reprovision Primary
-1. Rebuild Deposed Primary
+1. Unfreeze Cluster State (`async$ manatee-adm unfreeze`)
+1. Re-enable Morays
 
 Details for each step are below, specifically things you can check to make sure
 your migration is running smoothly.  It is assumed that:
@@ -51,6 +52,18 @@ are running and verify it is past this commit:
 commit 486142204a3347d9bd356647a39c7ea113a62fc3
 Date:   Thu Dec 4 23:34:19 2014 +0000
 ```
+
+## Recommended: Disable Morays
+
+This step is not strictly required, but is recommended.  It's safest to perform
+the cluster upgrade with all clients disabled.
+
+More concretely: if you proceed with the upgrade while under write load, *and*
+there are certain failures during the procedure (unrelated to the procedure),
+then it's possible to wind up in a state that will require deep intervention in
+order to avoid losing data.  You can avoid this risk by disabling writes for
+the duration of the upgrade by disabling all postgres clients (i.e., morays).
+
 
 ## Reprovision Async
 
@@ -301,36 +314,6 @@ manatee, the "__FROZEN__" property will be present.  From an older manatee
 }
 ```
 
-## Unfreeze Cluster State
-
-Unfreezing the cluster state allows the new sync to take over as the primary
-when the primary is reprovisioned.  This is done by:
-
-```
-async$ manatee-adm unfreeze
-```
-
-If you forget this step, when the primary is reprovisioned the sync will emit
-warnings that it should have taken over, but couldn't due to the cluster being
-frozen.  For example:
-
-```
-[2014-12-02T19:00:24.173Z] DEBUG: manatee-sitter/cluster/99642 on d0c715ab-1d55-
-43cd-88f2-f6bfe3960683 (/opt/smartdc/manatee/node_modules/manatee/node_modules/m
-anatee-state-machine/lib/manatee-peer.js:576 in ManateePeer.startTakeover): prep
-aring for new generation (primary gone)
-[2014-12-02T19:00:24.173Z]  WARN: manatee-sitter/cluster/99642 on d0c715ab-1d55-
-43cd-88f2-f6bfe3960683 (/opt/smartdc/manatee/node_modules/manatee/node_modules/m
-anatee-state-machine/lib/manatee-peer.js:673): backing off
-    ClusterFrozenError: cluster is frozen
-        at Array.takeoverCheckFrozen [as 0] (/opt/smartdc/manatee/node_modules/m
-        at Object.waterfall (/opt/smartdc/manatee/node_modules/manatee/node_modu
-        at ManateePeer.startTakeover (/opt/smartdc/manatee/node_modules/manatee/
-        at ManateePeer.evalClusterState (/opt/smartdc/manatee/node_modules/manat
-        at null._onTimeout (/opt/smartdc/manatee/node_modules/manatee/node_modul
-        at Timer.listOnTimeout [as ontimeout] (timers.js:110:15)
-```
-
 ## Reprovision Primary
 
 Now reprovision the primary.  At this point one of two things will happen.  If
@@ -395,34 +378,47 @@ In this case you can see that the cluster state has declared a new generation
 }
 ```
 
-## Rebuild Deposed Primary
+## Unfreeze Cluster State
 
-This step is optional depending on whether the sync took over as primary or not.
-If the sync did take over as primary (as in the previous step), you should
-see a manatee peer tagged with "deposed" when running `manatee-adm status`.
-
-This deposed peer will need to be rebuilt.  To do so, log onto the host, run
-`manatee-adm rebuild` and follow the prompts.  Once the rebuild is complete,
-you should see the deposed peer become an async.
-
-Your cluster should now look "healthy".  You can also see that `manatee-adm
-history` reflects the progression of changes:
+When you reprovision the primary, the sync may emit warnings that it should have
+taken over, but couldn't because the cluster is frozen.  For example:
 
 ```
-[root@d0c715ab (postgres) ~]$ manatee-adm history
-{"time":"1417543665280","date":"2014-12-02T18:07:45.280Z","ip":"10.77.77.47:5432","action":"AssumeLeader","role":"Leader","master":"","slave":"","zkSeq":"0000000000"}
-{"time":"1417543693514","date":"2014-12-02T18:08:13.514Z","ip":"10.77.77.47:5432","action":"NewStandby","role":"leader","master":"","slave":"10.77.77.48:5432","zkSeq":"0000000001"}
-{"time":"1417543693593","date":"2014-12-02T18:08:13.593Z","ip":"10.77.77.48:5432","action":"NewLeader","role":"Standby","master":"10.77.77.47:5432","slave":"","zkSeq":"0000000002"}
-{"time":"1417544064976","date":"2014-12-02T18:14:24.976Z","ip":"10.77.77.49:5432","action":"NewLeader","role":"Standby","master":"10.77.77.48:5432","slave":"","zkSeq":"0000000003"}
-{"time":"1417545337553","date":"2014-12-02T18:35:37.553Z","state":{"primary":{"zoneId":"f29499ea-b50c-431e-9975-e4bf760fb5e1","ip":"10.77.77.47","pgUrl":"tcp://postgres@10.77.77.47:5432/postgres","backupUrl":"http://10.77.77.47:12345","id":"10.77.77.47:5432:12345"},"sync":{"zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","backupUrl":"http://10.77.77.49:12345","id":"10.77.77.49:5432:12345"},"async":[{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"}],"generation":0,"initWal":"0/0000000","freeze":{"date":"2014-12-02T18:31:35.394Z","reason":"manatee-adm state-backfill"}},"zkSeq":"0000000004"}
-{"time":"1417546098034","date":"2014-12-02T18:48:18.034Z","ip":"10.77.77.47:5432","action":"NewStandby","role":"leader","master":"","slave":"10.77.77.49:5432","zkSeq":"0000000005"}
-{"time":"1417546912449","date":"2014-12-02T19:01:52.449Z","state":{"generation":1,"primary":{"id":"10.77.77.49:5432:12345","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","backupUrl":"http://10.77.77.49:12345"},"sync":{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"},"async":[],"initWal":"0/174A4D0"},"zkSeq":"0000000006"}
-{"time":"1417547498986","date":"2014-12-02T19:11:38.986Z","state":{"generation":1,"primary":{"id":"10.77.77.49:5432:12345","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","backupUrl":"http://10.77.77.49:12345"},"sync":{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"},"async":[],"deposed":[{"id":"10.77.77.47:5432:12345","zoneId":"f29499ea-b50c-431e-9975-e4bf760fb5e1","ip":"10.77.77.47","pgUrl":"tcp://postgres@10.77.77.47:5432/postgres","backupUrl":"http://10.77.77.47:12345"}],"initWal":"0/174A4D0"},"zkSeq":"0000000007"}
-{"time":"1417547623781","date":"2014-12-02T19:13:43.781Z","state":{"generation":1,"primary":{"id":"10.77.77.49:5432:12345","ip":"10.77.77.49","pgUrl":"tcp://postgres@10.77.77.49:5432/postgres","zoneId":"d0c715ab-1d55-43cd-88f2-f6bfe3960683","backupUrl":"http://10.77.77.49:12345"},"sync":{"zoneId":"4afba482-7670-4cfe-b11f-9df7f558106a","ip":"10.77.77.48","pgUrl":"tcp://postgres@10.77.77.48:5432/postgres","backupUrl":"http://10.77.77.48:12345","id":"10.77.77.48:5432:12345"},"async":[{"id":"10.77.77.47:5432:12345","zoneId":"f29499ea-b50c-431e-9975-e4bf760fb5e1","ip":"10.77.77.47","pgUrl":"tcp://postgres@10.77.77.47:5432/postgres","backupUrl":"http://10.77.77.47:12345"}],"initWal":"0/174A4D0"},"zkSeq":"0000000008"}
+[2014-12-02T19:00:24.173Z] DEBUG: manatee-sitter/cluster/99642 on d0c715ab-1d55-
+43cd-88f2-f6bfe3960683 (/opt/smartdc/manatee/node_modules/manatee/node_modules/m
+anatee-state-machine/lib/manatee-peer.js:576 in ManateePeer.startTakeover): prep
+aring for new generation (primary gone)
+[2014-12-02T19:00:24.173Z]  WARN: manatee-sitter/cluster/99642 on d0c715ab-1d55-
+43cd-88f2-f6bfe3960683 (/opt/smartdc/manatee/node_modules/manatee/node_modules/m
+anatee-state-machine/lib/manatee-peer.js:673): backing off
+    ClusterFrozenError: cluster is frozen
+        at Array.takeoverCheckFrozen [as 0] (/opt/smartdc/manatee/node_modules/m
+        at Object.waterfall (/opt/smartdc/manatee/node_modules/manatee/node_modu
+        at ManateePeer.startTakeover (/opt/smartdc/manatee/node_modules/manatee/
+        at ManateePeer.evalClusterState (/opt/smartdc/manatee/node_modules/manat
+        at null._onTimeout (/opt/smartdc/manatee/node_modules/manatee/node_modul
+        at Timer.listOnTimeout [as ontimeout] (timers.js:110:15)
 ```
 
-At this point your cluster is upgraded.  Notes below on two node and single-node
-updates as well as rollback.
+Unfreezing the cluster state allows the new sync to take over as the primary
+if the primary subsequently fails.  It is *not* recommended to perform this step
+until the primary has been reprovisioned (in the previous step), rejoined the
+cluster, and re-established synchronous replication.  That's because there's
+nothing to prevent the sync from taking over before synchronous replication has
+been established, in which case data could be lost.
+
+To unfreeze the cluster to resume normal operations, use:
+
+```
+async$ manatee-adm unfreeze
+```
+
+## Re-enable Morays
+
+If you disabled Morays (and other postgres clients) in step two above, you can
+re-enable them now.  At this point your cluster is upgraded.
+
+Notes below on two node and single-node updates as well as rollback.
 
 ## Rollback
 
