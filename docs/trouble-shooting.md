@@ -474,7 +474,7 @@ can do this on the HN via sapiadm. In this example the quota size is set to
 This lists the manatee peers in each DC by `zone_uuid, alias, CN_uuid, zone_ip`.
 From the headnode, run:
 ```
-[root@headnode (staging-1) ~]# sdc-sapi /instances?service_uuid=$(sdc-sapi /services?name=manatee | json -Ha uuid) | json -Ha uuid params.alias params.server_uuid metadata.PRIMARY_IP
+[root@headnode (staging-1) ~]# sdc-sapi /instances?service_uuid=$(sdc-sapi /services?name=manatee | json -Ha uuid) | json -Ha uuid  | xargs -n1 sdc-vmadm get  | json -ga uuid alias server_uuid nics.0.ip
 4243db81-4453-42b3-a241-f26395712d19 manatee2 445aab6c-3048-11e3-9816-002590c3f3bc 172.25.3.65
 8372b732-007c-400c-9642-9eb63d169cf2 manatee0 cf4414d0-3047-11e3-8545-002590c3f2d4 172.25.3.16
 cce218f8-6ad9-45c6-bd98-d9d0b840b56a manatee1 aac3c402-3047-11e3-b451-002590c57864 172.25.3.59
