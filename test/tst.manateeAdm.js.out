@@ -1,0 +1,1235 @@
+TEST CASE "singletonOk": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonOk": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   -     -          -          -          -          -     
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonOk": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        singleton (one-node-write)
+freeze:      frozen since 2006-02-15T00:00:00.000Z
+freeze info: manatee setup: one node write mode
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   -     -          -          -          -          -     
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonOk": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        singleton (one-node-write)
+freeze:      frozen since 2006-02-15T00:00:00.000Z
+freeze info: manatee setup: one node write mode
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   -     -          -          -          -          -     
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonOk": manatee-adm verify:
+--------- stdout ------------
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonOk": manatee-adm verify -v:
+--------- stdout ------------
+all checks passed
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonDown": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonDown": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c fail -     -          -          -          -          -     
+--------- stderr ------------
+
+error: cannot query postgres on primary
+-----------------------------
+
+TEST CASE "singletonDown": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        singleton (one-node-write)
+freeze:      frozen since 2006-02-15T00:00:00.000Z
+freeze info: manatee setup: one node write mode
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c fail -     -          -          -          -          -     
+
+error: cannot query postgres on primary
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonDown": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        singleton (one-node-write)
+freeze:      frozen since 2006-02-15T00:00:00.000Z
+freeze info: manatee setup: one node write mode
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c fail -     -          -          -          -          -     
+
+error: cannot query postgres on primary
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonDown": manatee-adm verify:
+--------- stdout ------------
+error: cannot query postgres on primary
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "singletonDown": manatee-adm verify -v:
+--------- stdout ------------
+error: cannot query postgres on primary
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm verify:
+--------- stdout ------------
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm verify -v:
+--------- stdout ------------
+all checks passed
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers -H:
+--------- stdout ------------
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers -H -o role:
+--------- stdout ------------
+primary 
+sync    
+async   
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers --omitHeader -o role -o peername:
+--------- stdout ------------
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060
+sync     30219700-cd09-11e4-a971-cf7f957afa2d
+async    3022acc6-cd09-11e4-9716-1ff89e748aff
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers --columns role -o peername,ip:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers --role=primary:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers -H -o ip -r sync:
+--------- stdout ------------
+10.0.0.2        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status -H:
+--------- stdout ------------
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status -H -o role:
+--------- stdout ------------
+primary 
+sync    
+async   
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status --omitHeader -o role -o peername:
+--------- stdout ------------
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060
+sync     30219700-cd09-11e4-a971-cf7f957afa2d
+async    3022acc6-cd09-11e4-9716-1ff89e748aff
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status --columns role -o peername,ip:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status --role=primary:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status -H -o ip -r sync:
+--------- stdout ------------
+10.0.0.2        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers -o pg-sent:
+--------- stdout ------------
+--------- stderr ------------
+manatee-adm: column not available with this subcommand: "SENT"
+Show known peers in this cluster. 
+
+Usage:
+    manatee-adm peers [OPTIONS]
+
+Options:
+    -h, --help                          Show this help.
+    -o COLNAME[,...], --columns=COLNAME[,...]
+                                        Columns to print.
+    -H, --omitHeader                    Omit header row from output.
+    -r ROLE, --role=ROLE                Only show peers with role ROLE.
+    -s SHARD, --shard=SHARD             Name of the Manatee shard (cluster).
+    -z ZK_IPS, --zk=ZK_IPS              The zookeeper connection string. (e.g.,
+                                        127.0.0.1:2181).
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm peers -o badcolumn:
+--------- stdout ------------
+--------- stderr ------------
+manatee-adm: unsupported column: "badcolumn"
+Show known peers in this cluster. 
+
+Usage:
+    manatee-adm peers [OPTIONS]
+
+Options:
+    -h, --help                          Show this help.
+    -o COLNAME[,...], --columns=COLNAME[,...]
+                                        Columns to print.
+    -H, --omitHeader                    Omit header row from output.
+    -r ROLE, --role=ROLE                Only show peers with role ROLE.
+    -s SHARD, --shard=SHARD             Name of the Manatee shard (cluster).
+    -z ZK_IPS, --zk=ZK_IPS              The zookeeper connection string. (e.g.,
+                                        127.0.0.1:2181).
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status -o badcolumn:
+--------- stdout ------------
+--------- stderr ------------
+manatee-adm: unsupported column: "badcolumn"
+Show the postgres status of this cluster. 
+
+Usage:
+    manatee-adm pg-status [OPTIONS] [PERIOD [COUNT]]
+
+Options:
+    -h, --help                          Show this help.
+    -o COLNAME[,...], --columns=COLNAME[,...]
+                                        Columns to print.
+    -H, --omitHeader                    Omit header row from output.
+    -r ROLE, --role=ROLE                Only show peers with role ROLE.
+    -s SHARD, --shard=SHARD             Name of the Manatee shard (cluster).
+    -w, --wide, --cinematic             Show full peernames.
+    -z ZK_IPS, --zk=ZK_IPS              The zookeeper connection string. (e.g.,
+                                        127.0.0.1:2181).
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status 1 2:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalOk": manatee-adm pg-status -w:
+--------- stdout ------------
+ROLE     PEERNAME                             PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700-cd09-11e4-a971-cf7f957afa2d ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6-cd09-11e4-9716-1ff89e748aff ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Peers": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Peers": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   -     -          -          -          -          -     
+--------- stderr ------------
+
+warning: cluster has no async peers
+-----------------------------
+
+TEST CASE "normal2Peers": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   -     -          -          -          -          -     
+
+warning: cluster has no async peers
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Peers": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   -     -          -          -          -          -     
+
+warning: cluster has no async peers
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Peers": manatee-adm verify:
+--------- stdout ------------
+warning: cluster has no async peers
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Peers": manatee-adm verify -v:
+--------- stdout ------------
+warning: cluster has no async peers
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+async    30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
+async    30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30265b32 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30265b32 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+async    30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
+async    30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30265b32 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers": manatee-adm verify:
+--------- stdout ------------
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers": manatee-adm verify -v:
+--------- stdout ------------
+all checks passed
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalDeposed": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+deposed  30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalDeposed": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+deposed  30250e3a fail -     -          -          -          -          -     
+--------- stderr ------------
+
+warning: cluster has a deposed peer
+-----------------------------
+
+TEST CASE "normalDeposed": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+deposed  30250e3a fail -     -          -          -          -          -     
+
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalDeposed": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+deposed  30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+deposed  30250e3a fail -     -          -          -          -          -     
+
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalDeposed": manatee-adm verify:
+--------- stdout ------------
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalDeposed": manatee-adm verify -v:
+--------- stdout ------------
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Deposed": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+deposed  30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
+deposed  30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Deposed": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+deposed  30250e3a fail -     -          -          -          -          -     
+deposed  30265b32 fail -     -          -          -          -          -     
+--------- stderr ------------
+
+warning: cluster has a deposed peer
+-----------------------------
+
+TEST CASE "normal2Deposed": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+deposed  30250e3a fail -     -          -          -          -          -     
+deposed  30265b32 fail -     -          -          -          -          -     
+
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Deposed": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+deposed  30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
+deposed  30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+deposed  30250e3a fail -     -          -          -          -          -     
+deposed  30265b32 fail -     -          -          -          -          -     
+
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Deposed": manatee-adm verify:
+--------- stdout ------------
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal2Deposed": manatee-adm verify -v:
+--------- stdout ------------
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers2deposed": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+async    30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
+async    30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5        
+deposed  3028df9c-cd09-11e4-baa6-23ac5bd2e03c 10.0.0.6        
+deposed  302b6db6-cd09-11e4-af3b-5bda767e5008 10.0.0.7        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers2deposed": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30265b32 ok   -     -          -          -          -          5m42s 
+deposed  3028df9c fail -     -          -          -          -          -     
+deposed  302b6db6 fail -     -          -          -          -          -     
+--------- stderr ------------
+
+warning: cluster has a deposed peer
+-----------------------------
+
+TEST CASE "normal5Peers2deposed": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30265b32 ok   -     -          -          -          -          5m42s 
+deposed  3028df9c fail -     -          -          -          -          -     
+deposed  302b6db6 fail -     -          -          -          -          -     
+
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers2deposed": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+async    30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
+async    30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5        
+deposed  3028df9c-cd09-11e4-baa6-23ac5bd2e03c 10.0.0.6        
+deposed  302b6db6-cd09-11e4-af3b-5bda767e5008 10.0.0.7        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
+async    30265b32 ok   -     -          -          -          -          5m42s 
+deposed  3028df9c fail -     -          -          -          -          -     
+deposed  302b6db6 fail -     -          -          -          -          -     
+
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers2deposed": manatee-adm verify:
+--------- stdout ------------
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normal5Peers2deposed": manatee-adm verify -v:
+--------- stdout ------------
+warning: cluster has a deposed peer
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPdown": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPdown": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c fail -     -          -          -          -          -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+
+error: cannot query postgres on primary
+error: peer "301e2d2c": downstream replication peer not connected
+-----------------------------
+
+TEST CASE "normalPdown": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c fail -     -          -          -          -          -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+error: cannot query postgres on primary
+error: peer "301e2d2c": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPdown": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c fail -     -          -          -          -          -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+error: cannot query postgres on primary
+error: peer "301e2d2c": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPdown": manatee-adm verify:
+--------- stdout ------------
+error: cannot query postgres on primary
+error: peer "301e2d2c": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPdown": manatee-adm verify -v:
+--------- stdout ------------
+error: cannot query postgres on primary
+error: peer "301e2d2c": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPnorepl": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPnorepl": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   -     -          -          -          -          -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+
+error: peer "301e2d2c": downstream replication peer not connected
+-----------------------------
+
+TEST CASE "normalPnorepl": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   -     -          -          -          -          -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+error: peer "301e2d2c": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPnorepl": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   -     -          -          -          -          -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+error: peer "301e2d2c": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPnorepl": manatee-adm verify:
+--------- stdout ------------
+error: peer "301e2d2c": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPnorepl": manatee-adm verify -v:
+--------- stdout ------------
+error: peer "301e2d2c": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPasync": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPasync": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+
+error: peer "301e2d2c": expected downstream replication to be "sync", but found "async"
+-----------------------------
+
+TEST CASE "normalPasync": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+error: peer "301e2d2c": expected downstream replication to be "sync", but found "async"
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPasync": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+error: peer "301e2d2c": expected downstream replication to be "sync", but found "async"
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPasync": manatee-adm verify:
+--------- stdout ------------
+error: peer "301e2d2c": expected downstream replication to be "sync", but found "async"
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalPasync": manatee-adm verify -v:
+--------- stdout ------------
+error: peer "301e2d2c": expected downstream replication to be "sync", but found "async"
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSdown": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSdown": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 fail -     -          -          -          -          -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+
+error: cannot query postgres on sync
+-----------------------------
+
+TEST CASE "normalSdown": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 fail -     -          -          -          -          -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+error: cannot query postgres on sync
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSdown": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 fail -     -          -          -          -          -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+error: cannot query postgres on sync
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSdown": manatee-adm verify:
+--------- stdout ------------
+error: cannot query postgres on sync
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSdown": manatee-adm verify -v:
+--------- stdout ------------
+error: cannot query postgres on sync
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSnorepl": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSnorepl": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   -     -          -          -          -          -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+--------- stderr ------------
+
+warning: peer "30219700": downstream replication peer not connected
+-----------------------------
+
+TEST CASE "normalSnorepl": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   -     -          -          -          -          -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+warning: peer "30219700": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSnorepl": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   -     -          -          -          -          -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+
+warning: peer "30219700": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSnorepl": manatee-adm verify:
+--------- stdout ------------
+warning: peer "30219700": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalSnorepl": manatee-adm verify -v:
+--------- stdout ------------
+warning: peer "30219700": downstream replication peer not connected
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalNoLag": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalNoLag": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          0m00s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalNoLag": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          0m00s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalNoLag": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          0m00s 
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalNoLag": manatee-adm verify:
+--------- stdout ------------
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalNoLag": manatee-adm verify -v:
+--------- stdout ------------
+all checks passed
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalLargeLag": manatee-adm peers:
+--------- stdout ------------
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalLargeLag": manatee-adm pg-status:
+--------- stdout ------------
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          1441m05s
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalLargeLag": manatee-adm show:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          1441m05s
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalLargeLag": manatee-adm show -v:
+--------- stdout ------------
+zookeeper:   UNUSED
+cluster:     UNUSED
+generation:  3 (3/12345678)
+mode:        normal
+freeze:      not frozen
+
+ROLE     PEERNAME                             IP              
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
+sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
+async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
+
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          1441m05s
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalLargeLag": manatee-adm verify:
+--------- stdout ------------
+--------- stderr ------------
+-----------------------------
+
+TEST CASE "normalLargeLag": manatee-adm verify -v:
+--------- stdout ------------
+all checks passed
+--------- stderr ------------
+-----------------------------
+
+TEST PASSED

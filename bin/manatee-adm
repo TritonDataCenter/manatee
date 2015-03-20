@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// -*- mode: js -*-
+/* vim: set ft=javascript: */
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,31 +7,172 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2015, Joyent, Inc.
  */
+
 var adm = require('../lib/adm');
+var assert = require('assert-plus');
 var cmdln = require('cmdln');
+var extsprintf = require('extsprintf');
 var fs = require('fs');
 var util = require('util');
 var path = require('path');
+var tab = require('tab');
+var VError = require('verror');
+
+var sprintf = extsprintf.sprintf;
+var fprintf = extsprintf.fprintf;
+
+/*
+ * For consistency in option definitions, any options used by more than one
+ * subcommand should be defined here.  Subcommands using these options refer to
+ * these definitions directly.
+ */
+var commonOptions = {
+    'columns': {
+        names: ['columns', 'o'],
+        type: 'arrayOfString',
+        help: 'Columns to print',
+        helpArg: 'COLNAME[,...]'
+    },
+    'config': {
+        names: ['config', 'c'],
+        type: 'string',
+        helpArg: 'CONFIG',
+        help: 'The path to the Manatee sitter config',
+        default: process.env.MANATEE_SITTER_CONFIG
+    },
+    'help': {
+        names: ['help', 'h'],
+        type: 'bool',
+        help: 'Show this help'
+    },
+    'ignorePrompts': {
+        names: ['ignorePrompts', 'y'],
+        type: 'bool',
+        helpArg: 'IGNORE_PROMPTS',
+        help: 'Skip confirmation prompts (can be dangerous)',
+        default: false
+    },
+    'omitHeader': {
+        names: [ 'omitHeader', 'H' ],
+        type: 'bool',
+        help: 'Omit header row from output',
+        default: false
+    },
+    'role': {
+        names: [ 'role', 'r' ],
+        type: 'string',
+        help: 'Only show peers with role ROLE',
+        helpArg: 'ROLE'
+    },
+    'shard': {
+        names: ['shard', 's'],
+        type: 'string',
+        helpArg: 'SHARD',
+        help: 'Name of the Manatee shard (cluster)',
+        default: process.env.SHARD
+    },
+    'verbose': {
+        names: [ 'verbose', 'v' ],
+        type: 'bool',
+        help: 'Enable verbose output'
+    },
+    'zk': {
+        names: ['zk', 'z'],
+        type: 'string',
+        helpArg: 'ZK_IPS',
+        help: 'The zookeeper connection string. (e.g., 127.0.0.1:2181)',
+        default: process.env.ZK_IPS
+    }
+};
 
 function ManateeAdm() {
     cmdln.Cmdln.call(this, {
         name: 'manatee-adm',
-        desc: 'Inspect and administer Manatee'
+        desc: 'Inspect and administer a cluster of Manatee peers',
+        helpSubcmds: [
+            { 'group': '' },
+            { 'group': 'STATUS COMMANDS' },
+            'show',
+            'peers',
+            'pg-status',
+            'history',
+            'verify',
+            { 'group': 'CLUSTER MAINTENANCE COMMANDS' },
+            'freeze',
+            'unfreeze',
+            'reap',
+            'rebuild',
+            { 'group': 'UPGRADE COMMANDS' },
+            'state-backfill',
+            { 'group': 'META COMMANDS' },
+            'help',
+            'version',
+            { 'group': 'DEVELOPER COMMANDS' },
+            'set-onwm',
+            'zk-state',
+            'zk-active',
+            { 'group': 'DEPRECATED AND INTERNAL COMMANDS' },
+            'check-lock',
+            'status',
+            { 'group': '' }
+        ]
     });
+
+    this.arg0 = 'manatee-adm';
 }
 util.inherits(ManateeAdm, cmdln.Cmdln);
 
 /**
- * Prints the version for this manatee-adm (and, hence, manatee itself).  Taken
- * directly from the package.json.
+ * Emit an error message, then the usage message, and then exit.
+ */
+ManateeAdm.prototype.usage = function (message, subcmd, cb)
+{
+    var self = this;
+
+    console.error('%s: %s', self.arg0, message);
+    console.error(this.helpFromSubcmd(subcmd));
+    process.exit(2);
+};
+
+/**
+ * Check for a required command-line option.  If option "option" was not
+ * specified in "opts", then print an error message, then the usage message,
+ * then exit.  This function does not return on failure.
+ */
+ManateeAdm.prototype.checkRequiredOption = function (subcmd, opts, option, cb)
+{
+    var self = this;
+
+    if (!opts[option]) {
+        self.usage('option is required: --' + option, subcmd, cb);
+    }
+};
+
+/*
+ * Checks whether the "help" option was specified.  If so, print the usage
+ * message and exit.  This function does not return if it prints the help
+ * message.
+ */
+ManateeAdm.prototype.checkHelpRequested = function (subcmd, opts, cb)
+{
+    var self = this;
+
+    if (opts.help) {
+        self.do_help('help', {}, [subcmd], cb);
+        throw (new Error('internal error: did not expect do_help() to return'));
+    }
+};
+
+/**
+ * Prints the version for this manatee-adm.  Taken directly from the
+ * package.json.
  */
 ManateeAdm.prototype.do_version = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+
+    self.checkHelpRequested(subcmd, opts, cb);
 
     var file = path.resolve(path.dirname(__dirname), 'package.json');
     var error;
@@ -44,33 +185,27 @@ ManateeAdm.prototype.do_version = function (subcmd, opts, args, cb) {
     }
     return (cb(error));
 };
-ManateeAdm.prototype.do_version.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}];
-ManateeAdm.prototype.do_version.help = (
-    'Shows the version of manatee, taken from the package.json. \n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} version [OPTIONS]\n' +
-    '\n' +
+ManateeAdm.prototype.do_version.options = [ commonOptions.help ];
+ManateeAdm.prototype.do_version.help = ([
+    'Show the version of this Manatee client (from package.json).',
+    '',
+    'Usage:',
+    '    {{name}} version [OPTIONS]',
+    '',
     '{{options}}'
-);
+].join('\n'));
 
 /**
- * Display the current status of the manatee shard(s).
+ * Display the current status of the Manatee cluster(s).
  */
 ManateeAdm.prototype.do_status = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.zk) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
+    console.error('note: "%s status" is deprecated. See "%s help pg-status".',
+        self.arg0, self.arg0);
     adm.status(opts, function (err, status) {
         if (err) {
             return cb(err);
@@ -80,52 +215,294 @@ ManateeAdm.prototype.do_status = function (subcmd, opts, args, cb) {
         }
     });
 };
-ManateeAdm.prototype.do_status.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['legacyOrderMode', 'l'],
-    type: 'bool',
-    helpArg: 'LEGACY_ORDER_MODE',
-    help: 'Show what the status is based on what is in the ZK election path ' +
-        'rather than what is in the cluster state object.',
-    default: false
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'The manatee shard to stat. If empty status will show all shards'
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_status.help = (
-    'Show status of a manatee shard. \n' +
+ManateeAdm.prototype.do_status.options = [
+    commonOptions.help,
+    {
+        names: ['legacyOrderMode', 'l'],
+        type: 'bool',
+        helpArg: 'LEGACY_ORDER_MODE',
+        help: 'Show what the status is based on Manatee v1 semantics ' +
+            '(ZooKeeper election path) rather than Manatee v2 semantics ' +
+            '(persistent cluster state).',
+        default: false
+    },
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_status.help = ([
+    'Show status of this cluster. See pg-status instead.',
+    '',
+    'Usage:',
+    '    {{name}} status [OPTIONS]',
+    '',
+    '{{options}}'
+].join('\n'));
+
+/**
+ * Show overall cluster information.
+ */
+ManateeAdm.prototype.do_show = function (subcmd, opts, args, cb) {
+    var self = this;
+    var loadoptions, identcolumns, pgcolumns;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    if (args.length > 0) {
+        self.usage('unexpected arguments: ' + args, subcmd, cb);
+    }
+
+    if (opts.verbose) {
+        identcolumns = extractColumns(opts, peersDflColumns);
+    }
+
+    pgcolumns = extractColumns(opts, pgStatusDflColumns);
+
+    loadoptions = {
+        'zk': opts.zk,
+        'shard': opts.shard
+    };
+
+    adm.loadClusterDetails(loadoptions, function (err, cs) {
+        if (err) {
+            console.error('%s: %s', self.arg0, err.message);
+        } else {
+            console.log('zookeeper:   %s', opts.zk);
+            console.log('cluster:     %s', opts.shard);
+            console.log('generation:  %s (%s)',
+                cs.pgs_generation, cs.pgs_initwal);
+            console.log('mode:        %s',
+                cs.pgs_singleton ? 'singleton (one-node-write)' : 'normal');
+            if (cs.pgs_frozen) {
+                console.log('freeze:      frozen since %s', cs.pgs_freeze_time);
+                console.log('freeze info: %s', cs.pgs_freeze_reason);
+            } else {
+                console.log('freeze:      not frozen');
+            }
+            console.log('');
+
+            if (opts.verbose) {
+                printClusterTable(opts, identcolumns, cs);
+                console.log('');
+            }
+
+            printClusterTable(opts, pgcolumns, cs);
+            printClusterIssues(cs, process.stdout, true);
+        }
+    });
+};
+ManateeAdm.prototype.do_show.options = [
+    commonOptions.help,
+    commonOptions.shard,
+    commonOptions.verbose,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_show.help = ([
+    'Show cluster summary information.',
+    '',
+    'Usage:',
+    '    {{name}} show [OPTIONS]',
+    '',
+    '{{options}}'
+].join('\n'));
+
+
+
+/**
+ * List postgres peers.
+ */
+ManateeAdm.prototype.do_peers = function (subcmd, opts, args, cb) {
+    var self = this;
+    var error, columns, loadoptions;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    if (args.length > 0) {
+        self.usage('unexpected arguments: ' + args, subcmd, cb);
+    }
+
+    error = validateRole(opts);
+    if (error instanceof Error) {
+        self.usage(error.message, subcmd, cb);
+    }
+
+    columns = extractColumns(opts, peersDflColumns);
+    if (columns instanceof Error) {
+        self.usage(columns.message, subcmd, cb);
+    }
+
+    columns.forEach(function (column) {
+        if (!column.noPg) {
+            self.usage(sprintf('column not available with this ' +
+                'subcommand: "%s"', column.label), subcmd, cb);
+        }
+    });
+
+    loadoptions = {
+        'zk': opts.zk,
+        'shard': opts.shard,
+        'skipPostgres': true
+    };
+    adm.loadClusterDetails(loadoptions, function (err, cs) {
+        if (err) {
+            console.error('%s: %s', self.arg0, err.message);
+        } else {
+            printClusterTable(opts, columns, cs);
+        }
+    });
+};
+
+ManateeAdm.prototype.do_peers.options = [
+    commonOptions.help,
+    commonOptions.columns,
+    commonOptions.omitHeader,
+    commonOptions.role,
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_peers.help = (
+    'Show known peers in this cluster. \n' +
     '\n' +
     'Usage:\n' +
-    '    {{name}} status [OPTIONS]\n' +
+    '    {{name}} peers [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
 
+
+
+/**
+ * Display the current postgres status for this cluster.
+ */
+ManateeAdm.prototype.do_pg_status = function (subcmd, opts, args, cb) {
+    var self = this;
+    var error, period, count, columns;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    if (args.length > 2) {
+        self.usage('unexpected arguments: ' + args.slice(2), subcmd, cb);
+    }
+
+    error = validateRole(opts);
+    if (error instanceof Error) {
+        self.usage(error.message, subcmd, cb);
+    }
+
+    period = null;
+    count = null;
+    if (args.length > 0) {
+        period = parseInt(args[0], 10);
+        if (isNaN(period) || period < 1) {
+            self.usage('invalid period: "' + args[0] + '"', subcmd, cb);
+        }
+
+        if (args.length > 1) {
+            count = parseInt(args[1], 10);
+            if (isNaN(count) || count < 1) {
+                self.usage('invalid count: "' + args[1] + '"', subcmd, cb);
+            }
+        }
+    }
+
+    columns = extractColumns(opts,
+        opts.wide ? pgStatusWideDflColumns : pgStatusDflColumns);
+    if (columns instanceof Error) {
+        self.usage(columns.message, subcmd, cb);
+    }
+    doPgStatusIter(opts, columns, period, count, cb);
+};
+
+ManateeAdm.prototype.do_pg_status.options = [
+    commonOptions.help,
+    commonOptions.columns,
+    commonOptions.omitHeader,
+    commonOptions.role,
+    commonOptions.shard,
+    {
+        names: ['wide', 'w', 'cinematic'],
+        type: 'bool',
+        help: 'Show full peernames',
+        default: false
+    },
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_pg_status.help = (
+    'Show the postgres status of this cluster. \n' +
+    '\n' +
+    'Usage:\n' +
+    '    {{name}} pg-status [OPTIONS] [PERIOD [COUNT]]\n' +
+    '\n' +
+    '{{options}}'
+);
+
+
+/**
+ * Verify the state of the cluster.
+ */
+ManateeAdm.prototype.do_verify = function (subcmd, opts, args, cb) {
+    var self = this;
+    var loadoptions;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    if (args.length > 0) {
+        self.usage('unexpected arguments: ' + args, subcmd, cb);
+    }
+
+    loadoptions = {
+        'zk': opts.zk,
+        'shard': opts.shard
+    };
+    adm.loadClusterDetails(loadoptions, function (err, cs) {
+        if (err) {
+            console.log('error: failed to fetch cluster state');
+            process.exit(1);
+        } else {
+            printClusterIssues(cs, process.stdout, false);
+            if ((cs.pgs_errors.length + cs.pgs_warnings.length) > 0)
+                process.exit(1);
+            if (opts.verbose)
+                console.log('all checks passed');
+        }
+    });
+};
+
+ManateeAdm.prototype.do_verify.options = [
+    commonOptions.help,
+    commonOptions.verbose,
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_verify.help = ([
+    'Verify the health of the cluster.',
+    '',
+    'Usage:',
+    '    {{name}} verify [OPTIONS]\n',
+    '',
+    '{{options}}'
+].join('\n'));
+
+
+
 /**
  * Display the current cluster state.
  */
-ManateeAdm.prototype.do_state = function (subcmd, opts, args, cb) {
+ManateeAdm.prototype.do_zk_state = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.zk) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
-    adm.state(opts, function (err, state) {
+    adm.zkState(opts, function (err, state) {
         if (err) {
             return cb(err);
         } else {
@@ -134,46 +511,32 @@ ManateeAdm.prototype.do_state = function (subcmd, opts, args, cb) {
         }
     });
 };
-ManateeAdm.prototype.do_state.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'Get the state for this manatee shard.',
-    default: process.env.SHARD
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_state.help = (
-    'Show the cluster state stored in ZK for this shard. \n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} state [OPTIONS]\n' +
-    '\n' +
+ManateeAdm.prototype.do_zk_state.hiddenAliases = [ 'state' ];
+ManateeAdm.prototype.do_zk_state.options = [
+    commonOptions.help,
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_zk_state.help = ([
+    'Show the raw cluster state stored in ZooKeeper.',
+    '',
+    'Usage:',
+    '    {{name}} zk-state [OPTIONS]',
+    '',
     '{{options}}'
-);
+].join('\n'));
 
 /**
- * Display the current (raw) active nodes for a shard.
+ * Display the current (raw) active peers for a cluster.
  */
-ManateeAdm.prototype.do_active = function (subcmd, opts, args, cb) {
+ManateeAdm.prototype.do_zk_active = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.zk) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
-    adm.active(opts, function (err, active) {
+    adm.zkActive(opts, function (err, active) {
         if (err) {
             return cb(err);
         } else {
@@ -182,46 +545,33 @@ ManateeAdm.prototype.do_active = function (subcmd, opts, args, cb) {
         }
     });
 };
-ManateeAdm.prototype.do_active.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'Get the active for this manatee shard.',
-    default: process.env.SHARD
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_active.help = (
-    'Display the current active peers for a shard. \n' +
-    'Since this displays exactly what is in zookeeper, this may show\n' +
-    'multiple entries for the same manatee.\n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} active [OPTIONS]\n' +
-    '\n' +
+ManateeAdm.prototype.do_zk_active.hiddenAliases = [ 'active' ];
+ManateeAdm.prototype.do_zk_active.options = [
+    commonOptions.help,
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_zk_active.help = ([
+    'Show the cluster peers connected to ZooKeeper.',
+    '',
+    'This may show multiple entries for the same peer when there are multiple',
+    'ZooKeeper sessions for that peer (as when it has recently restarted).',
+    '',
+    'Usage:',
+    '    {{name}} zk-active [OPTIONS]',
+    '',
     '{{options}}'
-);
+].join('\n'));
 
 /**
  * Backfill the cluster state.
  */
 ManateeAdm.prototype.do_state_backfill = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.zk) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     adm.stateBackfill(opts, function (err, state) {
         if (err) {
@@ -232,66 +582,38 @@ ManateeAdm.prototype.do_state_backfill = function (subcmd, opts, args, cb) {
         }
     });
 };
-ManateeAdm.prototype.do_state_backfill.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'Backfill the state for this manatee shard.',
-    default: process.env.SHARD
-}, {
-    names: ['ignorePrompts', 'y'],
-    type: 'bool',
-    helpArg: 'IGNORE_PROMPTS',
-    help: 'Set this to skip prompts (is dangerous) ',
-    default: false
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_state_backfill.help = (
-    'Backfill the cluster state for the shard, only if no state exists. \n' +
-    '\n' +
-    '!!! WARNING !!! \n' +
-    'This will only work when no cluster state has been written. \n' +
-    'It is only to be used when moving to Manatee using the persistent \n' +
-    'cluster state in ZK. \n' +
-    '\n' +
-    'This tool may backfill the cluster state in a surprising order: \n' +
-    'Primary -> Primary, Async -> Sync, Sync -> Async' +
-    'The reason for this is so that when the Async is deployed first, it \n' +
-    'will set itself up as a sync, then when the sync is deployed it will \n' +
-    'set itself up as async.  This facilitates the migration to using \n' +
-    'cluster state rather than election order to decide topology. \n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} state [OPTIONS]\n' +
-    '\n' +
+ManateeAdm.prototype.do_state_backfill.options = [
+    commonOptions.help,
+    commonOptions.shard,
+    commonOptions.ignorePrompts,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_state_backfill.help = ([
+    'Backfill the ZooKeeper state for this cluster.',
+    '',
+    'WARNING: This will only work when no cluster state has been written. It',
+    'is only to be used as part of the migration process from Manatee v1 to ',
+    'Manatee v2. See the documentation for details.',
+    '',
+    'Usage:',
+    '    {{name}} state-backfill [OPTIONS]',
+    '',
     '{{options}}'
-);
+].join('\n'));
 
 /**
- * Check the status of a manatee lock
+ * Check the status of a Manatee lock.  This is used by the pg_dump script to
+ * determine whether dumps are disabled.  It should probably be renamed to
+ * reflect that it's actually checking a configuration property stored in ZK
+ * (indicating whether dumps are enabled) and then it should grow a sibling for
+ * setting the property.
  */
 ManateeAdm.prototype.do_check_lock = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.path) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
-
-    if (!opts.zk) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'path', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     adm.checkLock(opts, function (err, stat) {
         if (err || stat) {
@@ -301,93 +623,192 @@ ManateeAdm.prototype.do_check_lock = function (subcmd, opts, args, cb) {
         return cb();
     });
 };
-ManateeAdm.prototype.do_check_lock.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['path', 'p'],
-    type: 'string',
-    helpArg: 'LOCK_PATH',
-    help: 'The manatee lock path in ZK'
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
+ManateeAdm.prototype.do_check_lock.options = [
+    commonOptions.help,
+    {
+        names: ['path', 'p'],
+        type: 'string',
+        helpArg: 'LOCK_PATH',
+        help: 'The Manatee lock path in ZK'
+    },
+    commonOptions.zk
+];
 ManateeAdm.prototype.do_check_lock.help = (
-    'Check the status of a manatee lock. \n' +
+    'Check the status of a Manatee lock. \n' +
     '\n' +
     'Usage:\n' +
-    '    {{name}} check_lock [OPTIONS]\n' +
+    '    {{name}} check-lock [OPTIONS]\n' +
     '\n' +
     '{{options}}'
 );
 
 
 /**
- * Get the state transition history of the shard.
+ * Get the state transition history of the cluster.
  */
 ManateeAdm.prototype.do_history = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
+    var histopts;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    if (opts.sort != 'zkSeq' && opts.sort != 'time') {
+        self.usage('-s / --sort must be one of "zkSeq" or "time"', subcmd, cb);
     }
 
-    if (!opts.shard) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    histopts = {
+        'zk': opts.zk,
+        'shard': opts.shard,
+        'sortByTime': opts.sort == 'time'
+    };
 
-    adm.history(opts, function (err, result) {
+    adm.history(histopts, function (err, events) {
+        var rows, columns;
+
         if (err) {
             return cb(err);
         }
 
-        for (var i = 0; i < result.length; i++) {
-            console.log(JSON.stringify(result[i]));
+        if (opts.json) {
+            events.forEach(function (evt) {
+                console.log(JSON.stringify({
+                    'zkSeq': evt['zkSeq'],
+                    'time': evt['time'].toISOString(),
+                    'state': evt['state']
+                }));
+            });
+            cb();
+            return;
         }
+
+        columns = [ {
+            'label': 'TIME',
+            'width': 24
+        }, {
+            'label': 'G#',
+            'align': 'right',
+            'width': 2
+        }, {
+            'label': 'MODE',
+            'width': 5
+        }, {
+            'label': 'FRZ',
+            'width': 3
+        }, {
+            'label': 'PRIMARY',
+            'width': 8
+        }, {
+            'label': 'SYNC',
+            'width': 8
+        }, {
+            'label': 'ASYNC',
+            'width': 8
+        }, {
+            'label': 'DEPOSED',
+            'width': 8
+        } ];
+
+        if (opts.verbose) {
+            columns.push({ 'label': 'SUMMARY' });
+        }
+
+        rows = events.map(function (evt) {
+            var st, p, s, a, dep, d;
+
+            if (evt.action) {
+                return ({
+                    'TIME': evt.date.toISOString(),
+                    'G#': '-',
+                    'MODE': '-',
+                    'FRZ': '-',
+                    'PRIMARY': '-',
+                    'SYNC': '-',
+                    'ASYNC': '-',
+                    'DEPOSED': '-',
+                    'SUMMARY': 'v1.0 event'
+                });
+            }
+
+            st = evt['state'];
+            p = st['primary']['zoneId'];
+            s = st['sync'] !== null ? st['sync']['zoneId'] : '-';
+            a = st['async'].length === 0 ? '-' :
+                st['async'].map(function (async) {
+                    return (async['zoneId'].substr(0, 8));
+                });
+
+            /*
+             * Early revisions of Manatee 2.0 did not necessarily have a
+             * "deposed" field, though it is required now.
+             */
+            dep = st.hasOwnProperty('deposed') ? st['deposed'] : [];
+            d = dep.length === 0 ? '-' :
+                dep.map(function (deposed) {
+                    return (deposed['zoneId'].substr(0, 8));
+                });
+
+            p = p.substr(0, 8);
+            s = s.substr(0, 8);
+
+            return ({
+                'TIME': evt['time'].toISOString(),
+                'G#': st['generation'],
+                'MODE': st['oneNodeWriteMode'] ? 'singl' : 'multi',
+                'FRZ': st['freeze'] ? 'frz' : '-',
+                'PRIMARY': p,
+                'SYNC': s,
+                'ASYNC': a,
+                'DEPOSED': d,
+                'SUMMARY': evt['comment']
+            });
+        });
+
+        tab.emitTable({
+            'columns': columns,
+            'rows': rows
+        });
+
         return cb();
     });
 };
-ManateeAdm.prototype.do_history.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'The manatee shard',
-    default: process.env.SHARD
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_history.help = (
-    'Displays histories for this shard. \n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} history [OPTIONS]\n' +
-    '\n' +
+ManateeAdm.prototype.do_history.options = [
+    commonOptions.help,
+    {
+        names: [ 'json', 'j' ],
+        type: 'bool',
+        help: 'Emit raw JSON output'
+    },
+    commonOptions.shard,
+    {
+        names: [ 'sort' ],
+        type: 'string',
+        helpArg: 'SORTFIELD',
+        help: 'Sort field (either "zkSeq" (default) or "time")',
+        default: 'zkSeq'
+    },
+    commonOptions.verbose,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_history.help = ([
+    'Displays history of state changes for this cluster.',
+    '',
+    'Usage:',
+    '    {{name}} history [OPTIONS]',
+    '',
     '{{options}}'
-);
+].join('\n'));
 
 /**
- * Rebuild a manatee peer in a shard.
+ * Rebuild a Manatee peer in a cluster.
  */
 ManateeAdm.prototype.do_rebuild = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
-    if (!opts.config) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'config', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     try {
         var cfg = JSON.parse(fs.readFileSync(opts.config, 'utf8'));
@@ -402,56 +823,32 @@ ManateeAdm.prototype.do_rebuild = function (subcmd, opts, args, cb) {
         return (cb(err));
     });
 };
-ManateeAdm.prototype.do_rebuild.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['config', 'c'],
-    type: 'string',
-    helpArg: 'CONFIG',
-    help: 'The path to the manatee sitter config to list',
-    default: process.env.MANATEE_SITTER_CONFIG
-}, {
-    names: ['ignorePrompts', 'y'],
-    type: 'bool',
-    helpArg: 'IGNORE_PROMPTS',
-    help: 'Set this to skip prompts (is dangerous) ',
-    default: false
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_rebuild.help = (
-    'Rebuild a manatee zone. \n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} rebuild [OPTIONS]\n' +
-    '\n' +
+ManateeAdm.prototype.do_rebuild.options = [
+    commonOptions.help,
+    commonOptions.config,
+    commonOptions.ignorePrompts,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_rebuild.help = ([
+    'Rebuild this Manatee peer from the primary peer.' +
+    '',
+    'Usage:',
+    '    {{name}} rebuild [OPTIONS]',
+    '',
     '{{options}}'
-);
+].join('\n'));
 
 /**
- * Freezes a manatee's cluster state so that it won't make any state
+ * Freezes a Manatee's cluster state so that it won't make any state
  * transitions.
  */
 ManateeAdm.prototype.do_freeze = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.shard) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
-
-    if (!opts.reason) {
-        console.log('!!! -r [reason] is required !!!');
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'reason', cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     adm.freeze(opts, function (err) {
         if (err) {
@@ -462,30 +859,19 @@ ManateeAdm.prototype.do_freeze = function (subcmd, opts, args, cb) {
         return cb();
     });
 };
-ManateeAdm.prototype.do_freeze.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['reason', 'r'],
-    type: 'string',
-    helpArg: 'REASON',
-    help: 'The reason this shard is being frozen'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'The manatee shard',
-    default: process.env.SHARD
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
+ManateeAdm.prototype.do_freeze.options = [
+    commonOptions.help,
+    {
+        names: ['reason', 'r'],
+        type: 'string',
+        helpArg: 'REASON',
+        help: 'The reason this cluster is being frozen'
+    },
+    commonOptions.shard,
+    commonOptions.zk
+];
 ManateeAdm.prototype.do_freeze.help = (
-    'Freeze a shard\'s topology. \n' +
+    'Freeze this cluster\'s topology. \n' +
     '\n' +
     'Usage:\n' +
     '    {{name}} freeze [OPTIONS]\n' +
@@ -494,17 +880,14 @@ ManateeAdm.prototype.do_freeze.help = (
 );
 
 /**
- * Unfreezes a manatee's cluster state so that it will make state transitions.
+ * Unfreezes a Manatee's cluster state so that it will make state transitions.
  */
 ManateeAdm.prototype.do_unfreeze = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.shard) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     adm.unfreeze(opts, function (err) {
         if (err) {
@@ -515,25 +898,13 @@ ManateeAdm.prototype.do_unfreeze = function (subcmd, opts, args, cb) {
         return cb();
     });
 };
-ManateeAdm.prototype.do_unfreeze.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'The manatee shard',
-    default: process.env.SHARD
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
+ManateeAdm.prototype.do_unfreeze.options = [
+    commonOptions.help,
+    commonOptions.shard,
+    commonOptions.zk
+];
 ManateeAdm.prototype.do_unfreeze.help = (
-    'Unfreeze a shard\'s topology. \n' +
+    'Unfreeze this cluster\'s topology. \n' +
     '\n' +
     'Usage:\n' +
     '    {{name}} unfreeze [OPTIONS]\n' +
@@ -546,13 +917,11 @@ ManateeAdm.prototype.do_unfreeze.help = (
  */
 ManateeAdm.prototype.do_set_onwm = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.shard) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'mode', cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     opts.mode = opts.mode.toLowerCase();
     if (['on', 'off'].indexOf(opts.mode) === -1) {
@@ -568,66 +937,43 @@ ManateeAdm.prototype.do_set_onwm = function (subcmd, opts, args, cb) {
         return cb();
     });
 };
-ManateeAdm.prototype.do_set_onwm.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'The manatee shard',
-    default: process.env.SHARD
-}, {
-    names: ['mode', 'm'],
-    type: 'string',
-    helpArg: 'MODE',
-    help: 'Must be either "on" or "off"'
-}, {
-    names: ['ignorePrompts', 'y'],
-    type: 'bool',
-    helpArg: 'IGNORE_PROMPTS',
-    help: 'Set this to skip prompts (is dangerous) ',
-    default: false
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_set_onwm.help = (
-    'Set one node write mode. \n' +
-    '\n' +
-    '!!! WARNING !!!\n' +
-    'Do not set or disable one node write mode unless you are sure you\n' +
-    'know what you\'re doing.  In order for one node write mode to be\n' +
-    'setd, the state must match what is in your configuration files for\n' +
-    'Manatee.\n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} set_onwm [OPTIONS]\n' +
-    '\n' +
+ManateeAdm.prototype.do_set_onwm.options = [
+    commonOptions.help,
+    commonOptions.ignorePrompts,
+    {
+        names: ['mode', 'm'],
+        type: 'string',
+        helpArg: 'MODE',
+        help: 'Must be either "on" or "off"'
+    },
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_set_onwm.help = ([
+    'Enable or disable singleton (one-node-write) mode.',
+    '',
+    'WARNING: This command must be used very carefully and only if you',
+    'really know what you are doing.',
+    '',
+    'Usage:',
+    '    {{name}} set-onwm [OPTIONS]',
+    '',
     '{{options}}'
-);
+].join('\n'));
 
 /**
- * Removes deposed nodes.
+ * Removes deposed peers from the Manatee state.
  */
-ManateeAdm.prototype.do_remove_deposed = function (subcmd, opts, args, cb) {
+ManateeAdm.prototype.do_reap = function (subcmd, opts, args, cb) {
     var self = this;
-    if (opts.help) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
 
-    if (!opts.shard) {
-        self.do_help('help', {}, [subcmd], cb);
-    }
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     if (!opts.ip && !opts.zonename) {
-        if (!opts.config) {
-            self.do_help('help', {}, [subcmd], cb);
-        }
+        self.checkRequiredOption(subcmd, opts, 'config', cb);
+
         try {
             var cfg = JSON.parse(fs.readFileSync(opts.config, 'utf8'));
             opts.zonename = cfg.zoneId;
@@ -636,7 +982,7 @@ ManateeAdm.prototype.do_remove_deposed = function (subcmd, opts, args, cb) {
         }
     }
 
-    adm.removeDeposed(opts, function (err) {
+    adm.reap(opts, function (err) {
         if (err) {
             return cb(err);
         }
@@ -645,52 +991,478 @@ ManateeAdm.prototype.do_remove_deposed = function (subcmd, opts, args, cb) {
         return cb();
     });
 };
-ManateeAdm.prototype.do_remove_deposed.options = [ {
-    names: ['help', 'h'],
-    type: 'bool',
-    help: 'Show this help'
-}, {
-    names: ['config', 'c'],
-    type: 'string',
-    helpArg: 'CONFIG',
-    help: 'The path to the manatee sitter config',
-    default: process.env.MANATEE_SITTER_CONFIG
-}, {
-    names: ['ip', 'i'],
-    type: 'string',
-    helpArg: 'IP',
-    help: 'The ip of the node to remove'
-}, {
-    names: ['zonename', 'n'],
-    type: 'string',
-    helpArg: 'ZONENAME',
-    help: 'The zonename of the node to remove'
-}, {
-    names: ['shard', 's'],
-    type: 'string',
-    helpArg: 'SHARD',
-    help: 'The manatee shard',
-    default: process.env.SHARD
-}, {
-    names: ['zk', 'z'],
-    type: 'string',
-    helpArg: 'ZOOKEEPER_URL',
-    help: 'The zookeeper connection string. e.g. 127.0.0.1:2181',
-    default: process.env.ZK_IPS
-}];
-ManateeAdm.prototype.do_remove_deposed.help = (
-    'Moves a node out of the list of deposed manatees. \n' +
-    '\n' +
-    'After a primary has been deposed by a sync, the primary enters into a\n' +
-    'deposed state.  Remove it from the deposed list after it has been\n' +
-    'rebuilt.  You can either use the ip or the zonename to identify the\n' +
-    'node to remove.  If zonename or ip isn\'t specified, this zonename\n' +
-    'will be used.\n' +
-    '\n' +
-    'Usage:\n' +
-    '    {{name}} remove_deposed [OPTIONS]\n' +
-    '\n' +
+ManateeAdm.prototype.do_reap.options = [
+    commonOptions.help,
+    commonOptions.config,
+    {
+        names: ['ip', 'i'],
+        type: 'string',
+        helpArg: 'IP',
+        help: 'The IP of the peer to reap'
+    },
+    {
+        names: ['zonename', 'n'],
+        type: 'string',
+        helpArg: 'ZONENAME',
+        help: 'The zonename of the peer to reap'
+    },
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_reap.help = ([
+    'Removes a non-existent peer from the list of deposed peers.',
+    '',
+    'This operation is rarely necessary. See the man page for details.',
+    '',
+    'You can use either an IP address or a zonename to identify the peer to',
+    'reap. If neither is not specified, this zone\'s zonename will be used.',
+    '',
+    'Usage:',
+    '    {{name}} reap [OPTIONS]\n' +
+    '',
     '{{options}}'
-);
+].join('\n'));
 
-cmdln.main(new ManateeAdm(), {showErrStack: true});
+/*
+ * Helper functions
+ *
+ * Several of the "manatee-adm" commands print out a table and allow users to
+ * select which columns to use.  We use common code to print these tables and
+ * the variables below to configure the available and default fields.
+ *
+ * Each column has a "name" (which is what the user would pass to the "-o"
+ * option to select that column) and a node-tab configuration (which includes
+ * the header label for that column, the width, alignment, and the like).
+ *
+ *     allColumns               maps column names to corresponding node-tab
+ *                              column configuration.  The additional property
+ *                              "noPg" is ignored by node-tab but used by the
+ *                              CLI to determine whether a given field is
+ *                              available without data from Postgres.
+ *
+ *     columnAliases            maps column names (aliases) to column names
+ *                              (actual underlying column)
+ *
+ *     peersDflColumns          list of default column names for
+ *                              "manatee-adm peers"
+ *
+ *     pgStatusDflColumns       list of default column names for
+ *                              "manatee-adm pg-status"
+ *
+ *     pgStatusWideDflColumns   list of default column names for
+ *                              "manatee-adm pg-status" when the "-w" ("wide")
+ *                              option is used.
+ *
+ * See the extractColumns() function for mapping between column names and column
+ * configurations.
+ */
+var allColumns = {
+    /*
+     * Columns available via both "manatee-adm peers" and "manatee-adm
+     * pg-status".  These columns come from the ZooKeeper state.
+     */
+    'peername': {
+        'label': 'PEERNAME',
+        'width': 36,
+        'noPg': true
+    },
+    'peerabbr': {
+        'label': 'PEER',
+        'width': 8,
+        'noPg': true
+    },
+    'role': {
+        'label': 'ROLE',
+        'width': 8,
+        'noPg': true
+    },
+    'ip': {
+        'label': 'IP',
+        'width': 16,
+        'noPg': true
+    },
+
+    /*
+     * Columns only available via "manatee-adm pg-status".  These come from
+     * querying Postgres or the sitter directly.
+     */
+    'pg-online': {
+        /* values: "ok" or "fail" */
+        'label': 'PG',
+        'width': 4
+    },
+
+    'pg-repl': {
+        /* values: "sync", "async", or "-" */
+        'label': 'REPL',
+        'width': 5
+    },
+
+    'pg-sent': {
+        /* WAL position */
+        'label': 'SENT',
+        'width': 10
+    },
+
+    'pg-write': {
+        /* WAL position */
+        'label': 'WRITE',
+        'width': 10
+    },
+
+    'pg-flush': {
+        /* WAL position */
+        'label': 'FLUSH',
+        'width': 10
+    },
+
+    'pg-replay': {
+        /* WAL position */
+        'label': 'REPLAY',
+        'width': 10
+    },
+
+    'pg-lag': {
+        /* time duration (e.g., "3m15s") */
+        'label': 'LAG',
+        'width': 6
+    }
+};
+
+var columnAliases = {
+    'zonename': 'peername',
+    'zoneabbr': 'peerabbr'
+};
+var peersDflColumns = [ 'role', 'peername', 'ip' ];
+var pgStatusDflColumns = [ 'role', 'peerabbr', 'pg-online', 'pg-repl',
+    'pg-sent', 'pg-write', 'pg-flush', 'pg-replay', 'pg-lag' ];
+var pgStatusWideDflColumns = [ 'role', 'peername', 'pg-online', 'pg-repl',
+    'pg-sent', 'pg-write', 'pg-flush', 'pg-replay', 'pg-lag' ];
+
+/*
+ * Validate column names and return column descriptors suitable for passing to
+ * node-tab.
+ *
+ *     opts             command line options.  This may contain:
+ *
+ *              columns         an array of strings denoting supported column
+ *                              names or aliases (see allColumns and
+ *                              columnAliases above)
+ *
+ *     dflcolnames      array of strings denoting the columns to use if
+ *                      "opts.columns" is not present
+ *
+ * On user error (e.g., unsupported column names in "opts.columns" or zero
+ * columns specified in "opts.columns"), returns an Error to the caller.  On
+ * programmer error (e.g., unsupported column names in "dflcolumns" or any use
+ * of a valid alias that has no associated command), throws an Error (which
+ * should not be caught).
+ */
+function extractColumns(opts, dflcolnames) {
+        var colnames, columns;
+        var error = null;
+
+        assert.object(opts, 'opts');
+        assert.optionalArrayOfString(opts.columns, 'opts.columns');
+        assert.arrayOfString(dflcolnames, 'dflcolnames');
+
+        /*
+         * Expand comma-separated lists in "opts.columns".
+         */
+        if (opts.columns) {
+            colnames = [];
+            opts.columns.forEach(function (optarg) {
+                /* JSSTYLED */
+                optarg.split(/,/).forEach(function (part) {
+                    if (part.length > 0)
+                        colnames.push(part);
+                });
+            });
+        } else {
+            colnames = dflcolnames;
+        }
+
+        columns = [];
+        colnames.forEach(function (rawcolname) {
+                var colname;
+
+                if (columnAliases.hasOwnProperty(rawcolname)) {
+                    colname = columnAliases[rawcolname];
+                    assert.ok(allColumns.hasOwnProperty(colname),
+                        'internal error: valid alias "' + rawcolname +
+                        '" references non-existent column "' + colname + '"');
+                } else {
+                    colname = rawcolname;
+                    if (!allColumns.hasOwnProperty(colname)) {
+                        error = new VError('unsupported column: "%s"', colname);
+                        return;
+                    }
+                }
+
+                    columns.push(allColumns[colname]);
+        });
+
+        if (error === null && columns.length === 0) {
+                error = new VError('no columns selected');
+        }
+
+        if (error !== null) {
+                if (opts.columns)
+                        return (error);
+                throw (new VError(error,
+                    'internal error: default column names'));
+        }
+
+        return (columns);
+}
+
+/*
+ * Print a table representation of the current cluster status.
+ *
+ *     opts             command line options.  This may contain:
+ *
+ *              columns         an array of strings denoting supported column
+ *                              names or aliases (see allColumns and
+ *                              columnAliases above)
+ *
+ *              omitHeader      optional boolean indicating whether the header
+ *                              row should be omitted from the output
+ *
+ *              role            optional filter on the role of each peer
+ *
+ *     dflcolumns       array of strings denoting the columns to use if
+ *                      "opts.columns" is not present
+ *
+ *     cs               see loadClusterState().
+ */
+function printClusterTable(opts, columns, cs) {
+        var rows, rolefilter;
+
+        assert.object(opts, 'opts');
+        assert.optionalBool(opts.omitHeader, 'opts.omitHeader');
+        assert.optionalString(opts.role, 'opts.role');
+        assert.arrayOfObject(columns, 'opts.columns');
+        assert.ok(columns.length > 0, 'non-empty opts.columns');
+        assert.object(cs, 'cs');
+
+        rows = [];
+        rolefilter = opts.role || null;
+
+        if (rolefilter === null || rolefilter == 'primary') {
+            rows.push(rowForPeer(
+                columns, 'primary', cs.pgs_peers[cs.pgs_primary]));
+        }
+
+        if ((rolefilter === null || rolefilter == 'sync') &&
+            cs.pgs_sync !== null) {
+            rows.push(rowForPeer(columns, 'sync', cs.pgs_peers[cs.pgs_sync]));
+        }
+
+        if (rolefilter === null || rolefilter == 'async') {
+            cs.pgs_asyncs.forEach(function (id) {
+                rows.push(rowForPeer(columns, 'async', cs.pgs_peers[id]));
+            });
+        }
+
+        if (rolefilter === null || rolefilter === 'deposed') {
+            cs.pgs_deposed.forEach(function (id) {
+                rows.push(rowForPeer(columns, 'deposed', cs.pgs_peers[id]));
+            });
+        }
+
+        tab.emitTable({
+            'columns': columns,
+            'rows': rows,
+            'omitHeader': opts.omitHeader
+        });
+}
+
+/*
+ * Returns an object describing a single peer, where the fields of the object
+ * correspond to the node-tab column names.
+ */
+function rowForPeer(columns, role, peer) {
+    var rv = {};
+
+    rv['ROLE'] = role;
+    rv['PEER'] = peer.pgp_label;
+    rv['PEERNAME'] = peer.pgp_ident.zoneId;
+    rv['IP'] = peer.pgp_ident.ip;
+
+    if (peer.pgp_pgerr !== null) {
+        rv['PG'] = 'fail';
+        rv['REPL'] = '-';
+        rv['SENT'] = '-';
+        rv['WRITE'] = '-';
+        rv['FLUSH'] = '-';
+        rv['REPLAY'] = '-';
+        rv['LAG'] = '-';
+        return (rv);
+    }
+
+    rv['PG'] = 'ok';
+    rv['LAG'] = pgDuration(peer.pgp_lag);
+
+    if (peer.pgp_repl === null || !peer.pgp_repl.sync_state) {
+        rv['REPL'] = '-';
+        rv['SENT'] = '-';
+        rv['WRITE'] = '-';
+        rv['FLUSH'] = '-';
+        rv['REPLAY'] = '-';
+        return (rv);
+    }
+
+    rv['REPL'] = peer.pgp_repl.sync_state;
+    rv['SENT'] = peer.pgp_repl.sent_location;
+    rv['WRITE'] = peer.pgp_repl.write_location;
+    rv['FLUSH'] = peer.pgp_repl.flush_location;
+    rv['REPLAY'] = peer.pgp_repl.replay_location;
+    return (rv);
+}
+
+/*
+ * Given a postgres time duration object "lag", which may have properties like
+ * "minutes", "seconds", and the like, return a human readable summary of the
+ * duration, like "87m12s".  If the object is null, returns "-".  If the time is
+ * not known, returns "?".
+ */
+function pgDuration(lag) {
+    var minutes, seconds, key;
+
+    if (lag === null)
+        return ('-');
+
+    minutes = lag.minutes || 0;
+    seconds = lag.seconds || 0;
+    for (key in lag) {
+        switch (key) {
+        case 'days':
+            minutes += lag[key] * 24 * 60;
+            break;
+
+        case 'hours':
+            minutes += lag[key] * 60;
+            break;
+
+        case 'minutes':
+        case 'seconds':
+            break;
+
+        default:
+            /*
+             * The node-pg-types code that parses postgres intervals implies
+             * that it could produce keys for "months" or "years", but
+             * empirically it doesn't seem to.  That's a relief (and probably
+             * not accidental), since the number of minutes in these units is
+             * not constant.  If we get something we don't know about, indicate
+             * this to the user.
+             */
+            return ('?');
+        }
+    }
+
+    return (sprintf('%dm%02ds', minutes, seconds));
+}
+
+/*
+ * Validates the "role" command-line option.  It may be unspecified or one of
+ * "primary", "sync", "async", or "deposed".
+ */
+function validateRole(opts)
+{
+    if (!opts.role)
+        return (null);
+
+    switch (opts.role) {
+    case 'primary':
+    case 'sync':
+    case 'async':
+    case 'deposed':
+        break;
+
+    default:
+        return (new VError('unsupported value for --role: "%s"', opts.role));
+    }
+
+    return (null);
+}
+
+/*
+ * Executes "count" iterations of the "pg-status" command, once every "period"
+ * seconds, and invokes "cb" on completion.  If "count" is null and "period" is
+ * not null, repeat forever.  If "period" is null, don't repeat at all.  This
+ * mimics the behavior of the various *stat commands (e.g., mpstat(1M),
+ * prstat(1M), and the like).
+ */
+function doPgStatusIter(opts, columns, period, count, cb) {
+    var self = this;
+
+    adm.loadClusterDetails(opts, function (err, cs) {
+        if (err) {
+            console.error('%s: %s', self.arg0, err.message);
+        } else {
+            printClusterTable(opts, columns, cs);
+            printClusterIssues(cs, process.stderr, true);
+        }
+
+        if (period === null || count == 1)
+            return cb(err);
+
+        setTimeout(doPgStatusIter, period * 1000, opts, columns,
+            period, count - 1, cb);
+    });
+}
+
+/*
+ * Prints messages about issues with the cluster.
+ */
+function printClusterIssues(cs, stream, leadingnl) {
+    if (leadingnl &&
+        (cs.pgs_errors.length > 0 || cs.pgs_warnings.length > 0)) {
+        fprintf(stream, '\n');
+    }
+
+    cs.pgs_errors.forEach(function (error) {
+        fprintf(stream, 'error: %s\n', clusterIssueToMessage(error));
+    });
+    cs.pgs_warnings.forEach(function (error) {
+        fprintf(stream, 'warning: %s\n', clusterIssueToMessage(error));
+    });
+}
+
+/*
+ * Given an issue with the cluster (either a warning or error, but always an
+ * instance of Error), return a one-line summary message of the problem.
+ */
+function clusterIssueToMessage(error) {
+    var msg, nl;
+
+    assert.ok(error instanceof Error);
+
+    /*
+     * Our output is defined to be one message per line.  Messages are not
+     * supposed to have newlines in them.  But in case they do, truncate
+     * them.
+     */
+    msg = error.message;
+    nl = msg.indexOf('\n');
+    if (nl != -1) {
+        msg = msg.substr(0, nl) + '...';
+    }
+
+    return (msg);
+}
+
+
+/*
+ * If we get EPIPE on stdout, ignore the error and exit immediately.
+ */
+process.stdout.on('error', function (err) {
+    if (err.code == 'EPIPE') {
+        process.exit(0);
+    }
+
+    throw (err);
+});
+
+cmdln.main(new ManateeAdm());

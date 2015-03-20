@@ -239,90 +239,28 @@ not impact the shard's performance or availability.
 
 ## Shard Administration
 Manatee provides the `manatee-adm` utility which gives visibility into the
-status of the Manatee shard. One of the key subcommands is the `status` command.
+status of the Manatee shard. One of the key subcommands is the `pg-status` command.
+
 ``` bash
-[root@host ~/manatee]# ./node_modules/manatee/bin/manatee-adm status -z <zk_ip>
-{
-"1": {
-    "primary": {
-        "id": "172.27.4.12:5432:12345",
-        "ip": "172.27.4.12",
-        "pgUrl": "tcp://postgres@172.27.4.12:5432/postgres",
-        "zoneId": "b515b611-3b6e-4cc9-8d1f-3cf78e27bf24",
-        "backupUrl": "http://172.27.4.12:12345",
-        "online": true,
-        "repl": {
-            "pid": 23047,
-            "usesysid": 10,
-            "usename": "postgres",
-            "application_name": "tcp://postgres@172.27.5.8:5432/postgres",
-            "client_addr": "172.27.5.8",
-            "client_hostname": "",
-            "client_port": 42718,
-            "backend_start": "2014-04-28T17:07:55.548Z",
-            "state": "streaming",
-            "sent_location": "E/D9D14780",
-            "write_location": "E/D9D14780",
-            "flush_location": "E/D9D14780",
-            "replay_location": "E/D9D14378",
-            "sync_priority": 1,
-            "sync_state": "sync"
-        }
-    },
-    "sync": {
-        "id": "172.27.5.8:5432:12345",
-        "ip": "172.27.5.8",
-        "pgUrl": "tcp://postgres@172.27.5.8:5432/postgres",
-        "zoneId": "d2de0030-986e-4dae-991d-7d85f2e333d9",
-        "backupUrl": "http://172.27.5.8:12345",
-        "online": true,
-        "repl": {
-            "pid": 95136,
-            "usesysid": 10,
-            "usename": "postgres",
-            "application_name": "tcp://postgres@172.27.3.7:5432/postgres",
-            "client_addr": "172.27.3.7",
-            "client_hostname": "",
-            "client_port": 53461,
-            "backend_start": "2014-04-28T21:28:07.905Z",
-            "state": "streaming",
-            "sent_location": "E/D9D14780",
-            "write_location": "E/D9D14780",
-            "flush_location": "E/D9D14780",
-            "replay_location": "E/D9D14378",
-            "sync_priority": 0,
-            "sync_state": "async"
-        }
-    },
-    "async": {
-        "id": "172.27.3.7:5432:12345",
-        "ip": "172.27.3.7",
-        "pgUrl": "tcp://postgres@172.27.3.7:5432/postgres",
-        "zoneId": "70d44638-f4fb-4cbd-8611-0f7c83d8502f",
-        "backupUrl": "http://172.27.3.7:12345",
-        "online": true,
-        "repl": {},
-        "lag": {
-            "time_lag": {}
-        }
-    }
-}
-}
+$ manatee-adm pg-status 
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  bb348824 ok   sync  0/671FEDF8 0/671FEDF8 0/671FEDF8 0/671FE9F0 -     
+sync     a376df2b ok   async 0/671FEDF8 0/671FEDF8 0/671FEDF8 0/671FE9F0 -     
+async    09957297 ok   -     -          -          -          -          0m00s 
 ```
-This prints out the current topology of the shard.  The "online" filed indicates
+
+This prints out the current topology of the shard.  The "PG" column indicates
 that postgres is online.
 
-The "repl" field shows the standby that's currently connected to the node. It's
-the same set of fields that is returned by the PG query ```select * from
-pg_stat_replication```. The repl field is helpful in verifying the status of the
-PostgreSQL instances. If the repl field exists, it means that the node's standby
-is caught up and streaming. If there is no repl field, it means that there is no
-PG instance replication from this node. This is expected with the last node in
-the shard.
+The REPL field shows information about the downstream peer that's currently
+connected to this peer for replication purposes.  If the REPL column is "sync"
+or "async", it means that the downstream peer is caught up and streaming. If
+REPL is "-", it means that there is no PG instance replication from this node.
+This is expected with the last peer in the shard.
 
-However, if there is another node after the current one in the shard, and there
-is no repl field, it indicatees there is a problem with replication between the
-two nodes.
+However, if there is another peer after the current one in the shard, and REPL
+is "-", that indicates there is a problem with replication between the two
+peers.  The "pg-status" command will explicitly report such issues.
 
 ## Shard History
 You can query any past topology changes by using the `history` subcommand.
@@ -348,18 +286,18 @@ the middle of a migration.  To freeze the cluster state so that it will perform
 no transitions, use the `manatee-adm freeze -r [reason]` command.  The reason is
 free-form and required.  The reason is meant for operators to consult before
 unfreezing the cluster.  When the cluster is frozen, it is prominently displayed
-in the output for `manatee-adm status`:
+in the output for `manatee-adm show`:
 
 ```
 [root@b35e12da (postgres) ~]$ manatee-adm freeze -r 'By nate for CM-129'
 Frozen.
-[root@b35e12da (postgres) ~]$ manatee-adm status | json | head -5
-{
-  "1.moray.coal.joyent.us": {
-    "__FROZEN__": "2014-12-10T18:20:35.758Z: By nate for CM-129",
-    "primary": {
-      "id": "10.77.77.8:5432:12345",
-[root@b35e12da (postgres) ~]$
+[root@b35e12da (postgres) ~]$ manatee-adm show | head -6
+zookeeper:   172.27.10.142
+cluster:     1.moray.emy-10.joyent.us
+generation:  1 (0/00000000)
+mode:        normal
+freeze:      frozen since 2015-03-18T18:40:11.095Z
+freeze info: by dap for CM-129
 ```
 
 To unfreeze the cluster, use the `manatee-adm unfreeze` command.
@@ -368,62 +306,21 @@ To unfreeze the cluster, use the `manatee-adm unfreeze` command.
 
 When a sync takes over becoming the primray, there is a chance that the previous
 primary's Postgres transaction logs have diverged.  There are many reasons this
-can happen, the reasons we know about are documented in the [transaction log
+can happen, and the known reasons are documented in the [transaction log
 divergence](xlog-diverge.md) doc.  Deposed manatees have the "deposed" tag when
-viewing `manatee-adm status`:
+viewing `manatee-adm pg-status`:
 
 ```
-[root@27b94bd8 (postgres) ~]$ manatee-adm status | json
-{
-  "1.moray.coal.joyent.us": {
-    "primary": {
-      "id": "10.77.77.21:5432:12345",
-      "ip": "10.77.77.21",
-      "pgUrl": "tcp://postgres@10.77.77.21:5432/postgres",
-      "zoneId": "8c591b3b-402f-4522-9820-df9911859499",
-      "backupUrl": "http://10.77.77.21:12345",
-      "online": true,
-      "repl": {
-        "pid": 37735,
-        "usesysid": 10,
-        "usename": "postgres",
-        "application_name": "tcp://postgres@10.77.77.23:5432/postgres",
-        "client_addr": "10.77.77.23",
-        "client_hostname": "",
-        "client_port": 51517,
-        "backend_start": "2014-12-12T22:57:23.742Z",
-        "state": "streaming",
-        "sent_location": "0/176CD78",
-        "write_location": "0/176CD78",
-        "flush_location": "0/176CD78",
-        "replay_location": "0/176CD18",
-        "sync_priority": 1,
-        "sync_state": "sync"
-      }
-    },
-    "sync": {
-      "id": "10.77.77.23:5432:12345",
-      "zoneId": "a9dbf8ba-5daf-42d8-800e-7cefebb10361",
-      "ip": "10.77.77.23",
-      "pgUrl": "tcp://postgres@10.77.77.23:5432/postgres",
-      "backupUrl": "http://10.77.77.23:12345",
-      "online": true,
-      "repl": {}
-    },
-    "deposed": {
-      "id": "10.77.77.22:5432:12345",
-      "ip": "10.77.77.22",
-      "pgUrl": "tcp://postgres@10.77.77.22:5432/postgres",
-      "zoneId": "27b94bd8-98e2-4aa7-a741-bbc9c83f63ae",
-      "backupUrl": "http://10.77.77.22:12345"
-    }
-  }
-}
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
+async    3022acc6 ok   -     -          -          -          -          5m42s 
+deposed  30250e3a fail -     -          -          -          -          -     
 ```
 
 To rebuild a deposed node, log onto the host, run `manatee-adm rebuild`, and
 follow the prompts.  If your dataset is particularly large, this can take
-a "long time".  You should consider running the rebuild in a `screen` session.
+a long time.  You should consider running the rebuild in a `screen` session.
 
 To be on the safe side, any deposed primary should be rebuilt in order to rejoin
 the cluster.  This may not be necessary in some cases, but is suggested unless
@@ -436,15 +333,15 @@ cluster is at risk of becoming wedged!  This is because the previously deposed
 and diverged primary can be promoted to sync.  If that happens, your cluster
 will not be able to accept writes.
 
-## One Node Write Mode
+## Singleton (One-Node-Write) Mode
 
-One node write mode (ONWM) is a "special" mode for manatee clusters that have no
+One-node-write mode (ONWM) is a special mode for manatee clusters that have no
 important data.  It allows a primary to accept writes without synchronously
-replicating those trasactions to a sync.  In fact, with ONWM, any peers that
+replicating those transactions to a sync.  In fact, with ONWM, any peers that
 attempt to join the cluster will shut down if they detect another peer is
 already the primary by looking at the cluster state in zookeeper.
 
-ONWM is usually enabled when setting up larger systems that will me moved to
+ONWM is usually enabled when setting up larger systems that will be moved to
 "High Availability" (HA) configurations later.  To move from ONWM to HA requires
 downtime.  An operator would:
 

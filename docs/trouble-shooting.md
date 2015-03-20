@@ -5,7 +5,7 @@
 -->
 
 <!--
-    Copyright (c) 2014, Joyent, Inc.
+    Copyright (c) 2015, Joyent, Inc.
 -->
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -36,100 +36,56 @@ This guide will list the most common failure scenarios of Manatee and steps to
 resuscitate the Shard.
 
 ## Warning
-You should read the user guide first to ensure you understand
-how Manatee works. Some of the recovery steps could potentially be destructive
-and result in data loss if performed incorrectly.
+You should read the user guide first to ensure you understand how Manatee works.
+Some of the recovery steps could potentially be destructive and result in data
+loss if performed incorrectly.
 
 # Manatee-adm
+
 The primary way an operator should be interacting with manatee is via the
-`manatee-adm` CLI.
+`manatee-adm` CLI.  The main tool for assessing the cluster's overall state is
+`manatee-adm pg-status`.
 
 # Healthy Manatee
-The output of `# manatee-adm status` of a healthy manatee shard will look like
-this.
-```json
-{
-    "sdc": {
-        "primary": {
-            "id": "172.25.3.65:5432:12345",
-            "ip": "172.25.3.65",
-            "pgUrl": "tcp://postgres@172.25.3.65:5432/postgres",
-            "zoneId": "4243db81-4453-42b3-a241-f26395712d19",
-            "backupUrl": "http://172.25.3.65:12345",
-            "online": true,
-            "repl": {
-                "pid": 15324,
-                "usesysid": 10,
-                "usename": "postgres",
-                "application_name": "tcp://postgres@172.25.3.16:5432/postgres",
-                "client_addr": "172.25.3.16",
-                "client_hostname": "",
-                "client_port": 46276,
-                "backend_start": "2014-07-25T19:37:52.026Z",
-                "state": "streaming",
-                "sent_location": "E/293522B0",
-                "write_location": "E/293522B0",
-                "flush_location": "E/293522B0",
-                "replay_location": "E/2934F6D0",
-                "sync_priority": 1,
-                "sync_state": "sync"
-            }
-        },
-        "sync": {
-            "id": "172.25.3.16:5432:12345",
-            "ip": "172.25.3.16",
-            "pgUrl": "tcp://postgres@172.25.3.16:5432/postgres",
-            "zoneId": "8372b732-007c-400c-9642-9eb63d169cf2",
-            "backupUrl": "http://172.25.3.16:12345",
-            "online": true,
-            "repl": {
-                "pid": 18377,
-                "usesysid": 10,
-                "usename": "postgres",
-                "application_name": "tcp://postgres@172.25.3.59:5432/postgres",
-                "client_addr": "172.25.3.59",
-                "client_hostname": "",
-                "client_port": 41581,
-                "backend_start": "2014-07-25T19:37:53.961Z",
-                "state": "streaming",
-                "sent_location": "E/293522B0",
-                "write_location": "E/293522B0",
-                "flush_location": "E/293522B0",
-                "replay_location": "E/2934F6D0",
-                "sync_priority": 0,
-                "sync_state": "async"
-            }
-        },
-        "async": {
-            "id": "172.25.3.59:5432:12345",
-            "ip": "172.25.3.59",
-            "pgUrl": "tcp://postgres@172.25.3.59:5432/postgres",
-            "zoneId": "cce218f8-6ad9-45c6-bd98-d9d0b840b56a",
-            "backupUrl": "http://172.25.3.59:12345",
-            "online": true,
-            "repl": {},
-            "lag": {
-                "time_lag": {}
-            }
-        }
-    }
-}
-```
-There are 3 peers in this shard, a `primary`, `sync`, and `async`.  The "online"
-field indicates that Postgres is online.
 
-Pay close attention to ther `repl` field of each peer. The repl field represents
-the replication state of its immediate standby. For example, the `primary.repl`
-field represents the replication state of the synchronous peer. A primary peer
-with an empty `repl` field means replication is offline between the primary and
-the sync. A sync peer with an empty `repl` field means that replication is
+The output of `# manatee-adm pg-status` of a healthy manatee shard will look like
+this:
+
+    ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
+    primary  bb348824 ok   sync  0/671FEDF8 0/671FEDF8 0/671FEDF8 0/671FE9F0 -     
+    sync     a376df2b ok   async 0/671FEDF8 0/671FEDF8 0/671FEDF8 0/671FE9F0 -     
+    async    09957297 ok   -     -          -          -          -          0m00s 
+
+There are 3 peers in this shard, a `primary`, `sync`, and `async`.  The "PG"
+column indicates that Postgres is online.
+
+If anything is wrong with the cluster, errors or warnings will be printed below
+this output.  Errors indicate problems that likely affect service, while
+warnings indicate problems that should not directly be impacting service at the
+moment.
+
+The REPL column (and subsequent columns) describes the replication state of each
+peer to its immediate downstream peer. For example, the primary's REPL column
+represents the state of replication to the synchronous peer.  A primary peer
+with "-" in the REPL column means replication is offline between the primary and
+the sync. A sync peer with "-" in the REPL field means that replication is
 offline between the sync and the async.
 
 A 3-node manatee shard is healthy only if there are 3 peers in the shard, all
-three peers are marked `"online": true` and `primary.repl.sync_state ===
-'sync'`, and `sync.repl.sync_state === 'async'`
+three peers are marked "ok" in the "PG" column, the primary's REPL is "sync",
+and the sync's REPL is "async".  As mentioned above, the tool checks these
+conditions and prints out when something is wrong.
+
+# Troubleshooting under-the-hood
+
+"manatee-adm pg-status" should automatically identify problems with the cluster.
+In previous versions of Manatee, operators were required to use the "manatee-adm
+status" command and verify these conditions manually.  The rest of this guide
+describes the process of identifying problems based on the "manatee-adm status"
+output, but it should no longer be required on newer versions of Manatee.
 
 # Symptoms
+
 Here are some commonly seen outputs of `manatee-adm status` when the shard is
 unhealthy. Before you start: click [here](http://calmingmanatee.com/).
 
@@ -233,7 +189,7 @@ If this returns nothing, then no manatee peers are deployed.
 1. Log on to any manatee peer.
 1. Check the manatee state:
 ```
-[root@b35e12da (postgres) ~]$ manatee-adm state | json
+[root@b35e12da (postgres) ~]$ manatee-adm zk-state | json
 {
   "generation": 1,
   "primary": {
@@ -268,9 +224,9 @@ If this returns nothing, then no manatee peers are deployed.
 1. Log on to the mantaee sync and make sure it is running.
 1. Log on to asyncs and make sure they are running.
 1. You can check the set of manatee peers that are connected to zk with the
-   `# manatee-adm active` command:
+   `# manatee-adm zk-active` command:
 ```
-[root@b35e12da (postgres) ~]$ manatee-adm active | json
+[root@b35e12da (postgres) ~]$ manatee-adm zk-active | json
 {
   "10.77.77.7:5432:12345-0000000164": {
     "zoneId": "3dc65ac3-2977-40da-a948-3c72b9359884",
