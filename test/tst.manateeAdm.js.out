@@ -7,8 +7,8 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 
 TEST CASE "singletonOk": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   -     -             -             -             -     
 --------- stderr ------------
 -----------------------------
 
@@ -21,8 +21,8 @@ mode:        singleton (one-node-write)
 freeze:      frozen since 2006-02-15T00:00:00.000Z
 freeze info: manatee setup: one node write mode
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   -     -             -             -             -     
 --------- stderr ------------
 -----------------------------
 
@@ -38,8 +38,8 @@ freeze info: manatee setup: one node write mode
 ROLE     PEERNAME                             IP              
 primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   -     -             -             -             -     
 --------- stderr ------------
 -----------------------------
 
@@ -63,8 +63,8 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 
 TEST CASE "singletonDown": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c fail -     -             -             -             -     
 --------- stderr ------------
 
 error: cannot query postgres on primary
@@ -79,8 +79,8 @@ mode:        singleton (one-node-write)
 freeze:      frozen since 2006-02-15T00:00:00.000Z
 freeze info: manatee setup: one node write mode
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c fail -     -             -             -             -     
 
 error: cannot query postgres on primary
 --------- stderr ------------
@@ -98,8 +98,8 @@ freeze info: manatee setup: one node write mode
 ROLE     PEERNAME                             IP              
 primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c fail -     -             -             -             -     
 
 error: cannot query postgres on primary
 --------- stderr ------------
@@ -128,10 +128,10 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalOk": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
@@ -143,10 +143,10 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
@@ -163,10 +163,10 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
@@ -229,9 +229,9 @@ TEST CASE "normalOk": manatee-adm peers -H -o ip -r sync:
 
 TEST CASE "normalOk": manatee-adm pg-status -H:
 --------- stdout ------------
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
@@ -262,8 +262,8 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalOk": manatee-adm pg-status --role=primary:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
 --------- stderr ------------
 -----------------------------
 
@@ -336,23 +336,23 @@ Options:
 
 TEST CASE "normalOk": manatee-adm pg-status 1 2:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
 TEST CASE "normalOk": manatee-adm pg-status -w:
 --------- stdout ------------
-ROLE     PEERNAME                             PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c-cd09-11e4-837d-13ea7132a060 ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700-cd09-11e4-a971-cf7f957afa2d ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6-cd09-11e4-9716-1ff89e748aff ok   -     -          -          -          -          5m42s 
+ROLE     PEERNAME                             PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c-cd09-11e4-837d-13ea7132a060 ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700-cd09-11e4-a971-cf7f957afa2d ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6-cd09-11e4-9716-1ff89e748aff ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
@@ -366,9 +366,9 @@ sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2
 
 TEST CASE "normal2Peers": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   -     -             -             -             -     
 --------- stderr ------------
 
 warning: cluster has no async peers
@@ -382,9 +382,9 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   -     -             -             -             -     
 
 warning: cluster has no async peers
 --------- stderr ------------
@@ -402,9 +402,9 @@ ROLE     PEERNAME                             IP
 primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1        
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   -     -             -             -             -     
 
 warning: cluster has no async peers
 --------- stderr ------------
@@ -435,12 +435,12 @@ async    30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5
 
 TEST CASE "normal5Peers": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30265b32 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30250e3a ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30265b32 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
@@ -452,12 +452,12 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30265b32 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30250e3a ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30265b32 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
@@ -476,12 +476,12 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 async    30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
 async    30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30265b32 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30250e3a ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30265b32 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 -----------------------------
 
@@ -508,11 +508,11 @@ deposed  30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4
 
 TEST CASE "normalDeposed": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
-deposed  30250e3a fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
+deposed  30250e3a fail -     -             -             -             -     
 --------- stderr ------------
 
 warning: cluster has a deposed peer
@@ -526,11 +526,11 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
-deposed  30250e3a fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
+deposed  30250e3a fail -     -             -             -             -     
 
 warning: cluster has a deposed peer
 --------- stderr ------------
@@ -550,11 +550,11 @@ sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 deposed  30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
-deposed  30250e3a fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
+deposed  30250e3a fail -     -             -             -             -     
 
 warning: cluster has a deposed peer
 --------- stderr ------------
@@ -585,12 +585,12 @@ deposed  30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5
 
 TEST CASE "normal2Deposed": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
-deposed  30250e3a fail -     -          -          -          -          -     
-deposed  30265b32 fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
+deposed  30250e3a fail -     -             -             -             -     
+deposed  30265b32 fail -     -             -             -             -     
 --------- stderr ------------
 
 warning: cluster has a deposed peer
@@ -604,12 +604,12 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
-deposed  30250e3a fail -     -          -          -          -          -     
-deposed  30265b32 fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
+deposed  30250e3a fail -     -             -             -             -     
+deposed  30265b32 fail -     -             -             -             -     
 
 warning: cluster has a deposed peer
 --------- stderr ------------
@@ -630,12 +630,12 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 deposed  30250e3a-cd09-11e4-a9e0-cbb241418d62 10.0.0.4        
 deposed  30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
-deposed  30250e3a fail -     -          -          -          -          -     
-deposed  30265b32 fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
+deposed  30250e3a fail -     -             -             -             -     
+deposed  30265b32 fail -     -             -             -             -     
 
 warning: cluster has a deposed peer
 --------- stderr ------------
@@ -668,14 +668,14 @@ deposed  302b6db6-cd09-11e4-af3b-5bda767e5008 10.0.0.7
 
 TEST CASE "normal5Peers2deposed": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30265b32 ok   -     -          -          -          -          5m42s 
-deposed  3028df9c fail -     -          -          -          -          -     
-deposed  302b6db6 fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30250e3a ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30265b32 ok   -     -             -             -             5m42s 
+deposed  3028df9c fail -     -             -             -             -     
+deposed  302b6db6 fail -     -             -             -             -     
 --------- stderr ------------
 
 warning: cluster has a deposed peer
@@ -689,14 +689,14 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30265b32 ok   -     -          -          -          -          5m42s 
-deposed  3028df9c fail -     -          -          -          -          -     
-deposed  302b6db6 fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30250e3a ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30265b32 ok   -     -             -             -             5m42s 
+deposed  3028df9c fail -     -             -             -             -     
+deposed  302b6db6 fail -     -             -             -             -     
 
 warning: cluster has a deposed peer
 --------- stderr ------------
@@ -719,14 +719,14 @@ async    30265b32-cd09-11e4-b42b-d3e4ff184bb8 10.0.0.5
 deposed  3028df9c-cd09-11e4-baa6-23ac5bd2e03c 10.0.0.6        
 deposed  302b6db6-cd09-11e4-af3b-5bda767e5008 10.0.0.7        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30250e3a ok   async 0/12345678 0/12345678 0/12345678 0/12345678 5m42s 
-async    30265b32 ok   -     -          -          -          -          5m42s 
-deposed  3028df9c fail -     -          -          -          -          -     
-deposed  302b6db6 fail -     -          -          -          -          -     
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30250e3a ok   async 0/12345678    0/12345678    0/12345678    5m42s 
+async    30265b32 ok   -     -             -             -             5m42s 
+deposed  3028df9c fail -     -             -             -             -     
+deposed  302b6db6 fail -     -             -             -             -     
 
 warning: cluster has a deposed peer
 --------- stderr ------------
@@ -755,10 +755,10 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalPdown": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c fail -     -          -          -          -          -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c fail -     -             -             -             -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 
 error: cannot query postgres on primary
@@ -773,10 +773,10 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c fail -     -          -          -          -          -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c fail -     -             -             -             -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 error: cannot query postgres on primary
 error: peer "301e2d2c": downstream replication peer not connected
@@ -796,10 +796,10 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c fail -     -          -          -          -          -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c fail -     -             -             -             -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 error: cannot query postgres on primary
 error: peer "301e2d2c": downstream replication peer not connected
@@ -831,10 +831,10 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalPnorepl": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   -     -          -          -          -          -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   -     -             -             -             -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 
 error: peer "301e2d2c": downstream replication peer not connected
@@ -848,10 +848,10 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   -     -          -          -          -          -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   -     -             -             -             -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 error: peer "301e2d2c": downstream replication peer not connected
 --------- stderr ------------
@@ -870,10 +870,10 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   -     -          -          -          -          -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   -     -             -             -             -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 error: peer "301e2d2c": downstream replication peer not connected
 --------- stderr ------------
@@ -902,10 +902,10 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalPasync": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   async 0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 
 error: peer "301e2d2c": expected downstream replication to be "sync", but found "async"
@@ -919,10 +919,10 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   async 0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 error: peer "301e2d2c": expected downstream replication to be "sync", but found "async"
 --------- stderr ------------
@@ -941,10 +941,10 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   async 0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 error: peer "301e2d2c": expected downstream replication to be "sync", but found "async"
 --------- stderr ------------
@@ -973,10 +973,10 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalSdown": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 fail -     -          -          -          -          -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 fail -     -             -             -             -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 
 error: cannot query postgres on sync
@@ -990,10 +990,10 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 fail -     -          -          -          -          -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 fail -     -             -             -             -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 error: cannot query postgres on sync
 --------- stderr ------------
@@ -1012,10 +1012,10 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 fail -     -          -          -          -          -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 fail -     -             -             -             -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 error: cannot query postgres on sync
 --------- stderr ------------
@@ -1044,10 +1044,10 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalSnorepl": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   -     -          -          -          -          -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   -     -             -             -             -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 --------- stderr ------------
 
 warning: peer "30219700": downstream replication peer not connected
@@ -1061,10 +1061,10 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   -     -          -          -          -          -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   -     -             -             -             -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 warning: peer "30219700": downstream replication peer not connected
 --------- stderr ------------
@@ -1083,10 +1083,10 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   -     -          -          -          -          -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   -     -             -             -             -     
+async    3022acc6 ok   -     -             -             -             5m42s 
 
 warning: peer "30219700": downstream replication peer not connected
 --------- stderr ------------
@@ -1115,10 +1115,10 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalNoLag": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          0m00s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             0m00s 
 --------- stderr ------------
 -----------------------------
 
@@ -1130,10 +1130,10 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          0m00s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             0m00s 
 --------- stderr ------------
 -----------------------------
 
@@ -1150,10 +1150,10 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          0m00s 
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             0m00s 
 --------- stderr ------------
 -----------------------------
 
@@ -1179,10 +1179,10 @@ async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3
 
 TEST CASE "normalLargeLag": manatee-adm pg-status:
 --------- stdout ------------
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          1441m05s
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             1441m05s
 --------- stderr ------------
 -----------------------------
 
@@ -1194,10 +1194,10 @@ generation:  3 (3/12345678)
 mode:        normal
 freeze:      not frozen
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          1441m05s
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             1441m05s
 --------- stderr ------------
 -----------------------------
 
@@ -1214,10 +1214,10 @@ primary  301e2d2c-cd09-11e4-837d-13ea7132a060 10.0.0.1
 sync     30219700-cd09-11e4-a971-cf7f957afa2d 10.0.0.2        
 async    3022acc6-cd09-11e4-9716-1ff89e748aff 10.0.0.3        
 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          1441m05s
+ROLE     PEER     PG   REPL  SENT          FLUSH         REPLAY        LAG   
+primary  301e2d2c ok   sync  0/12345678    0/12345678    0/12345678    -     
+sync     30219700 ok   async 0/12345678    0/12345678    0/12345678    -     
+async    3022acc6 ok   -     -             -             -             1441m05s
 --------- stderr ------------
 -----------------------------
 

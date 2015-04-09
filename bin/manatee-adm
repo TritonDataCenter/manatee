@@ -1101,25 +1101,25 @@ var allColumns = {
     'pg-sent': {
         /* WAL position */
         'label': 'SENT',
-        'width': 10
+        'width': 13
     },
 
     'pg-write': {
         /* WAL position */
         'label': 'WRITE',
-        'width': 10
+        'width': 13
     },
 
     'pg-flush': {
         /* WAL position */
         'label': 'FLUSH',
-        'width': 10
+        'width': 13
     },
 
     'pg-replay': {
         /* WAL position */
         'label': 'REPLAY',
-        'width': 10
+        'width': 13
     },
 
     'pg-lag': {
@@ -1135,9 +1135,9 @@ var columnAliases = {
 };
 var peersDflColumns = [ 'role', 'peername', 'ip' ];
 var pgStatusDflColumns = [ 'role', 'peerabbr', 'pg-online', 'pg-repl',
-    'pg-sent', 'pg-write', 'pg-flush', 'pg-replay', 'pg-lag' ];
+    'pg-sent', 'pg-flush', 'pg-replay', 'pg-lag' ];
 var pgStatusWideDflColumns = [ 'role', 'peername', 'pg-online', 'pg-repl',
-    'pg-sent', 'pg-write', 'pg-flush', 'pg-replay', 'pg-lag' ];
+    'pg-sent', 'pg-flush', 'pg-replay', 'pg-lag' ];
 
 /*
  * Validate column names and return column descriptors suitable for passing to
@@ -1395,12 +1395,8 @@ function validateRole(opts)
  * prstat(1M), and the like).
  */
 function doPgStatusIter(opts, columns, period, count, cb) {
-    var self = this;
-
     adm.loadClusterDetails(opts, function (err, cs) {
-        if (err) {
-            console.error('%s: %s', self.arg0, err.message);
-        } else {
+        if (!err) {
             printClusterTable(opts, columns, cs);
             printClusterIssues(cs, process.stderr, true);
         }
