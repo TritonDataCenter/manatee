@@ -33,6 +33,7 @@ var configTemplate = {
         'healthChkTimeout': 5000,
         'oneNodeWriteMode': false,
         'opsTimeout': 60000,
+        'pgConnectTimeout': 60,
         'pgInitDbPath': '/opt/local/bin/initdb',
         'postgresConf': null,
         'postgresPath': '/opt/local/bin/postgres',

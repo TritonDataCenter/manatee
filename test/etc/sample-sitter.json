@@ -13,6 +13,7 @@
     "healthChkTimeout": 5000,
     "oneNodeWriteMode": false,
     "opsTimeout": 5000,
+    "pgConnectTimeout": 60,
     "pgCtlPath": "/opt/local/bin/pg_ctl",
     "pgInitDbPath": "/opt/local/bin/initdb",
     "postgresConf": "/var/tmp/manatee_tests/3dcd4e66-a47a-4eae-983f-af48b21ccecf_metadata/config/postgres.conf",

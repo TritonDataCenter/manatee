@@ -13,6 +13,7 @@
         "healthChkTimeout": 5000,
         "oneNodeWriteMode": false,
         "opsTimeout": 10000,
+        "pgConnectTimeout": 60,
         "pgCtlPath": "/opt/local/bin/pg_ctl",
         "pgInitDbPath": "/opt/local/bin/initdb",
         "postgresConf": "./etc/postgresql.integ.coal.conf",

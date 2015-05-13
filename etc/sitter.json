@@ -19,6 +19,8 @@
         "oneNodeWriteMode": false,
         "// ": "Timeout of PG operations such as initdb, start, stop.",
         "opsTimeout": 60000,
+        "// ": "Postgres connect timeout (in seconds)",
+        "pgConnectTimeout": 60,
         "// ": "Path to the PG initdb binary.",
         "pgInitDbPath": "/opt/local/bin/initdb",
         "// ": "The postgresql.conf pattern that's used to seed the PG instance. Edit this config for config changes to PG.",
