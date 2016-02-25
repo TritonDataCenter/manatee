@@ -87,7 +87,7 @@ Here are the components encapsulated within a single Manatee node.
 ![Manatee Node](http://us-east.manta.joyent.com/poseidon/public/manatee/docs/Manatee-Node.jpg "Manatee Node")
 
 #### Manatee Sitter
-The sitter is the main process in within Manatee. The PG process runs as the
+The sitter is the main process within Manatee. The PG process runs as the
 child of the sitter. PG never runs unless the sitter is running. The sitter is
 responsible for:
 
