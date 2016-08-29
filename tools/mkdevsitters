@@ -33,7 +33,7 @@ function mksitter
 
 	echo -n "peer $which: creating ZFS dataset ... "
 	if ! zfs create -o mountpoint=$mountpoint -o canmount=noauto \
-	    -o snapdir=visible $dataset; then
+	    $dataset; then
 		fail "failed to create dataset \"$dataset\""
 	fi
 
