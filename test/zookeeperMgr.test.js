@@ -24,7 +24,7 @@ var bunyan = require('bunyan');
 var childProcess = require('child_process');
 var fs = require('fs');
 var vasync = require('vasync');
-var zkClient = require('node-zookeeper-client');
+var zkClient = require('joyent-zookeeper-client');
 var ZkMgr = require('../lib/zookeeperMgr');
 
 /**

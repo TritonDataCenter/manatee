@@ -30,7 +30,7 @@
         "manatee-state-machine": "git://github.com/joyent/manatee-state-machine#master",
         "manta": "1.2.6",
         "node-uuid": "1.4.1",
-        "node-zookeeper-client": "0.2.1",
+        "joyent-zookeeper-client": "0.2.2",
         "once": "1.3.0",
         "pg": "3.0.3",
         "posix": "1.0.3",
