@@ -11,7 +11,7 @@
  */
 var once = require('once');
 var vasync = require('vasync');
-var zkClient = require('node-zookeeper-client');
+var zkClient = require('joyent-zookeeper-client');
 
 var connStr = process.argv[2];
 var timeout = process.argv[3] ? parseInt(process.argv[3], 10) : 0;

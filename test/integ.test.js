@@ -35,7 +35,7 @@ var util = require('util');
 var uuid = require('node-uuid');
 var vasync = require('vasync');
 var verror = require('verror');
-var zk = require('node-zookeeper-client');
+var zk = require('joyent-zookeeper-client');
 
 var FS_PATH_PREFIX = process.env.FS_PATH_PREFIX || '/var/tmp/manatee_tests';
 var ZK_URL = process.env.ZK_CONN_STR || 'localhost:2181';
