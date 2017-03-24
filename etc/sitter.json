@@ -6,7 +6,7 @@
     "// ": "The Postgres Manager config.",
     "postgresMgrCfg": {
         "// ": "The postgres data directory.",
-        "dataDir": "/var/manatee/data",
+        "dataDir": "/var/manatee",
         "// ": "The postgres user.",
         "dbUser": "postgres",
         "// ": "The pg_hba conf pattern that's used to seed the postgres instance. Edit this config instead of the pg_hba in the postgres data directory.",
