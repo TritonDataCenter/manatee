@@ -138,8 +138,8 @@ plus:
   "replay\_location" field in Postgres's "pg\_stat\_replication" view.
 * `pg-lag`: If upstream replication is established, this corresponds to the
   difference between now and "pg\_last\_xact\_replay\_timestamp()".  This is
-  intended to be a measure of how far asynchronous replication is lagging, but
-  it's only useful for that purpose if data is actually being written upstream.
+  intended to be a measure of how far replication is lagging, but it's only
+  useful for that purpose if data is actually being written upstream.
 
 **Example output**
 

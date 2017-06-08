@@ -150,8 +150,8 @@ Postgres's "pg_stat_replication" view.
 .IP \(bu 2
 \fB\fCpg\-lag\fR: If upstream replication is established, this corresponds to the
 difference between now and "pg_last_xact_replay_timestamp()".  This is
-intended to be a measure of how far asynchronous replication is lagging, but
-it's only useful for that purpose if data is actually being written upstream.
+intended to be a measure of how far replication is lagging, but it's only
+useful for that purpose if data is actually being written upstream.
 .RE
 .PP
 \fBExample output\fP
