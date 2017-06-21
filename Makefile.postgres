@@ -1,0 +1,91 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+#
+# Copyright (c) 2017, Joyent, Inc.
+#
+
+#
+# This Makefile is used by a dependent repo (like manta-manatee) to build
+# both Postgres 9.2 and 9.6, as well as the modules that we ship with
+# them. When invoking this Makefile, they should provide both the base of
+# the proto area and the path to the directory containing the Postgres and
+# pg_repack sources. For example:
+#
+#       $(MAKE) -C node_modules/manatee -f Makefile.postgres \
+#       	RELSTAGEDIR="$(RELSTAGEDIR)" \
+#       	DEPSDIR="$(ROOT)/deps"
+#
+
+ifndef RELSTAGEDIR
+$(error RELSTAGEDIR must be set)
+endif
+
+ifndef DEPSDIR
+$(error DEPSDIR must be set)
+endif
+
+PG92DIR = /opt/postgresql/9.2.4
+PG96DIR = /opt/postgresql/9.6.3
+
+.PHONY: all
+all: pg92 pg96
+
+.PHONY: pg92
+pg92:
+	cd $(DEPSDIR)/postgresql92 && env \
+		ac_cv_header_sys_ucred_h=no \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		./configure \
+			--prefix=$(PG92DIR) \
+			--enable-debug \
+			--enable-dtrace \
+			--enable-nls \
+			--with-openssl \
+			--with-readline \
+			--without-perl \
+			--without-python \
+			--without-tcl \
+			--without-zlib
+	cd $(DEPSDIR)/postgresql92 && env \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		$(MAKE)
+	cd $(DEPSDIR)/postgresql92 && env \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
+	cd $(DEPSDIR)/postgresql92/contrib/pg_stat_statements && env \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
+
+.PHONY: pg96
+pg96:
+	cd $(DEPSDIR)/postgresql96 && env \
+		ac_cv_header_sys_ucred_h=no \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		./configure \
+			--prefix=$(PG96DIR) \
+			--enable-debug \
+			--enable-dtrace \
+			--enable-nls \
+			--with-openssl \
+			--with-readline \
+			--without-perl \
+			--without-python \
+			--without-tcl \
+			--without-zlib
+	cd $(DEPSDIR)/postgresql96 && env \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		$(MAKE)
+	cd $(DEPSDIR)/postgresql96 && env \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
+	cd $(DEPSDIR)/postgresql96/contrib/pg_stat_statements && env \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
+	cd $(DEPSDIR)/pg_repack && env \
+		CFLAGS=-m64 \
+		PATH=$(RELSTAGEDIR)/root/$(PG96DIR)/bin:$$PATH \
+		$(MAKE) install LDFLAGS="`$(RELSTAGEDIR)/root/$(PG96DIR)/bin/pg_config --ldflags`"
