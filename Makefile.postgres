@@ -29,7 +29,7 @@ $(error DEPSDIR must be set)
 endif
 
 PG92DIR = /opt/postgresql/9.2.4
-PG96DIR = /opt/postgresql/9.6.3
+PG96DIR = /opt/postgresql/9.6.4
 
 .PHONY: all
 all: pg92 pg96
