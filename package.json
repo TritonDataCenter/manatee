@@ -43,7 +43,7 @@
         "tab": "0.1.0",
         "vasync": "1.6.2",
         "verror": "1.6.0",
-        "xlog": "https://github.com/chudley/node-xlog#42d762d84192fd5282b4317f8ba364a14d9a2d64",
+        "xlog": "git+https://github.com/chudley/node-xlog.git#42d762d84192fd5282b4317f8ba364a14d9a2d64",
         "xtend": "1.0.3"
     },
     "devDependencies": {
