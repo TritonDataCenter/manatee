@@ -28,7 +28,7 @@
         "iniparser": "1.0.5",
         "forkexec": "1.1.0",
         "jsprim": "1.4.0",
-        "manatee-state-machine": "git://github.com/joyent/manatee-state-machine#master",
+        "manatee-state-machine": "git+https://github.com/joyent/manatee-state-machine.git#dev-MANATEE-359",
         "manta": "1.2.6",
         "node-uuid": "1.4.1",
         "joyent-zookeeper-client": "0.2.2",
