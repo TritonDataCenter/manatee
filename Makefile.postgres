@@ -82,34 +82,7 @@ pg96:
 	cd $(DEPSDIR)/postgresql96 && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/auto_explain && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/oid2name && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/pageinspect && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/pg_buffercache && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/pg_freespacemap && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/pg_prewarm && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
 	cd $(DEPSDIR)/postgresql96/contrib/pg_stat_statements && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/pg_visibility && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/pgstattuple && env \
-		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql96/contrib/vacuumlo && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
 	cd $(DEPSDIR)/pg_repack && env \
