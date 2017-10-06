@@ -1,7 +1,7 @@
 {
     "author": "Yunong Xiao <yunong@joyent.com>",
     "name": "manatee",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "private": true,
     "homepage": "seacow.io",
     "description": "H/A Postgres Minder",
