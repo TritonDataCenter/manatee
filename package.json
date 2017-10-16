@@ -34,6 +34,7 @@
         "joyent-zookeeper-client": "0.2.2",
         "once": "1.3.0",
         "pg": "3.0.3",
+        "pg-lsn": "git+https://github.com/chudley/node-pg-lsn.git#23c503d18838a8281ac6762ab10353ffc6b9ba23",
         "posix": "1.0.3",
         "posix-getopt": "1.0.0",
         "progbar": "0.1.0",
@@ -43,7 +44,6 @@
         "tab": "0.1.0",
         "vasync": "1.6.2",
         "verror": "1.6.0",
-        "xlog": "git+https://github.com/chudley/node-xlog.git#42d762d84192fd5282b4317f8ba364a14d9a2d64",
         "xtend": "1.0.3"
     },
     "devDependencies": {
