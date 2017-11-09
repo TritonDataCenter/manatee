@@ -849,6 +849,17 @@ ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
     self.checkRequiredOption(subcmd, opts, 'shard', cb);
     self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
+    if (args.length < 2) {
+        self.usage('expected more args', subcmd, cb);
+    }
+
+    if ([ 'primary', 'sync', 'async' ].indexOf(args[0]) === -1) {
+        self.usage('bad role', subcmd, cb);
+    }
+
+    opts.suppliedRole = args[0];
+    opts.suppliedPeer = args[1];
+
     adm.promote(opts, function (err) {
         if (!err) {
             console.log('Promotion successful.');
