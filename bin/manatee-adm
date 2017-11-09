@@ -104,6 +104,7 @@ function ManateeAdm() {
             'unfreeze',
             'reap',
             'rebuild',
+            'promote',
             { 'group': 'UPGRADE COMMANDS' },
             'state-backfill',
             { 'group': 'META COMMANDS' },
@@ -834,6 +835,37 @@ ManateeAdm.prototype.do_rebuild.help = ([
     '',
     'Usage:',
     '    {{name}} rebuild [OPTIONS]',
+    '',
+    '{{options}}'
+].join('\n'));
+
+/*
+ * Promotes a peer to the next applicable slot in the topology.
+ */
+ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
+    var self = this;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    adm.promote(opts, function (err) {
+        if (!err) {
+            console.log('Promotion successful.');
+        }
+        cb(err);
+    });
+};
+ManateeAdm.prototype.do_promote.options = [
+    commonOptions.help,
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_promote.help = ([
+    'Promote the given peer to the next applicable position in the topology.',
+    '',
+    'Usage:',
+    '    {{name}} promote [OPTIONS]',
     '',
     '{{options}}'
 ].join('\n'));
