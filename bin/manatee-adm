@@ -846,19 +846,10 @@ ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
     var self = this;
 
     self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'role', cb);
+    self.checkRequiredOption(subcmd, opts, 'zonename', cb);
     self.checkRequiredOption(subcmd, opts, 'shard', cb);
     self.checkRequiredOption(subcmd, opts, 'zk', cb);
-
-    if (args.length < 2) {
-        self.usage('expected more args', subcmd, cb);
-    }
-
-    if ([ 'primary', 'sync', 'async' ].indexOf(args[0]) === -1) {
-        self.usage('bad role', subcmd, cb);
-    }
-
-    opts.suppliedRole = args[0];
-    opts.suppliedPeer = args[1];
 
     adm.promote(opts, function (err) {
         if (!err) {
@@ -869,6 +860,31 @@ ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
 };
 ManateeAdm.prototype.do_promote.options = [
     commonOptions.help,
+    {
+        'names': [ 'role', 'r' ],
+        'type': 'string',
+        'helpArg': 'ROLE',
+        'help': 'The current role of the peer to promote'
+    },
+    {
+        'names': [ 'zonename', 'n' ],
+        'type': 'string',
+        'helpArg': 'ZONENAME',
+        'help': 'The zonename of the peer to promote'
+    },
+    {
+        'names': [ 'asyncIndex', 'i' ],
+        'type': 'number',
+        'helpArg': 'INDEX',
+        'help': 'Index of peer in async chain (zero-based)'
+    },
+    {
+        'names': [ 'watchTimeout', 't' ],
+        'type': 'number',
+        'helpArg': 'MS',
+        'help': 'Time to wait between steps while watching the cluster for ' +
+            'changes before giving up.'
+    },
     commonOptions.shard,
     commonOptions.zk
 ];

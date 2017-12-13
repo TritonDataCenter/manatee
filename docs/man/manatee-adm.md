@@ -343,6 +343,7 @@ will be used.
     The zonename of the peer to remove.
 
 
+### promote
 
 
 ## UPGRADE COMMANDS
