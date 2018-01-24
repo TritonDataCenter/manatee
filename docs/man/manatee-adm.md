@@ -343,8 +343,19 @@ will be used.
     The zonename of the peer to remove.
 
 
-### promote
+### promote [-n | --zonename ZONENAME] [-r | --role ROLE] [-i | --asyncIndex INDEX]
 
+Promote a peer from its current position to the next applicable position in the
+topology.  The taken-over peer moves down the replication chain by one position,
+except in the case where the promoted peer is the sync, in which case the
+primary will be deposed.
+
+-n, --zonename `ZONENAME` The zonename of the peer to promote.
+
+-r, --role `ROLE` The current role of the peer to promote.
+
+-i, --asyncIndex `INDEX` The zero-indexed position of the peer to be promoted's
+position in the async chain (if applicable).
 
 ## UPGRADE COMMANDS
 
@@ -444,4 +455,4 @@ not.
 
 ## COPYRIGHT
 
-Copyright (c) 2015 Joyent Inc., All rights reserved.
+Copyright (c) 2018 Joyent Inc., All rights reserved.
