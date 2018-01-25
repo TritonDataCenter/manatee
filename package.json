@@ -48,8 +48,8 @@
     },
     "devDependencies": {
         "byline": "4.1.1",
-        "nodeunit": "git://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231",
-        "node-manatee": "git://github.com/joyent/node-manatee#master",
+        "nodeunit": "git+https://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231",
+        "node-manatee": "git+https://github.com/joyent/node-manatee#master",
         "tap": "0.4.8"
     },
     "scripts": {
