@@ -853,7 +853,7 @@ ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
 
     adm.promote(opts, function (err) {
         if (!err) {
-            console.log('Successfully put promote object.');
+            console.log('Successfully promoted peer.');
         }
         cb(err);
     });
