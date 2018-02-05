@@ -177,7 +177,6 @@ ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG
 primary  09957297 ok   sync  0/79E88D28 0/79E88D28 0/79E88D28 0/79E884B0 \-     
 sync     a376df2b ok   \-     \-          \-          \-          \-          \-     
 async    bb348824 fail \-     \-          \-          \-          \-          \-     
-
 warning: peer "a376df2b": downstream replication peer not connected
 .fi
 .RE
@@ -191,7 +190,6 @@ ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG
 primary  bb348824 fail \-     \-          \-          \-          \-          \-     
 sync     09957297 ok   async 0/79DE6478 0/79DE6478 0/79DE6478 0/79DE6478 \-     
 async    a376df2b ok   \-     \-          \-          \-          \-          0m33s 
-
 error: cannot query postgres on primary: peer "bb348824": ECONNREFUSED
 error: peer "bb348824": downstream replication peer not connected
 .fi
@@ -412,7 +410,8 @@ documentation on migration for the appropriate use of this tool.
 .PP
 These commands fetch or modify internal data structures and should only be used
 by developers or as part of documented procedures.
-.SS set\-onwm \-y | \-\-ignorePrompts \[la]-m | --mode (on | off)\[ra]
+.SS set\-onwm \-y | \-\-ignorePrompts
+\[la]-m | --mode (on | off)\[ra]
 .PP
 Toggles the singleton ("one\-node\-write") mode property of the cluster state.
 This is generally not required, and is not the normal way to enable
