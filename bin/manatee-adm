@@ -105,6 +105,7 @@ function ManateeAdm() {
             'reap',
             'rebuild',
             'promote',
+            'clear-promote',
             { 'group': 'UPGRADE COMMANDS' },
             'state-backfill',
             { 'group': 'META COMMANDS' },
@@ -878,13 +879,6 @@ ManateeAdm.prototype.do_promote.options = [
         'helpArg': 'INDEX',
         'help': 'Index of peer in async chain (zero-based)'
     },
-    {
-        'names': [ 'watchTimeout', 't' ],
-        'type': 'number',
-        'helpArg': 'MS',
-        'help': 'Time to wait between steps while watching the cluster for ' +
-            'changes before giving up.'
-    },
     commonOptions.shard,
     commonOptions.zk
 ];
@@ -893,6 +887,36 @@ ManateeAdm.prototype.do_promote.help = ([
     '',
     'Usage:',
     '    {{name}} promote [OPTIONS]',
+    '',
+    '{{options}}'
+].join('\n'));
+
+/*
+ */
+ManateeAdm.prototype.do_clear_promote = function (subcmd, opts, args, cb) {
+    var self = this;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    adm.clearPromote(opts, function (err) {
+        if (!err) {
+            console.log('Cleared promote request.');
+        }
+        cb(err);
+    });
+};
+ManateeAdm.prototype.do_clear_promote.options = [
+    commonOptions.help,
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_clear_promote.help = ([
+    'Clear a promote object from cluster\'s state.',
+    '',
+    'Usage:',
+    '    {{name}} clear-promote [OPTIONS]',
     '',
     '{{options}}'
 ].join('\n'));
