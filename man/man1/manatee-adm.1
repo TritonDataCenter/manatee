@@ -177,6 +177,7 @@ ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG
 primary  09957297 ok   sync  0/79E88D28 0/79E88D28 0/79E88D28 0/79E884B0 \-     
 sync     a376df2b ok   \-     \-          \-          \-          \-          \-     
 async    bb348824 fail \-     \-          \-          \-          \-          \-     
+
 warning: peer "a376df2b": downstream replication peer not connected
 .fi
 .RE
@@ -190,6 +191,7 @@ ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG
 primary  bb348824 fail \-     \-          \-          \-          \-          \-     
 sync     09957297 ok   async 0/79DE6478 0/79DE6478 0/79DE6478 0/79DE6478 \-     
 async    a376df2b ok   \-     \-          \-          \-          \-          0m33s 
+
 error: cannot query postgres on primary: peer "bb348824": ECONNREFUSED
 error: peer "bb348824": downstream replication peer not connected
 .fi
@@ -381,6 +383,26 @@ will be used.
 .PP
 \-n, \-\-zonename \fB\fCZONENAME\fR
     The zonename of the peer to remove.
+.SS promote [\-n | \-\-zonename ZONENAME] [\-r | \-\-role ROLE] [\-i | \-\-asyncIndex INDEX]
+.PP
+Promote a peer from its current position to the next applicable position in the
+topology.  The taken\-over peer moves down the replication chain by one position,
+except in the case where the promoted peer is the sync, in which case the
+primary will be deposed.
+.PP
+\-n, \-\-zonename \fB\fCZONENAME\fR
+    The zonename of the peer to promote.
+.PP
+\-r, \-\-role \fB\fCROLE\fR
+    The current role of the peer to promote.
+.PP
+\-i, \-\-asyncIndex \fB\fCINDEX\fR
+    The zero\-indexed position of the peer to be promoted's position in
+    the async chain (if applicable).
+.SS clear\-promote
+.PP
+Clears a promote object from the cluster's state in the event that Manatee
+itself does not.
 .SH UPGRADE COMMANDS
 .SS state\-backfill
 .PP
@@ -390,8 +412,7 @@ documentation on migration for the appropriate use of this tool.
 .PP
 These commands fetch or modify internal data structures and should only be used
 by developers or as part of documented procedures.
-.SS set\-onwm \-y | \-\-ignorePrompts
-\[la]-m | --mode (on | off)\[ra]
+.SS set\-onwm \-y | \-\-ignorePrompts \[la]-m | --mode (on | off)\[ra]
 .PP
 Toggles the singleton ("one\-node\-write") mode property of the cluster state.
 This is generally not required, and is not the normal way to enable
@@ -465,4 +486,4 @@ not.
     Sets the node\-bunyan logging level. Defaults to fatal.
 .SH COPYRIGHT
 .PP
-Copyright (c) 2015 Joyent Inc., All rights reserved.
+Copyright (c) 2018 Joyent Inc., All rights reserved.

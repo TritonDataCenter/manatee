@@ -7,7 +7,7 @@
  */
 
 /*
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 var adm = require('../lib/adm');
@@ -841,7 +841,7 @@ ManateeAdm.prototype.do_rebuild.help = ([
 ].join('\n'));
 
 /*
- * Promotes a peer to the next applicable slot in the topology.
+ * Promotes a peer to the next applicable position in the topology.
  */
 ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
     var self = this;
@@ -892,6 +892,7 @@ ManateeAdm.prototype.do_promote.help = ([
 ].join('\n'));
 
 /*
+ * Clears a "promote" object from the cluster's state in ZooKeeper.
  */
 ManateeAdm.prototype.do_clear_promote = function (subcmd, opts, args, cb) {
     var self = this;

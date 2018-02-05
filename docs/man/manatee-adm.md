@@ -350,12 +350,20 @@ topology.  The taken-over peer moves down the replication chain by one position,
 except in the case where the promoted peer is the sync, in which case the
 primary will be deposed.
 
--n, --zonename `ZONENAME` The zonename of the peer to promote.
+-n, --zonename `ZONENAME`
+    The zonename of the peer to promote.
 
--r, --role `ROLE` The current role of the peer to promote.
+-r, --role `ROLE`
+    The current role of the peer to promote.
 
--i, --asyncIndex `INDEX` The zero-indexed position of the peer to be promoted's
-position in the async chain (if applicable).
+-i, --asyncIndex `INDEX`
+    The zero-indexed position of the peer to be promoted's position in
+    the async chain (if applicable).
+
+### clear-promote
+
+Clears a promote object from the cluster's state in the event that Manatee
+itself does not.
 
 ## UPGRADE COMMANDS
 
