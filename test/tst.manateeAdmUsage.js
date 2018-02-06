@@ -132,6 +132,14 @@ var subcmds = {
     'reap': {
         'required': [ 'shard', 'zk' ],
         'destructive': true
+    },
+    'promote': {
+        'required': [ 'role', 'zonename', 'shard', 'zk' ],
+        'destructive': true
+    },
+    'clear-promote': {
+        'required': [ 'shard', 'zk' ],
+        'destructive': true
     }
 };
 
@@ -164,7 +172,9 @@ var requiredOptionEnvVars = {
     'config': null,
     'mode': null,
     'path': null,
-    'reason': null
+    'reason': null,
+    'role': null,
+    'zonename': null
 };
 
 var testsOk = 0;            /* count of tests that passed */
