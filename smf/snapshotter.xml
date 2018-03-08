@@ -7,7 +7,7 @@
 -->
 
 <!--
-    Copyright (c) 2014, Joyent, Inc.
+    Copyright (c) 2018, Joyent, Inc.
 -->
 
 <service_bundle type='manifest' name='export'>
@@ -19,7 +19,8 @@
     <dependency name='filesystem' grouping='require_all' restart_on='error' type='service'>
       <service_fmri value='svc:/system/filesystem/local'/>
     </dependency>
-    <exec_method name='start' type='method' exec='node snapshotter.js -vvv -f ./etc/snapshotter.json &amp;' timeout_seconds='30'>
+    <exec_method name='start' type='method' exec='node --abort-on-uncaught-exception
+      snapshotter.js -vvv -f ./etc/snapshotter.json &amp;' timeout_seconds='30'>
       <method_context working_directory='/opt/manatee'>
         <method_environment>
           <envvar name='PATH' value='/opt/manatee/build/node/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin'/>

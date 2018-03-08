@@ -5,7 +5,7 @@
 -->
 
 <!--
-    Copyright (c) 2014, Joyent, Inc.
+    Copyright (c) 2018, Joyent, Inc.
 -->
 
 # Manatee
@@ -238,7 +238,8 @@ the first peer runs postgres on port 5432, the second peer runs postgres on port
 
 There are currently two components to run for each peer: the sitter (which also
 starts postgres) and the backup server (which is used for bootstrapping
-replication for new downstream peers).  To start the first peer, use:
+replication for new downstream peers).  These commands are all intended to be
+run with "root" user privileges.  To start the first peer, use:
 
     # node sitter.js -f devconfs/sitter1/sitter.json
 
@@ -249,5 +250,28 @@ Similarly, to run the backupserver, use:
 
     # node backupserver.js -f devconfs/sitter1/backupserver.json
 
-There's also a snapshotter, but running that for development is not yet
-documented.
+There's also a snapshotter, but you will likely want to create a custom
+configuration file for running it for development:
+
+    1. Create a file of this format, i.e. `etc/snapshotter_test_config.json`
+
+    {
+      "//": "The ZFS dataset used by Manatee."
+      "dataset": "zones/$ZONE_UUID/data/manatee",
+      "//" : "Snapshot period in ms",
+      "pollInterval": 36000,
+      "//" : "Number of snapshots to keep.",
+      "snapshotNumber": 20
+    }
+
+    2. Run the snapshotter with the config file:
+
+    # node snapshotter.js -f etc/snapshotter_test_config.json 2>&1 | bunyan
+
+### Running tests
+
+Before you can run a clean `make prepush`, you will need to set these
+environmental variables:
+
+    # export SHARD=1.moray.$YOUR_LAB_OR_VM.joyent.us
+    # export ZK_IPS=$NAMESERVICE_INSTANCE_IP

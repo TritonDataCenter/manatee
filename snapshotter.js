@@ -118,9 +118,8 @@ function readConfig(options) {
 
     var snapShotter = new SnapShotter(_config);
 
-    snapShotter.on('err', function (err) {
-        LOG.fatal('got error from snapshotter', err);
-        throw err;
+    snapShotter.on('error', function (err) {
+        LOG.error('got error from snapshotter', err);
     });
 
     snapShotter.start(function () {
