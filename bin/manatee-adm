@@ -853,10 +853,23 @@ ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
     self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     adm.promote(opts, function (err) {
-        if (!err) {
-            console.log('Successfully promoted peer.');
+        if (err) {
+            if (err instanceof VError &&
+                err.cause() instanceof VError.MultiError) {
+                /*
+                 * Unwrap and print if it's a MultiError.
+                 */
+                console.error(err.jse_shortmsg);
+                err.cause().errors().forEach(function (e) {
+                    console.error('  -', e.message);
+                });
+                err = new VError('Failed to promote peer.');
+            }
+            cb(err);
+            return;
         }
-        cb(err);
+        console.log('Successfully promoted peer.');
+        cb();
     });
 };
 ManateeAdm.prototype.do_promote.options = [
@@ -878,6 +891,12 @@ ManateeAdm.prototype.do_promote.options = [
         'type': 'number',
         'helpArg': 'INDEX',
         'help': 'Index of peer in async chain (zero-based)'
+    },
+    {
+        'names': [ 'ignoreWarnings' ],
+        'type': 'bool',
+        'helpArg': 'IGNORE_WARNINGS',
+        'help': 'Ignore warnings and errors reported by the cluster'
     },
     commonOptions.shard,
     commonOptions.zk
@@ -914,7 +933,7 @@ ManateeAdm.prototype.do_clear_promote.options = [
     commonOptions.zk
 ];
 ManateeAdm.prototype.do_clear_promote.help = ([
-    'Clear a promote object from cluster\'s state.',
+    'Clear a promote request from cluster\'s state.',
     '',
     'Usage:',
     '    {{name}} clear-promote [OPTIONS]',
