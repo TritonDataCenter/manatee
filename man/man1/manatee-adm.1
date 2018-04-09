@@ -461,15 +461,10 @@ the cluster's state object then this subcommand can be used to clear it.
 An example of an ignored request would be where an operator has requested the
 promotion of the sync, but immediately after initiating the request the async
 was removed from the cluster.  In this case, the cluster has no replacement for
-the sync, so the request will be ignored..
-.PP
-It's possible to get into a state where a promotion request could be cleared
-manually because the \fB\fCmanatee\-adm promote\fR subcommand is usable from any peer in
-the cluster, but it might be the case that not all peers are yet capable of
-acting on this promotion request.  In this case the cluster's state
-(see "zk\-state") will still reference the promotion request (by way of the
-"promote" object).  This request existing in the cluster's state where it is
-not supported will not affect the ongoing function of the cluster.
+the sync, so the request will be ignored.  The request will still be present in
+the cluster's state if this happens and will not affect the ongoing function of
+the cluster, but an operator might make use of this subcommand to clear the
+request in the interest of tidiness.
 .SH UPGRADE COMMANDS
 .SS state\-backfill
 .PP
