@@ -860,7 +860,7 @@ ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
                  * Unwrap and print if it's a MultiError.
                  */
                 console.error(err.jse_shortmsg);
-                err.cause().errors().forEach(function (e) {
+                err.cause().ase_errors.forEach(function (e) {
                     console.error('  -', e.message);
                 });
                 err = new VError('Failed to promote peer.');
@@ -897,6 +897,13 @@ ManateeAdm.prototype.do_promote.options = [
         'type': 'bool',
         'helpArg': 'IGNORE_WARNINGS',
         'help': 'Ignore warnings and errors reported by the cluster'
+    },
+    {
+        'names': [ 'lagToIgnore', 'l' ],
+        'type': 'number',
+        'helpArg': 'SECONDS',
+        'help': 'Lag in seconds that is acceptable for this promotion',
+        'default': 5
     },
     commonOptions.shard,
     commonOptions.zk
