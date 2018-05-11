@@ -372,14 +372,9 @@ These are required in order to prevent race conditions in the event that the
 cluster changes topology while we are composing our promotion request.
 
 Any warnings or errors reported by the cluster will result in a failed
-promotion request.  It is possible to ignore these warnings with the
-`--ignoreWarnings` flag, but the reported warnings should be carefully reviewed
-before ignoring them.  The promotion request will also fail if the cluster is
-experiencing an unacceptable amount of lag in seconds, with the acceptable
-amount of lag being defined by the `--lagInSeconds` flag (default is 5s).  Note
-that this lag must also be accompanied by a difference in reported sent and
-flush LSNs of the replication stream, indicating that the upstream peer is
-taking writes.
+promotion request.  It is possible to ignore these warnings interactively at a
+prompt, but the reported warnings should be carefully reviewed before ignoring
+them.
 
 Example usage:
 
@@ -403,13 +398,6 @@ Requesting the promotion of the second async peer:
 -i, --asyncIndex `INDEX`
     The zero-indexed position of the peer to be promoted's position in
     the async chain (if applicable).
-
---ignoreWarnings
-    Ignore any warnings or errors reported by the cluster when promoting a peer.
-
--l, --lagToIgnore `SECONDS`
-    Ignore this number of seconds in replication lag on each peer (default is
-    5s).
 
 ### clear-promote
 
