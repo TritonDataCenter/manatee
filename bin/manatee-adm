@@ -853,23 +853,10 @@ ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
     self.checkRequiredOption(subcmd, opts, 'zk', cb);
 
     adm.promote(opts, function (err) {
-        if (err) {
-            if (err instanceof VError &&
-                err.cause() instanceof VError.MultiError) {
-                /*
-                 * Unwrap and print if it's a MultiError.
-                 */
-                console.error(err.jse_shortmsg);
-                err.cause().ase_errors.forEach(function (e) {
-                    console.error('  -', e.message);
-                });
-                err = new VError('Failed to promote peer.');
-            }
-            cb(err);
-            return;
+        if (!err) {
+            console.log('Successfully promoted peer.');
         }
-        console.log('Successfully promoted peer.');
-        cb();
+        cb(err);
     });
 };
 ManateeAdm.prototype.do_promote.options = [
@@ -891,19 +878,6 @@ ManateeAdm.prototype.do_promote.options = [
         'type': 'number',
         'helpArg': 'INDEX',
         'help': 'Index of peer in async chain (zero-based)'
-    },
-    {
-        'names': [ 'ignoreWarnings' ],
-        'type': 'bool',
-        'helpArg': 'IGNORE_WARNINGS',
-        'help': 'Ignore warnings and errors reported by the cluster'
-    },
-    {
-        'names': [ 'lagToIgnore', 'l' ],
-        'type': 'number',
-        'helpArg': 'SECONDS',
-        'help': 'Lag in seconds that is acceptable for this promotion',
-        'default': 5
     },
     commonOptions.shard,
     commonOptions.zk
