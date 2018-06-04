@@ -26,6 +26,17 @@ var configTemplate = {
     'backupPort': 10002,
     'ip': null,
     'postgresMgrCfg': {
+        'dataConfig': null,
+        'postgresConfDir': null,
+        'defaultVersion': null,
+        'pgBaseDir': '/opt/postgresql/',
+        'postgresConfFile': 'postgresql.conf',
+        'recoveryConfFile': 'recovery.conf',
+        'hbaConfFile': 'pg_hba.conf',
+        'versions': {
+            '9.2': '9.2.4',
+            '9.6': '9.6.3'
+        },
         'dataDir': null,
         'dbUser': 'postgres',
         'hbaConf': './etc/pg_hba.conf',
@@ -72,7 +83,8 @@ function usage(message)
 {
     if (message)
         console.error('%s: %s', arg0, message);
-    console.error('usage: %s SELF_IP ZK_IP:ZK_PORT[...] WHICH', arg0);
+    console.error('usage: %s SELF_IP ZK_IP:ZK_PORT[...] WHICH SHARD ' +
+        'PG_VERSION', arg0);
     process.exit(2);
 }
 
@@ -84,9 +96,9 @@ function fatal(message)
 
 function main()
 {
-    var root, ip, shardpath, zkconnstr, which;
+    var root, ip, shardpath, zkconnstr, which, shardname, pgversion;
 
-    if (process.argv.length < 6)
+    if (process.argv.length < 7)
         usage();
 
     root = process.argv[2];
@@ -109,7 +121,24 @@ function main()
     which = parseInt(process.argv[5], 10);
     if (isNaN(which) || which <= 0)
         usage('WHICH argument should be a positive integer');
-    shardpath = '/manatee_test/1';
+
+    shardname = process.argv[6];
+    if (typeof (shardname) !== 'string')
+        usage('SHARD does not apear to be a string');
+
+    /*
+     * Basic checks on whether we have a full shard path starting at the root,
+     * or a shard name that we'll append to the "/manatee" path.
+     */
+    if (shardname.substr('/', 1) == '/') {
+        shardpath = shardname;
+    } else {
+        shardpath = '/manatee/' + shardname;
+    }
+
+    pgversion = process.argv[7];
+    if ([ '9.2', '9.6' ].indexOf(pgversion) === -1)
+        usage('PG_VERSION should be either "9.2" or "9.6"');
 
     child_process.exec('zonename', function (err, stdout, stderr) {
         var config, reason;
@@ -126,7 +155,8 @@ function main()
             'zkconnstr': zkconnstr,
             'zonename': stdout.trim(),
             'which': which,
-            'shardpath': shardpath
+            'shardpath': shardpath,
+            'pgversion': pgversion
         });
 
         console.log(JSON.stringify(config, false, '\t'));
@@ -136,7 +166,8 @@ function main()
 function mkconfig(template, params)
 {
     var rv, key, which, portdelta;
-    var dataset, mountpoint, datadir, cookie, pgurl, pgconf;
+    var dataset, mountpoint, datadir, cookie, pgurl, pgconf, pgconfdir,
+        dataconfig;
 
     /* XXX should be a deep copy */
     rv = {};
@@ -164,11 +195,16 @@ function mkconfig(template, params)
     datadir = util.format('%s/data', mountpoint);
     cookie = util.format('/var/tmp/manatee%s_sync_cookie', which);
     pgconf = util.format('%s/sitter%s/postgres.conf', params.root, which);
+    pgconfdir = util.format('%s/sitter%s', params.root, which);
+    dataconfig = util.format('%s/manatee-config.json', mountpoint);
 
     /*
      * Construct the final configuration and return it.
      */
     rv.ip = params.ip;
+
+    rv.postgresMgrCfg.postgresConfDir = pgconfdir;
+    rv.postgresMgrCfg.dataConfig = dataconfig;
     rv.postgresMgrCfg.dataDir = datadir;
     rv.postgresMgrCfg.postgresConf = pgconf;
     rv.postgresMgrCfg.syncStateCheckerCfg.cookieLocation = cookie;
@@ -177,9 +213,10 @@ function mkconfig(template, params)
     rv.postgresMgrCfg.zfsClientCfg.dataset = dataset;
     rv.postgresMgrCfg.zfsClientCfg.mountpoint = mountpoint;
     rv.postgresMgrCfg.zfsClientCfg.zfsHost = params.ip;
+    rv.postgresMgrCfg.defaultVersion = params.pgversion;
     rv.zkCfg.connStr = params.zkconnstr;
     rv.shardPath = params.shardpath;
-    rv.zoneId = params.zonename;
+    rv.zoneId = util.format('peer%d-%s', params.which, params.zonename);
     return (rv);
 }
 

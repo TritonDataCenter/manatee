@@ -343,7 +343,74 @@ will be used.
     The zonename of the peer to remove.
 
 
+### promote [-n | --zonename ZONENAME] [-r | --role ROLE] [-i | --asyncIndex INDEX]
 
+Initiate a request to promote the specified peer to the next applicable position
+in the topology.  The primary is responsible for acting on a promotion request
+in most cases, with the only exception being where the sync is to be promoted
+which will result in deposing the primary, which subsequently will require a
+rebuild.  It's possible for a cluster to ignore our promotion request (see
+"clear-promote" for details).
+
+The impact of this request varies depending on what peer is promoted.
+Initiating a promotion request using this subcommand reduces the time it takes
+for a cluster to take action on a planned takeover but can still result in data
+path downtime.  The type of downtime can be expected to be the same as if the
+cluster experienced a takeover naturally and is outlined below.
+
+- sync promotion: deposed primary, read downtime for duration of async to sync
+  transition, write downtime for duration of sync to primary transition
+  (including time taken to establish synchronous replication)
+- first async promoted: no read downtime, write downtime for duration of async
+  transition to sync
+- other async promoted: no impact
+
+When promoting the sync or the async in a cluster with only one async, only
+`--role` and `--zonename` are required.  For clusters with more than one async,
+`--asyncIndex` is required in order to determine which async is to be promoted.
+These are required in order to prevent race conditions in the event that the
+cluster changes topology while we are composing our promotion request.
+
+Any warnings or errors reported by the cluster will result in a failed
+promotion request.  It is possible to ignore these warnings interactively at a
+prompt, but the reported warnings should be carefully reviewed before ignoring
+them.
+
+Example usage:
+
+Requesting the promotion of the sync peer:
+
+    # manatee-adm promote --role=sync \
+        --zonename=4e27e2a9-2ff9-4c22-afd1-6cc9909c056c
+
+Requesting the promotion of the second async peer:
+
+    # manatee-adm promote --role=async \
+        --zonename=83f16f67-3c08-4022-8435-8bd0c65262eb \
+        --asyncIndex=1
+
+-n, --zonename `ZONENAME`
+    The zonename of the peer to promote.
+
+-r, --role `ROLE`
+    The current role of the peer to promote.
+
+-i, --asyncIndex `INDEX`
+    The zero-indexed position of the peer to be promoted's position in
+    the async chain (if applicable).
+
+### clear-promote
+
+If a promotion request is not acted upon by the cluster and is still present in
+the cluster's state object then this subcommand can be used to clear it.
+
+An example of an ignored request would be where an operator has requested the
+promotion of the sync, but immediately after initiating the request the async
+was removed from the cluster.  In this case, the cluster has no replacement for
+the sync, so the request will be ignored.  The request will still be present in
+the cluster's state if this happens and will not affect the ongoing function of
+the cluster, but an operator might make use of this subcommand to clear the
+request in the interest of tidiness.
 
 ## UPGRADE COMMANDS
 
@@ -443,4 +510,4 @@ not.
 
 ## COPYRIGHT
 
-Copyright (c) 2015 Joyent Inc., All rights reserved.
+Copyright (c) 2018 Joyent Inc., All rights reserved.
