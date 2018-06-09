@@ -719,7 +719,7 @@ ManateeAdm.prototype.do_history = function (subcmd, opts, args, cb) {
 
             if (evt.action) {
                 return ({
-                    'TIME': evt.date.toISOString(),
+                    'TIME': evt.time.toISOString(),
                     'G#': '-',
                     'MODE': '-',
                     'FRZ': '-',
