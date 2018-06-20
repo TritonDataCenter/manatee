@@ -416,9 +416,11 @@ These are required in order to prevent race conditions in the event that the
 cluster changes topology while we are composing our promotion request.
 .PP
 Any warnings or errors reported by the cluster will result in a failed
-promotion request.  It is possible to ignore these warnings interactively at a
-prompt, but the reported warnings should be carefully reviewed before ignoring
-them.
+promotion request.  Any amount of byte lag while there is also an unacceptable
+amount of time lag is considered a warning.  The acceptable amount of time lag
+is defined by the \fB\fC\-\-lagToIgnore\fR flag (default is 5s).  It is possible to
+ignore these warnings interactively at a prompt, but the reported warnings
+should be carefully reviewed before ignoring them.
 .PP
 Example usage:
 .PP
@@ -450,6 +452,10 @@ Requesting the promotion of the second async peer:
 \-i, \-\-asyncIndex \fB\fCINDEX\fR
     The zero\-indexed position of the peer to be promoted's position in
     the async chain (if applicable).
+.PP
+\-l, \-\-lagToIgnore \fB\fCSECONDS\fR
+    Ignore this number of seconds in replication lag on each peer (default is
+    5s)
 .SS clear\-promote
 .PP
 If a promotion request is not acted upon by the cluster and is still present in

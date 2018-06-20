@@ -879,6 +879,14 @@ ManateeAdm.prototype.do_promote.options = [
         'helpArg': 'INDEX',
         'help': 'Index of peer in async chain (zero-based)'
     },
+    {
+        'names': [ 'lagToIgnore', 'l' ],
+        'type': 'number',
+        'helpArg': 'SECONDS',
+        'help': 'Lag in seconds that is acceptable for this promotion ' +
+            '(default: 5s)',
+        'default': 5
+    },
     commonOptions.shard,
     commonOptions.zk
 ];
