@@ -372,11 +372,11 @@ These are required in order to prevent race conditions in the event that the
 cluster changes topology while we are composing our promotion request.
 
 Any warnings or errors reported by the cluster will result in a failed
-promotion request.  Any amount of byte lag while there is also an unacceptable
-amount of time lag is considered a warning.  The acceptable amount of time lag
-is defined by the `--lagToIgnore` flag (default is 5s).  It is possible to
-ignore these warnings interactively at a prompt, but the reported warnings
-should be carefully reviewed before ignoring them.
+promotion request.  Any amount of time lag is considered a warning (see
+`pg-lag` from the "pg-status" section).  The acceptable amount of time lag is
+defined by the `--lagToIgnore` flag which has a default value of 5s.  It is
+possible to ignore these warnings interactively at a prompt, but the reported
+warnings should be carefully reviewed before ignoring them.
 
 Example usage:
 
