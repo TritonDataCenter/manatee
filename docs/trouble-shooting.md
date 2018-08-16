@@ -401,7 +401,7 @@ Notice that the zone's delegated dataset has no more space.
 
 ### Solution
 
-1. Increase the zone's ZFS dataset. In the GZ, run:
+1. Increase the zone's ZFS dataset. Note the default is now 50G, so this shell example has outdated sizes. In the GZ, run:
 >```
 ># zfs set quota=1G zones/e3ab01c5-d5d0-423c-97de-2c71183302d9
 >```
