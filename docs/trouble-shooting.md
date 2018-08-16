@@ -421,8 +421,7 @@ such that future manatee zones will be deployed with the quota you've set. You
 can do this on the HN via sapiadm. In this example the quota size is set to
 500G.
 >```
-># sapiadm update $(sdc-sapi services?name=manatee | json -Ha uuid)
->params.quota=500
+># sapiadm update $(sdc-sapi /services?name=manatee | json -Ha uuid) params.quota=500
 >```
 
 # Useful Manatee Commands
