@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 /*
@@ -38,9 +38,7 @@ var LOG = bunyan.createLogger({
     name: NAME,
     serializers: {
         err: bunyan.stdSerializers.err
-    },
-    // always turn source to true, manatee isn't in the data path
-    src: true
+    }
 });
 
 var LOG_LEVEL_OVERRIDE = false;
@@ -65,8 +63,6 @@ function parseOptions() {
                 // just ensures that we're never < TRACE
                 LOG_LEVEL_OVERRIDE = true;
                 LOG.level(Math.max(bunyan.TRACE, (LOG.level() - 10)));
-                if (LOG.level() <= bunyan.DEBUG)
-                    LOG = LOG.child({src: true});
                 break;
 
             default:

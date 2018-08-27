@@ -19,7 +19,7 @@
         "node": ">=0.10"
     },
     "dependencies": {
-        "assert-plus": "0.1.5",
+        "assert-plus": "1.0.0",
         "backoff": "1.2.0",
         "bignum": "0.6.2",
         "bunyan": "0.22.1",
@@ -27,7 +27,7 @@
         "extsprintf": "1.3.0",
         "iniparser": "1.0.5",
         "forkexec": "1.1.0",
-        "jsprim": "1.4.0",
+        "jsprim": "2.0.0",
         "manatee-state-machine": "git+https://github.com/joyent/manatee-state-machine.git#master",
         "manta": "1.2.6",
         "node-uuid": "1.4.1",
@@ -40,16 +40,16 @@
         "progbar": "0.1.0",
         "prompt": "0.2.13",
         "restify": "2.6.1",
-        "shelljs": "0.0.5pre4",
         "tab": "0.1.0",
-        "vasync": "1.6.2",
-        "verror": "1.6.0",
+        "vasync": "2.2.0",
+        "verror": "1.10.0",
         "xtend": "1.0.3"
     },
     "devDependencies": {
         "byline": "4.1.1",
         "nodeunit": "git+https://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231",
         "node-manatee": "git+https://github.com/joyent/node-manatee#master",
+        "shelljs": "0.0.5pre4",
         "tap": "0.4.8"
     },
     "scripts": {
