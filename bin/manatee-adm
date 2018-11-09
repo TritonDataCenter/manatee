@@ -1277,6 +1277,13 @@ function printClusterTable(opts, columns, cs) {
         });
 }
 
+function stringifyLsn(s) {
+    if (s == null) {
+        return '-';
+    }
+    return s;
+}
+
 /*
  * Returns an object describing a single peer, where the fields of the object
  * correspond to the node-tab column names.
@@ -1313,10 +1320,10 @@ function rowForPeer(columns, role, peer) {
     }
 
     rv['REPL'] = peer.pgp_repl.sync_state;
-    rv['SENT'] = peer.pgp_repl.sent_location;
-    rv['WRITE'] = peer.pgp_repl.write_location;
-    rv['FLUSH'] = peer.pgp_repl.flush_location;
-    rv['REPLAY'] = peer.pgp_repl.replay_location;
+    rv['SENT'] = stringifyLsn(peer.pgp_repl.sent_location);
+    rv['WRITE'] = stringifyLsn(peer.pgp_repl.write_location);
+    rv['FLUSH'] = stringifyLsn(peer.pgp_repl.flush_location);
+    rv['REPLAY'] = stringifyLsn(peer.pgp_repl.replay_location);
     return (rv);
 }
 
