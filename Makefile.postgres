@@ -167,7 +167,7 @@ pg10:
 	cd $(DEPSDIR)/postgresql10/contrib/pgstattuple && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql19/contrib/vacuumlo && env \
+	cd $(DEPSDIR)/postgresql10/contrib/vacuumlo && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
 	cd $(DEPSDIR)/pg_repack && env \
