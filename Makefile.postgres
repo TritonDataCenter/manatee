@@ -30,10 +30,10 @@ endif
 
 PG92DIR = /opt/postgresql/9.2.4
 PG96DIR = /opt/postgresql/9.6.3
-PG10DIR = /opt/postgresql/10.5
+PG11DIR = /opt/postgresql/11.1
 
 .PHONY: all
-all: pg92 pg96 pg10
+all: pg92 pg96 pg11
 
 .PHONY: pg92
 pg92:
@@ -118,13 +118,13 @@ pg96:
 		PATH=$(RELSTAGEDIR)/root/$(PG96DIR)/bin:$$PATH \
 		$(MAKE) install LDFLAGS="`$(RELSTAGEDIR)/root/$(PG96DIR)/bin/pg_config --ldflags`"
 
-.PHONY: pg10
-pg10:
-	cd $(DEPSDIR)/postgresql10 && env \
+.PHONY: pg11
+pg11:
+	cd $(DEPSDIR)/postgresql11 && env \
 		ac_cv_header_sys_ucred_h=no \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		./configure \
-			--prefix=$(PG10DIR) \
+			--prefix=$(PG11DIR) \
 			--enable-debug \
 			--enable-dtrace \
 			--enable-nls \
@@ -134,45 +134,44 @@ pg10:
 			--without-python \
 			--without-tcl \
 			--without-zlib
-	cd $(DEPSDIR)/postgresql10 && env \
+	cd $(DEPSDIR)/postgresql11 && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE)
-	cd $(DEPSDIR)/postgresql10 && env \
+	cd $(DEPSDIR)/postgresql11 && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/auto_explain && env \
+	cd $(DEPSDIR)/postgresql11/contrib/auto_explain && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/oid2name && env \
+	cd $(DEPSDIR)/postgresql11/contrib/oid2name && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/pageinspect && env \
+	cd $(DEPSDIR)/postgresql11/contrib/pageinspect && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/pg_buffercache && env \
+	cd $(DEPSDIR)/postgresql11/contrib/pg_buffercache && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/pg_freespacemap && env \
+	cd $(DEPSDIR)/postgresql11/contrib/pg_freespacemap && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/pg_prewarm && env \
+	cd $(DEPSDIR)/postgresql11/contrib/pg_prewarm && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/pg_stat_statements && env \
+	cd $(DEPSDIR)/postgresql11/contrib/pg_stat_statements && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/pg_visibility && env \
+	cd $(DEPSDIR)/postgresql11/contrib/pg_visibility && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/pgstattuple && env \
+	cd $(DEPSDIR)/postgresql11/contrib/pgstattuple && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
-	cd $(DEPSDIR)/postgresql10/contrib/vacuumlo && env \
+	cd $(DEPSDIR)/postgresql11/contrib/vacuumlo && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
 	cd $(DEPSDIR)/pg_repack && env \
 		CFLAGS=-m64 \
-		PATH=$(RELSTAGEDIR)/root/$(PG10DIR)/bin:$$PATH \
-		$(MAKE) install LDFLAGS="`$(RELSTAGEDIR)/root/$(PG10DIR)/bin/pg_config --ldflags`"
-	cd "$(RELSTAGEDIR)/root/$(PG10DIR)/bin"
-	ln -s pg_waldump "$(RELSTAGEDIR)/root/$(PG10DIR)/bin/pg_xlogdump"
+		PATH=$(RELSTAGEDIR)/root/$(PG11DIR)/bin:$$PATH \
+		$(MAKE) install LDFLAGS="`$(RELSTAGEDIR)/root/$(PG11DIR)/bin/pg_config --ldflags`"
+	cd "$(RELSTAGEDIR)/root/$(PG11DIR)/bin"
