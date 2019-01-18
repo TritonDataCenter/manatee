@@ -136,7 +136,7 @@ pg11:
 			--without-zlib
 	cd $(DEPSDIR)/postgresql11 && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
-		$(MAKE)
+		$(MAKE) MAKELEVEL=0
 	cd $(DEPSDIR)/postgresql11 && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
