@@ -6,11 +6,19 @@
 #
 
 mds_arg0="$(basename ${BASH_SOURCE[0]})"
-mds_zonename=
+mds_zonename="$(zonename)"
 mds_basedir="$(dirname ${BASH_SOURCE[0]})/.."
 mds_mksitterconfig="$mds_basedir/tools/mksitterconfig"
+declare -A mds_pgsupported
+mds_pgsupported=(
+    ["9.2"]="73c122"
+    ["9.6"]="ca9cfe"
+)
+mds_pgbuilddir="/tmp/mds_pgbuild"
 mds_ip="$1"
 mds_zkconnstr="$2"
+mds_shard="$3"
+mds_pgversion="$4"
 
 function fail
 {
@@ -27,26 +35,16 @@ function mksitter
 	which="$1"
 	ip="$2"
 	zkconnstr="$3"
+	shard="$4"
+	pgversion="$5"
 	dataset="zones/$mds_zonename/data/peer$which"
 	sitterdir="$PWD/devconfs/sitter$which"
 	mountpoint="$PWD/devconfs/datasets/manatee$which"
 
-	echo -n "peer $which: creating ZFS dataset ... "
-	if ! zfs create -o mountpoint=$mountpoint -o canmount=noauto \
-	    $dataset; then
-		fail "failed to create dataset \"$dataset\""
-	fi
-
+	echo -n "peer $which: creating dataset mountpoint ..."
 	if ! mkdir -p $mountpoint ||
 	   ! chown postgres $mountpoint ||
-	   ! chmod 700 $mountpoint ||
-	   ! zfs mount $dataset; then
-		fail "failed to create, chown, chmod, or mount \"$mountpoint\""
-	fi
-
-	if ! mkdir -p $mountpoint/data ||
-	   ! chown postgres $mountpoint/data ||
-	   ! chmod 700 $mountpoint/data; then
+	   ! chmod 700 $mountpoint; then
 		fail "failed to create, chown, or chmod \"$mountpoint\""
 	fi
 
@@ -60,13 +58,18 @@ function mksitter
 	#    o the backup server configuration file
 	#
 	mkdir -p $sitterdir
+	mkdir -p $sitterdir/9.2
+	mkdir -p $sitterdir/9.6
 	mkdir -p $sitterdir/log
 	chown postgres:postgres $sitterdir/log || \
 	    fail "failed to chown postgres log directory"
 
 	echo -n "peer $which: creating configuration ... "
 	$mds_mksitterconfig "$PWD/devconfs" "$ip" "$zkconnstr" "$which" \
-	    > "$sitterdir/sitter.json" || fail "failed"
+	    "$shard" "$pgversion" > "$sitterdir/sitter.json" || \
+	    fail "failed to generate sitter config"
+	echo "{}" > "$sitterdir/pg_overrides.json" || \
+	    fail "failed to write pg_overrides.json"
 	echo "done."
 
 	echo -n "peer $which: fetching port from generated config ... "
@@ -75,11 +78,16 @@ function mksitter
 	echo "$port."
 
 	echo -n "peer $which: creating template postgresql.conf ... "
-	egrep -v '^\s*port\s*=' $mds_basedir/etc/postgresql.conf |
-	    egrep -v '^\s*log_directory\s*=' > "$sitterdir/postgres.conf"
+	egrep -v '^\s*port\s*=' "$mds_basedir/etc/postgresql.conf" |
+	    egrep -v '^\s*log_directory\s*=' > \
+	    "$sitterdir/$pgversion/postgresql.conf"
 	echo "port = $port # (change requires restart)" >> \
-	    "$sitterdir/postgres.conf"
-	echo "log_directory = '$sitterdir/log'" >> "$sitterdir/postgres.conf"
+	    "$sitterdir/$pgversion/postgresql.conf"
+	echo "log_directory = '$sitterdir/log'" >> \
+	    "$sitterdir/$pgversion/postgresql.conf"
+	for conf in recovery pg_hba; do
+		cp "$mds_basedir/etc/$conf.conf" "$sitterdir/$pgversion/."
+	done
 	echo "done."
 
 	echo -n "peer $which: creating backupserver config ... "
@@ -93,18 +101,81 @@ function mksitter
 	script="$script this.backupServerCfg.port = $port;"
 	echo "{}" | json -e "$script" > "$sitterdir/backupserver.json"
 	echo "done."
+
+	echo -n "peer $which: creating snapshotter config ... "
+	script="this.dataset = '$dataset';"
+	script="$script this.pollInterval = 36000;"
+	script="$script this.snapshotNumber = 20;"
+	echo "{}" | json -e "$script" > "$sitterdir/snapshotter.json"
+	echo "done."
+}
+
+# a fair amount of this function is making naive assumptions, but for
+# development purposes it's likely enough
+function ensurepostgres {
+	local vshort pgdir
+
+	if ! json -f package.json > /dev/null 2>&1; then
+		fail "must be in manatee project directory"
+	fi
+
+	if ! ls .git > /dev/null 2>&1; then
+		fail "pwd doesn't appear to be a git repository"
+	fi
+
+	groupadd -g 907 postgres > /dev/null 2>&1
+	useradd -u 907 -g postgres postgres > /dev/null 2>&1
+
+	if ! grep ^postgres /opt/local/etc/sudoers > /dev/null 2>&1; then
+	echo "postgres    ALL=(ALL) NOPASSWD: /usr/bin/chown, /usr/bin/chmod," \
+	    "/opt/local/bin/chown, /opt/local/bin/chmod" \
+	    >> /opt/local/etc/sudoers
+	fi
+
+	echo "ensuring supported postgres versions are installed"
+	git submodule add https://github.com/reorg/pg_repack.git deps/pg_repack
+	for version in ${!mds_pgsupported[@]}; do
+		vshort=$(echo "$version" | sed 's/\.//')
+		pgdir="$mds_pgbuilddir/root/opt/postgresql/"
+
+		git submodule add https://github.com/postgres/postgres.git \
+		    "deps/postgresql$vshort"
+		cd "deps/postgresql$vshort"
+		git checkout "${mds_pgsupported[$version]}"
+		cd - > /dev/null 2>&1
+
+		if ! ls "$pgdir/$version"*"/bin/postgres" > /dev/null 2>&1; then
+			echo "building postgres $version" \
+			    "(log at $mds_pgbuilddir/build.log)"
+			mkdir -p "$mds_pgbuilddir"
+			make -f Makefile.postgres \
+			    RELSTAGEDIR="$mds_pgbuilddir" \
+			    DEPSDIR="$PWD/deps" "pg$vshort" \
+			    >> "$mds_pgbuilddir/build.log" 2>&1
+		fi
+	done
+	cp -R "$mds_pgbuilddir/root/opt/postgresql" /opt/.
 }
 
 if ! type zonename > /dev/null 2>&1; then
 	fail "cannot determine dataset root: zonename(1M) command not found"
 fi
 
-if [[ $# -ne 2 ]]; then
-	echo "usage: $mds_arg0 LOCAL_IP ZK_IP:ZK_PORT" >&2
+if [[ $# -lt 3 ]]; then
+	echo "usage: $mds_arg0 LOCAL_IP ZK_IP:ZK_PORT SHARD PG_VERSION" >&2
 	exit 2
 fi
 
-mds_zonename="$(zonename)"
+if [[ -z "$mds_pgversion" ]]; then
+	mds_pgversion="9.6"
+fi
+
+if [[ ! "${!mds_pgsupported[@]}" =~ "$mds_pgversion" ]]; then
+	fail "supported version are \"9.2\" or \"9.6\""
+fi
+
+ensurepostgres
+
 for (( i = 1; i <= 3; i++ )) {
-	mksitter $i "$mds_ip" "$mds_zkconnstr"
+	mksitter $i "$mds_ip" "$mds_zkconnstr" "$mds_shard" "$mds_pgversion"
 }
