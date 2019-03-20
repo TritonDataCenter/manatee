@@ -175,3 +175,4 @@ pg11:
 		PATH=$(RELSTAGEDIR)/root/$(PG11DIR)/bin:$$PATH \
 		$(MAKE) install LDFLAGS="`$(RELSTAGEDIR)/root/$(PG11DIR)/bin/pg_config --ldflags`"
 	cd "$(RELSTAGEDIR)/root/$(PG11DIR)/bin"
+	ln -s pg_waldump "$(RELSTAGEDIR)/root/$(PG11DIR)/bin/pg_xlogdump"
