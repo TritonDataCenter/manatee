@@ -177,6 +177,7 @@ ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG
 primary  09957297 ok   sync  0/79E88D28 0/79E88D28 0/79E88D28 0/79E884B0 \-     
 sync     a376df2b ok   \-     \-          \-          \-          \-          \-     
 async    bb348824 fail \-     \-          \-          \-          \-          \-     
+
 warning: peer "a376df2b": downstream replication peer not connected
 .fi
 .RE
@@ -190,6 +191,7 @@ ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG
 primary  bb348824 fail \-     \-          \-          \-          \-          \-     
 sync     09957297 ok   async 0/79DE6478 0/79DE6478 0/79DE6478 0/79DE6478 \-     
 async    a376df2b ok   \-     \-          \-          \-          \-          0m33s 
+
 error: cannot query postgres on primary: peer "bb348824": ECONNREFUSED
 error: peer "bb348824": downstream replication peer not connected
 .fi
@@ -381,6 +383,91 @@ will be used.
 .PP
 \-n, \-\-zonename \fB\fCZONENAME\fR
     The zonename of the peer to remove.
+.SS promote [\-n | \-\-zonename ZONENAME] [\-r | \-\-role ROLE] [\-i | \-\-asyncIndex INDEX]
+.PP
+Initiate a request to promote the specified peer to the next applicable position
+in the topology.  The primary is responsible for acting on a promotion request
+in most cases, with the only exception being where the sync is to be promoted
+which will result in deposing the primary, which subsequently will require a
+rebuild.  It's possible for a cluster to ignore our promotion request (see
+"clear\-promote" for details).
+.PP
+The impact of this request varies depending on what peer is promoted.
+Initiating a promotion request using this subcommand reduces the time it takes
+for a cluster to take action on a planned takeover but can still result in data
+path downtime.  The type of downtime can be expected to be the same as if the
+cluster experienced a takeover naturally and is outlined below.
+.RS
+.IP \(bu 2
+sync promotion: deposed primary, read downtime for duration of async to sync
+transition, write downtime for duration of sync to primary transition
+(including time taken to establish synchronous replication)
+.IP \(bu 2
+first async promoted: no read downtime, write downtime for duration of async
+transition to sync
+.IP \(bu 2
+other async promoted: no impact
+.RE
+.PP
+When promoting the sync or the async in a cluster with only one async, only
+\fB\fC\-\-role\fR and \fB\fC\-\-zonename\fR are required.  For clusters with more than one async,
+\fB\fC\-\-asyncIndex\fR is required in order to determine which async is to be promoted.
+These are required in order to prevent race conditions in the event that the
+cluster changes topology while we are composing our promotion request.
+.PP
+Any warnings or errors reported by the cluster will result in a failed
+promotion request.  Any amount of time lag is considered a warning (see
+\fB\fCpg\-lag\fR from the "pg\-status" section).  The acceptable amount of time lag is
+defined by the \fB\fC\-\-lagToIgnore\fR flag which has a default value of 5s.  It is
+possible to ignore these warnings interactively at a prompt, but the reported
+warnings should be carefully reviewed before ignoring them.
+.PP
+Example usage:
+.PP
+Requesting the promotion of the sync peer:
+.PP
+.RS
+.nf
+# manatee\-adm promote \-\-role=sync \\
+    \-\-zonename=4e27e2a9\-2ff9\-4c22\-afd1\-6cc9909c056c
+.fi
+.RE
+.PP
+Requesting the promotion of the second async peer:
+.PP
+.RS
+.nf
+# manatee\-adm promote \-\-role=async \\
+    \-\-zonename=83f16f67\-3c08\-4022\-8435\-8bd0c65262eb \\
+    \-\-asyncIndex=1
+.fi
+.RE
+.PP
+\-n, \-\-zonename \fB\fCZONENAME\fR
+    The zonename of the peer to promote.
+.PP
+\-r, \-\-role \fB\fCROLE\fR
+    The current role of the peer to promote.
+.PP
+\-i, \-\-asyncIndex \fB\fCINDEX\fR
+    The zero\-indexed position of the peer to be promoted's position in
+    the async chain (if applicable).
+.PP
+\-l, \-\-lagToIgnore \fB\fCSECONDS\fR
+    Ignore this number of seconds in replication lag on each peer (default is
+    5s)
+.SS clear\-promote
+.PP
+If a promotion request is not acted upon by the cluster and is still present in
+the cluster's state object then this subcommand can be used to clear it.
+.PP
+An example of an ignored request would be where an operator has requested the
+promotion of the sync, but immediately after initiating the request the async
+was removed from the cluster.  In this case, the cluster has no replacement for
+the sync, so the request will be ignored.  The request will still be present in
+the cluster's state if this happens and will not affect the ongoing function of
+the cluster, but an operator might make use of this subcommand to clear the
+request in the interest of tidiness.
 .SH UPGRADE COMMANDS
 .SS state\-backfill
 .PP
@@ -390,8 +477,7 @@ documentation on migration for the appropriate use of this tool.
 .PP
 These commands fetch or modify internal data structures and should only be used
 by developers or as part of documented procedures.
-.SS set\-onwm \-y | \-\-ignorePrompts
-\[la]-m | --mode (on | off)\[ra]
+.SS set\-onwm \-y | \-\-ignorePrompts \[la]-m | --mode (on | off)\[ra]
 .PP
 Toggles the singleton ("one\-node\-write") mode property of the cluster state.
 This is generally not required, and is not the normal way to enable
@@ -465,4 +551,4 @@ not.
     Sets the node\-bunyan logging level. Defaults to fatal.
 .SH COPYRIGHT
 .PP
-Copyright (c) 2015 Joyent Inc., All rights reserved.
+Copyright (c) 2019 Joyent Inc., All rights reserved.
