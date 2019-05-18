@@ -29,7 +29,7 @@
         "forkexec": "1.1.0",
         "jsprim": "2.0.0",
         "manatee-state-machine": "git+https://github.com/joyent/manatee-state-machine.git#ff78e7596746ba8ff6b75784270c71ddaac008c9",
-        "manta": "1.2.6",
+        "manta": "3.0.0",
         "node-uuid": "1.4.1",
         "joyent-zookeeper-client": "0.2.3",
         "once": "1.3.0",
