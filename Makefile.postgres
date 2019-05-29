@@ -174,5 +174,8 @@ pg11:
 		CFLAGS=-m64 \
 		PATH=$(RELSTAGEDIR)/root/$(PG11DIR)/bin:$$PATH \
 		$(MAKE) install LDFLAGS="`$(RELSTAGEDIR)/root/$(PG11DIR)/bin/pg_config --ldflags`"
+	cd $(DEPSDIR)/postgresql11/contrib/hstore && env \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
 	cd "$(RELSTAGEDIR)/root/$(PG11DIR)/bin"
 	ln -s pg_waldump "$(RELSTAGEDIR)/root/$(PG11DIR)/bin/pg_xlogdump"
