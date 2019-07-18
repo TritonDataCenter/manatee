@@ -7,7 +7,7 @@
  */
 
 /*
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 var adm = require('../lib/adm');
@@ -104,6 +104,8 @@ function ManateeAdm() {
             'unfreeze',
             'reap',
             'rebuild',
+            'promote',
+            'clear-promote',
             { 'group': 'UPGRADE COMMANDS' },
             'state-backfill',
             { 'group': 'META COMMANDS' },
@@ -838,6 +840,96 @@ ManateeAdm.prototype.do_rebuild.help = ([
     '{{options}}'
 ].join('\n'));
 
+/*
+ * Promotes a peer to the next applicable position in the topology.
+ */
+ManateeAdm.prototype.do_promote = function (subcmd, opts, args, cb) {
+    var self = this;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'role', cb);
+    self.checkRequiredOption(subcmd, opts, 'zonename', cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    adm.promote(opts, function (err) {
+        if (!err) {
+            console.log('Successfully promoted peer.');
+        }
+        cb(err);
+    });
+};
+ManateeAdm.prototype.do_promote.options = [
+    commonOptions.help,
+    {
+        'names': [ 'role', 'r' ],
+        'type': 'string',
+        'helpArg': 'ROLE',
+        'help': 'The current role of the peer to promote'
+    },
+    {
+        'names': [ 'zonename', 'n' ],
+        'type': 'string',
+        'helpArg': 'ZONENAME',
+        'help': 'The zonename of the peer to promote'
+    },
+    {
+        'names': [ 'asyncIndex', 'i' ],
+        'type': 'number',
+        'helpArg': 'INDEX',
+        'help': 'Index of peer in async chain (zero-based)'
+    },
+    {
+        'names': [ 'lagToIgnore', 'l' ],
+        'type': 'number',
+        'helpArg': 'SECONDS',
+        'help': 'Lag in seconds that is acceptable for this promotion ' +
+            '(default: 5s)',
+        'default': 5
+    },
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_promote.help = ([
+    'Promote the given peer to the next applicable position in the topology.',
+    '',
+    'Usage:',
+    '    {{name}} promote [OPTIONS]',
+    '',
+    '{{options}}'
+].join('\n'));
+
+/*
+ * Clears a "promote" object from the cluster's state in ZooKeeper.
+ */
+ManateeAdm.prototype.do_clear_promote = function (subcmd, opts, args, cb) {
+    var self = this;
+
+    self.checkHelpRequested(subcmd, opts, cb);
+    self.checkRequiredOption(subcmd, opts, 'shard', cb);
+    self.checkRequiredOption(subcmd, opts, 'zk', cb);
+
+    adm.clearPromote(opts, function (err) {
+        if (!err) {
+            console.log('Cleared promote request.');
+        }
+        cb(err);
+    });
+};
+ManateeAdm.prototype.do_clear_promote.options = [
+    commonOptions.help,
+    commonOptions.shard,
+    commonOptions.zk
+];
+ManateeAdm.prototype.do_clear_promote.help = ([
+    'Clear a promote request from cluster\'s state.',
+    '',
+    'Usage:',
+    '    {{name}} clear-promote [OPTIONS]',
+    '',
+    '{{options}}'
+].join('\n'));
+
 /**
  * Freezes a Manatee's cluster state so that it won't make any state
  * transitions.
@@ -1321,45 +1413,25 @@ function rowForPeer(columns, role, peer) {
 }
 
 /*
- * Given a postgres time duration object "lag", which may have properties like
- * "minutes", "seconds", and the like, return a human readable summary of the
- * duration, like "87m12s".  If the object is null, returns "-".  If the time is
- * not known, returns "?".
+ * Given a postgres time duration object "lag", return a human readable summary
+ * of the duration, like "87m12s".  If the lag object is null, returns "-".  If
+ * lagInSeconds() cannot determine the time, returns "?".
  */
 function pgDuration(lag) {
-    var minutes, seconds, key;
+    var seconds, minutes;
 
-    if (lag === null)
-        return ('-');
+    seconds = adm.lagInSeconds(lag);
 
-    minutes = lag.minutes || 0;
-    seconds = lag.seconds || 0;
-    for (key in lag) {
-        switch (key) {
-        case 'days':
-            minutes += lag[key] * 24 * 60;
-            break;
-
-        case 'hours':
-            minutes += lag[key] * 60;
-            break;
-
-        case 'minutes':
-        case 'seconds':
-            break;
-
-        default:
-            /*
-             * The node-pg-types code that parses postgres intervals implies
-             * that it could produce keys for "months" or "years", but
-             * empirically it doesn't seem to.  That's a relief (and probably
-             * not accidental), since the number of minutes in these units is
-             * not constant.  If we get something we don't know about, indicate
-             * this to the user.
-             */
-            return ('?');
-        }
+    if (seconds instanceof Error) {
+        return ('?');
     }
+
+    if (seconds === null) {
+        return ('-');
+    }
+
+    minutes = Math.floor(seconds / 60);
+    seconds = seconds % 60;
 
     return (sprintf('%dm%02ds', minutes, seconds));
 }
