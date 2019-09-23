@@ -36,9 +36,7 @@ var NAME = 'manatee-sitter';
 var LOG = bunyan.createLogger({
     level: (process.env.LOG_LEVEL || 'info'),
     name: NAME,
-    serializers: {
-        err: bunyan.stdSerializers.err
-    }
+    serializers: bunyan.stdSerializers
 });
 
 var LOG_LEVEL_OVERRIDE = false;
