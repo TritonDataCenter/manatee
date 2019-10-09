@@ -13,6 +13,7 @@ declare -A mds_pgsupported
 mds_pgsupported=(
     ["9.2"]="73c122"
     ["9.6"]="ca9cfe"
+    ["12"]="d1f288"
 )
 mds_pgbuilddir="/tmp/mds_pgbuild"
 mds_ip="$1"
@@ -60,6 +61,7 @@ function mksitter
 	mkdir -p $sitterdir
 	mkdir -p $sitterdir/9.2
 	mkdir -p $sitterdir/9.6
+	mkdir -p $sitterdir/12
 	mkdir -p $sitterdir/log
 	chown postgres:postgres $sitterdir/log || \
 	    fail "failed to chown postgres log directory"
@@ -171,7 +173,7 @@ if [[ -z "$mds_pgversion" ]]; then
 fi
 
 if [[ ! "${!mds_pgsupported[@]}" =~ "$mds_pgversion" ]]; then
-	fail "supported version are \"9.2\" or \"9.6\""
+	fail "supported version are \"9.2\", \"9.6\", or \"12\""
 fi
 
 ensurepostgres
