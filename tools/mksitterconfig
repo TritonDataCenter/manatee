@@ -35,7 +35,8 @@ var configTemplate = {
         'hbaConfFile': 'pg_hba.conf',
         'versions': {
             '9.2': '9.2.4',
-            '9.6': '9.6.3'
+            '9.6': '9.6.3',
+	    '12': '12.0'
         },
         'dataDir': null,
         'dbUser': 'postgres',
@@ -137,8 +138,8 @@ function main()
     }
 
     pgversion = process.argv[7];
-    if ([ '9.2', '9.6' ].indexOf(pgversion) === -1)
-        usage('PG_VERSION should be either "9.2" or "9.6"');
+    if ([ '9.2', '9.6', '12' ].indexOf(pgversion) === -1)
+        usage('PG_VERSION should be either "9.2", "9.6", or "12"');
 
     child_process.exec('zonename', function (err, stdout, stderr) {
         var config, reason;
