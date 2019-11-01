@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2019, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 var mod_assertplus = require('assert-plus');
@@ -17,10 +17,10 @@ var PostgresMgr = require('../lib/postgresMgr');
 var config = JSON.parse(fs.readFileSync('./etc/sitter.json', 'utf8'));
 
 var log = mod_bunyan.createLogger({
-	'name': 'tst.postgresMgr',
-	'streams': [ {
-		'path': '/dev/null'
-	} ]
+    'name': 'tst.postgresMgr',
+    'streams': [ {
+        'path': '/dev/null'
+    } ]
 });
 
 config.postgresMgrCfg.log = log;
@@ -39,5 +39,5 @@ console.log(pg.resolveWalTranslations('1.1'));
 console.log(pg.resolveWalTranslations('9'));
 
 pg.close(function (err) {
-	process.exit();
+    process.exit();
 });
