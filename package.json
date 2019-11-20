@@ -48,7 +48,7 @@
     "devDependencies": {
         "byline": "4.1.1",
         "nodeunit": "git+https://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231",
-        "node-manatee": "git+https://github.com/joyent/node-manatee#master",
+        "node-manatee": "git+https://github.com/joyent/node-manatee#262828a805463b169916dfb0d725d28dbf40f882",
         "shelljs": "0.0.5pre4",
         "tap": "0.4.8"
     },
