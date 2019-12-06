@@ -177,5 +177,8 @@ pg12:
 	cd $(DEPSDIR)/postgresql12/contrib/hstore && env \
 		CFLAGS=-m64 LDFLAGS=-m64 \
 		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
+	cd $(DEPSDIR)/postgresql12/contrib/pgcrypto && env \
+		CFLAGS=-m64 LDFLAGS=-m64 \
+		$(MAKE) install DESTDIR="$(RELSTAGEDIR)/root"
 	cd "$(RELSTAGEDIR)/root/$(PG12DIR)/bin"
 	ln -s pg_waldump "$(RELSTAGEDIR)/root/$(PG12DIR)/bin/pg_xlogdump"
