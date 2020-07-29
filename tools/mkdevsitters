@@ -13,7 +13,7 @@ declare -A mds_pgsupported
 mds_pgsupported=(
     ["9.2"]="73c122"
     ["9.6"]="ca9cfe"
-    ["12"]="d1f288"
+    ["12"]="5060275"
 )
 mds_pgbuilddir="/tmp/mds_pgbuild"
 mds_ip="$1"
