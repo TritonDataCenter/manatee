@@ -5,9 +5,12 @@
 -->
 
 <!--
-    Copyright (c) 2014, Joyent, Inc.
+    Copyright 2021 Joyent, Inc.
 -->
 
+# Manatee
+
+``` none
                        _.---.._
           _        _.-' \  \    ''-.
         .'  '-,_.-'   /  /  /       '''.
@@ -15,8 +18,10 @@
         '._ .-'  '-._         \  \-  ---]
                       '-.___.-')  )..-'
                                (_/
+```
 
-# Overview
+## Overview
+
 Welcome to the Manatee guide. This guide is intended to give you a quick
 introduction to Manatee, and to help you setup your own instance of Manatee.
 
@@ -26,6 +31,7 @@ information on HA PostgreSQL, look
 [here](http://www.postgresql.org/docs/9.2/static/high-availability.html).
 
 ## What is Manatee?
+
 Manatee is an automated failover, fault monitoring and leader-election system
 built for managing a set of replicated PG servers. It is written completely in
 Node.js.
@@ -51,12 +57,14 @@ unrecoverrable, it can be rebuilt by restoring from an existing node in the
 shard.
 
 ## Architectural Components
+
 ### Shard Overview
+
 This is the component diagram of a fully setup Manatee shard. Much of the
 details of each Manatee node itself has been simplified, with detailed
 descriptions in later sections.
 
-![Manatee Architecture](http://us-east.manta.joyent.com/poseidon/public/manatee/docs/Manatee-Shard.jpg "Manatee Shard")
+![Manatee Architecture](images/Manatee-Shard.jpg "Manatee Shard")
 
 Each shard consists of 3 Manatee nodes, a primary(A), synchronous standby(B)
 and asynchronous standby(C) setup in a daisy chain.
@@ -82,11 +90,13 @@ for adjusting the topology only if it detects via (2) that the primary has
 failed.
 
 ### Manatee Node Detail
+
 Here are the components encapsulated within a single Manatee node.
 
-![Manatee Node](http://us-east.manta.joyent.com/poseidon/public/manatee/docs/Manatee-Node.jpg "Manatee Node")
+![Manatee Node](images/Manatee-Node.jpg "Manatee Node")
 
 #### Manatee Sitter
+
 The sitter is the main process within Manatee. The PG process runs as the
 child of the sitter. PG never runs unless the sitter is running. The sitter is
 responsible for:
@@ -100,16 +110,19 @@ responsible for:
   in a later section.
 
 ### Manatee Snapshotter
+
 The snapshotter takes periodic ZFS snapshots of the PG instance. (2) These
 snapshots are used to backup and restore the database to other nodes in the
 shard.
 
 ### Manatee Backup Server
+
 The snapshots taken by the snapshotter are made available to other nodes by the
 REST backupserver. The backupserver, upon receiving a backup request, will send
 the snapshots to another node. (3) (6)
 
-### ZFS
+### ZFS Snapshots
+
 Manatee relies on the [ZFS](http://en.wikipedia.org/wiki/ZFS) file system.
 Specifically, ZFS [snapshots](http://illumos.org/man/1m/zfs) are used to create
 point-in-time snapshots of the PG database. The `zfs send` and `zfs recv`
@@ -127,15 +140,19 @@ systems that have ZFS support should work, but have not been tested.
 You must install the following dependencies before installing Manatee.
 
 ## Node.js
+
 Manatee requires [Node.js 0.10.26](http://nodejs.org/download/) or later.
 
 ## Zookeeper
+
 Manatee requires [Apache Zookeeper 3.4.x](http://zookeeper.apache.org/releases.html).
 
 ## PostgreSQL
+
 Manatee requires [PostgreSQL 9.2.x](http://www.postgresql.org/download/) or later.
 
 ## ZFS
+
 Manatee requires the [ZFS](http://en.wikipedia.org/wiki/ZFS) file system.
 
 # Installation
@@ -145,8 +162,9 @@ Alternatively, you can grab the release
 [tarball](https://github.com/joyent/manatee/releases).
 
 Install the package dependencies via npm install.
+
 ``` bash
-[root@host ~/manatee]# npm install
+    [root@host ~/manatee]# npm install
 ```
 
 # Configuration
@@ -174,6 +192,7 @@ tune your `postgresql.conf` with parameters that suit your workload. Refer to
 the [PostgreSQL documentation](www.postgres.com).
 
 ## SMF
+
 The illumos [Service Management Facility](http://www.illumos.org/man/5/smf) can
 be used as a process manager for the Manatee processes. SMF provides service
 supervision and restarter functionality for Manatee, among other things. There
@@ -181,10 +200,12 @@ is a set of sample SMF manifests under
 [the smf directory](https://github.com/joyent/manatee/tree/master/smf).
 
 # Administration
+
 This section assumes you are using SMF to manage the Manatee instances and are
 running on SmartOS.
 
 ## Creating a new Manatee Shard
+
 The physical location of each Manatee node in the shard is important. Each
 Manatee node should be located on a different _physical_ host than the others
 in the shard, and if possible in different data centers. In this way, failures
@@ -192,9 +213,11 @@ of a single physical host or DC will not impact the availability of your
 Manatee shard.
 
 ### Setting up SMF
+
 It's recommended that you use a service restarter, such as SMF, with Manatee.
 Before running Manatee as an SMF service, you must first import the service
 manifest.
+
 ``` bash
 [root@host ~/manatee]# svccfg import ./smf/sitter.xml
 [root@host ~/manatee]# svccfg import ./smf/backupserver.xml
@@ -202,6 +225,7 @@ manifest.
 ```
 
 Check the svcs have been imported:
+
 ``` bash
 [root@host ~]# svcs -a | grep manatee
 disabled       17:33:13 svc:/manatee-sitter:default
@@ -210,6 +234,7 @@ disabled       17:33:13 svc:/manatee-snapshotter:default
 ```
 
 Once the manifests have been imported, you can start the services.
+
 ``` bash
 [root@host ~/manatee]# svcadm enable manatee-sitter
 [root@host ~/manatee]# svcadm enable manatee-backupserver
@@ -220,7 +245,9 @@ Repeat these steps on all Manatee nodes. You now have a highly available
 automated failover PG shard.
 
 ## Adding a new Node to the Manatee Shard
+
 Adding a new node is easy.
+
 * Create a new node.
 * Install and configure Manatee from the steps above.
 * Setup and start the Manatee SMF services.
@@ -229,6 +256,7 @@ This new node will automatically determine its position in the shard and clone
 its PG data from its leader. You do not need to manually build the new node.
 
 ## Moving Manatee Nodes
+
 In the normal course of maintenance, you may need to move or upgrade the
 Manatee nodes in the shard. You can do this by adding a new node to the shard,
 waiting for it to catch up (using tools described in the following sectons),
@@ -238,15 +266,16 @@ Additional nodes past the initial 3 will just be asynchronous standbys and will
 not impact the shard's performance or availability.
 
 ## Shard Administration
+
 Manatee provides the `manatee-adm` utility which gives visibility into the
 status of the Manatee shard. One of the key subcommands is the `pg-status` command.
 
 ``` bash
-$ manatee-adm pg-status 
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  bb348824 ok   sync  0/671FEDF8 0/671FEDF8 0/671FEDF8 0/671FE9F0 -     
-sync     a376df2b ok   async 0/671FEDF8 0/671FEDF8 0/671FEDF8 0/671FE9F0 -     
-async    09957297 ok   -     -          -          -          -          0m00s 
+$ manatee-adm pg-status
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG
+primary  bb348824 ok   sync  0/671FEDF8 0/671FEDF8 0/671FEDF8 0/671FE9F0 -
+sync     a376df2b ok   async 0/671FEDF8 0/671FEDF8 0/671FEDF8 0/671FE9F0 -
+async    09957297 ok   -     -          -          -          -          0m00s
 ```
 
 This prints out the current topology of the shard.  The "PG" column indicates
@@ -263,7 +292,9 @@ is "-", that indicates there is a problem with replication between the two
 peers.  The "pg-status" command will explicitly report such issues.
 
 ## Shard History
+
 You can query any past topology changes by using the `history` subcommand.
+
 ```bash
 [root@host ~/manatee]# ./node_modules/manatee/bin/manatee-adm history -s '1' -z <zk_ips>
 ```
@@ -272,7 +303,7 @@ This will return a list of every single cluster state change sorted by time.
 
 ## Getting the Mantee version
 
-```
+``` bash
 [root@b35e12da (postgres) ~]$ manatee-adm version
 2.0.0
 ```
@@ -288,7 +319,7 @@ free-form and required.  The reason is meant for operators to consult before
 unfreezing the cluster.  When the cluster is frozen, it is prominently displayed
 in the output for `manatee-adm show`:
 
-```
+``` bash
 [root@b35e12da (postgres) ~]$ manatee-adm freeze -r 'By nate for CM-129'
 Frozen.
 [root@b35e12da (postgres) ~]$ manatee-adm show | head -6
@@ -310,12 +341,12 @@ can happen, and the known reasons are documented in the [transaction log
 divergence](xlog-diverge.md) doc.  Deposed manatees have the "deposed" tag when
 viewing `manatee-adm pg-status`:
 
-```
-ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG   
-primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -     
-sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -     
-async    3022acc6 ok   -     -          -          -          -          5m42s 
-deposed  30250e3a fail -     -          -          -          -          -     
+``` bash
+ROLE     PEER     PG   REPL  SENT       WRITE      FLUSH      REPLAY     LAG
+primary  301e2d2c ok   sync  0/12345678 0/12345678 0/12345678 0/12345678 -
+sync     30219700 ok   async 0/12345678 0/12345678 0/12345678 0/12345678 -
+async    3022acc6 ok   -     -          -          -          -          5m42s
+deposed  30250e3a fail -     -          -          -          -          -
 ```
 
 To rebuild a deposed node, log onto the host, run `manatee-adm rebuild`, and
