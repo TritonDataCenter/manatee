@@ -6,6 +6,7 @@
 
 <!--
     Copyright 2021 Joyent, Inc.
+    Copyright 2022 MNX Cloud, Inc.
 -->
 
 # Manatee
@@ -130,8 +131,8 @@ utilities are used to restore or bootstrap other nodes in the shard.
 
 # Supported Platforms
 
-Manatee has been tested and runs in production on Joyent's
-[SmartOS](http://www.joyent.com/technology/smartos), and should work on most
+Manatee has been tested and runs in production on
+[SmartOS](http://www.smartos.org/), and should work on most
 [Illumos](http://illumos.org) distributions such as OmniOS. Unix-like operating
 systems that have ZFS support should work, but have not been tested.
 
@@ -157,9 +158,9 @@ Manatee requires the [ZFS](http://en.wikipedia.org/wiki/ZFS) file system.
 
 # Installation
 
-Get the latest Manatee [source](https://github.com/joyent/manatee).
+Get the latest Manatee [source](https://github.com/TritonDataCenter/manatee).
 Alternatively, you can grab the release
-[tarball](https://github.com/joyent/manatee/releases).
+[tarball](https://github.com/TritonDataCenter/manatee/releases).
 
 Install the package dependencies via npm install.
 
@@ -177,7 +178,7 @@ Setup a Zookeeper instance by following
 ## Manatee Configuration
 
 Manatee comes with sample configs under
-[the etc directory](https://github.com/joyent/manatee/tree/master/etc). Manatee
+[the etc directory](https://github.com/TritonDataCenter/manatee/tree/master/etc). Manatee
 configuration files are JSON-formatted.
 
 The default configuration files have been well tested and deployed in
@@ -187,7 +188,7 @@ sure of the consequences.
 ## Configuring PostgreSQL
 
 Manatee comes with a default set of PG
-[configs](https://github.com/joyent/manatee/tree/master/etc). You'll want to
+[configs](https://github.com/TritonDataCenter/manatee/tree/master/etc). You'll want to
 tune your `postgresql.conf` with parameters that suit your workload. Refer to
 the [PostgreSQL documentation](www.postgres.com).
 
@@ -197,7 +198,7 @@ The illumos [Service Management Facility](http://www.illumos.org/man/5/smf) can
 be used as a process manager for the Manatee processes. SMF provides service
 supervision and restarter functionality for Manatee, among other things. There
 is a set of sample SMF manifests under
-[the smf directory](https://github.com/joyent/manatee/tree/master/smf).
+[the smf directory](https://github.com/TritonDataCenter/manatee/tree/master/smf).
 
 # Administration
 

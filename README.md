@@ -6,9 +6,12 @@
 
 <!--
     Copyright (c) 2018, Joyent, Inc.
+    Copyright 2022 MNX Cloud, Inc.
 -->
 
 # Manatee
+
+```txt
                        _.---.._
           _        _.-' \  \    ''-.
         .'  '-,_.-'   /  /  /       '''.
@@ -16,12 +19,13 @@
         '._ .-'  '-._         \  \-  ---]
                       '-.___.-')  )..-'
                                (_/
+```
 
 This repository is part of the Joyent SmartDataCenter project (SDC).  For
 contribution guidelines, issues, and general documentation, visit the main
-[SDC](http://github.com/joyent/sdc) project page.
+[SDC](http://github.com/TritonDataCenter/sdc) project page.
 
-# Overview
+## Overview
 
 Manatee is an automated fault monitoring and leader-election system for
 strongly-consistent, highly-available writes to PostgreSQL.  It can tolerate
@@ -41,7 +45,7 @@ guide](docs/migrate-1-to-2.md).
 Working on Manatee? Check out the [Working on Manatee
 guide](docs/working-on-manatee.md).
 
-# Features
+## Features
 
 * Automated liveliness detection, failover, and recovery. Reads are always
   available, even during a failover. Writes are available as soon as the
@@ -56,10 +60,12 @@ guide](docs/working-on-manatee.md).
   for safe, reliable
   storage.
 
-# Quick Start
+## Quick Start
 
-## Client
-Detailed client docs are [here](https://github.com/joyent/node-manatee).
+### Client
+
+Detailed client docs are [here](https://github.com/TritonDataCenter/node-manatee).
+
 ```javascript
 var manatee = require('node-manatee');
 

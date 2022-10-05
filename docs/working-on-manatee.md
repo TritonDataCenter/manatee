@@ -37,7 +37,7 @@ This zone will also need to be provisioned with a delegated dataset.  See
 
 1. Get and build a local copy of this repo:
 
-        # git clone https://github.com/joyent/manatee
+        # git clone https://github.com/TritonDataCenter/manatee
         # cd manatee
         # make
 

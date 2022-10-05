@@ -1,13 +1,13 @@
 {
-    "author": "Yunong Xiao <yunong@joyent.com>",
+    "author": "MNX Cloud (mnx.io)",
     "name": "manatee",
     "version": "2.1.1",
     "private": true,
-    "homepage": "seacow.io",
+    "homepage": "https://github.com/TritonDataCenter/manatee",
     "description": "H/A Postgres Minder",
     "repository": {
         "type": "git",
-        "url": "https://github.com/joyent/manatee.git"
+        "url": "git@github.com:TritonDataCenter/manatee.git"
     },
     "main": "client/manatee.js",
     "directories": {
@@ -21,14 +21,14 @@
     "dependencies": {
         "assert-plus": "1.0.0",
         "backoff": "1.2.0",
-        "bignum": "0.6.2",
+        "bignum": "0.13.0",
         "bunyan": "0.22.1",
         "cmdln": "3.2.0",
         "extsprintf": "1.3.0",
         "iniparser": "1.0.5",
         "forkexec": "1.1.0",
         "jsprim": "2.0.0",
-        "manatee-state-machine": "git+https://github.com/joyent/manatee-state-machine.git#ff78e7596746ba8ff6b75784270c71ddaac008c9",
+        "manatee-state-machine": "git+https://github.com/TritonDataCenter/manatee-state-machine.git#ff78e7596746ba8ff6b75784270c71ddaac008c9",
         "manta": "1.2.6",
         "node-uuid": "1.4.1",
         "joyent-zookeeper-client": "0.2.3",
@@ -48,7 +48,7 @@
     "devDependencies": {
         "byline": "4.1.1",
         "nodeunit": "git+https://github.com/yunong/nodeunit.git#4b1bf5e52941b72cf619a246f87b261da95a1231",
-        "node-manatee": "git+https://github.com/joyent/node-manatee#262828a805463b169916dfb0d725d28dbf40f882",
+        "node-manatee": "git+https://github.com/TritonDataCenter/node-manatee#262828a805463b169916dfb0d725d28dbf40f882",
         "shelljs": "0.0.5pre4",
         "tap": "0.4.8"
     },

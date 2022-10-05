@@ -17,7 +17,7 @@ connection attempts typically receive a TCP reset, while if the system is
 offline, those attempts receive no response.
 
 For all these tests, if you're doing it in the context of a Manta deployment,
-you can use the [mlive](https://github.com/joyent/manta-mlive) tool to monitor
+you can use the [mlive](https://github.com/TritonDataCenter/manta-mlive) tool to monitor
 service interruptions.
 
 
