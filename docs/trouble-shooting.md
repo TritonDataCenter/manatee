@@ -6,6 +6,7 @@
 
 <!--
     Copyright (c) 2015, Joyent, Inc.
+    Copyright 2025 MNX Cloud, Inc.
 -->
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -401,9 +402,10 @@ Notice that the zone's delegated dataset has no more space.
 
 ### Solution
 
-1. Increase the zone's ZFS dataset. In the GZ, run:
+1. Increase the zone's ZFS dataset. The new quota should be at least higher
+than the current value. For example, setting it to 100GB, in the GZ, run:
 >```
-># zfs set quota=1G zones/e3ab01c5-d5d0-423c-97de-2c71183302d9
+># zfs set quota=100G zones/e3ab01c5-d5d0-423c-97de-2c71183302d9
 >```
 >Verify there's free space in the dataset.
 >```
@@ -421,8 +423,8 @@ such that future manatee zones will be deployed with the quota you've set. You
 can do this on the HN via sapiadm. In this example the quota size is set to
 500G.
 >```
-># sapiadm update $(sdc-sapi services?name=manatee | json -Ha uuid)
->params.quota=500
+># sapiadm update $(sdc-sapi /services?name=manatee | json -Ha uuid) \
+>    params.quota=500
 >```
 
 # Useful Manatee Commands
