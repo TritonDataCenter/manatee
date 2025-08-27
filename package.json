@@ -39,7 +39,7 @@
         "posix-getopt": "1.0.0",
         "progbar": "0.1.0",
         "prompt": "0.2.13",
-        "restify": "2.6.1",
+        "restify": "8.4.0",
         "tab": "0.1.0",
         "vasync": "2.2.0",
         "verror": "1.10.0",
